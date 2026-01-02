@@ -1,4 +1,4 @@
-package com.codesmithslabs.thedogtail.components
+package com.codesmithslabs.thedogtail.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

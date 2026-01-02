@@ -1,4 +1,4 @@
-package com.codesmithslabs.thedogtail.onboarding
+package com.codesmithslabs.thedogtail.ui.screens.onboarding
 
 // MVI Contract for Onboarding Screen
 class OnboardingContract {
@@ -16,6 +16,7 @@ class OnboardingContract {
 
     // Side Effects (One-time events like Navigation)
     sealed class Effect {
+        data object NavigateToUserInfo : Effect()
         data object NavigateToHome : Effect()
         data object NavigateToLogin : Effect()
     }
