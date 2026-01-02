@@ -39,49 +39,92 @@ import com.codesmithslabs.thedogtail.ui.theme.BrandSurface
 import com.codesmithslabs.thedogtail.ui.theme.TextPrimary
 import com.codesmithslabs.thedogtail.ui.theme.TextSecondary
 
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+
 @Composable
 fun CalendarStrip(
     selectedDate: String,
     onDateSelected: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Mock data for the calendar strip
-    val dates = listOf(
-        Pair("Fri", "2"),
-        Pair("Sat", "3"),
-        Pair("Sun", "4"),
-        Pair("Mon", "5"),
-        Pair("Tue", "6")
-    )
+    // Generate dates: Past 30 days + Today + Next 7 days
+    val dates = remember {
+        val today = LocalDate.now()
+        val dateFormatter = DateTimeFormatter.ofPattern("d", Locale.getDefault())
+        val dayFormatter = DateTimeFormatter.ofPattern("EEE", Locale.getDefault())
+        val fullDateFormatter = DateTimeFormatter.ofPattern("EEE d", Locale.getDefault()) // Format to match selectedDate string
 
-    Row(
+        (-30..7).map { offset ->
+            val date = today.plusDays(offset.toLong())
+            Triple(
+                date.format(dayFormatter),
+                date.format(dateFormatter),
+                date.format(fullDateFormatter) // Key for comparison
+            )
+        }
+    }
+
+    val listState = rememberLazyListState()
+
+    // Scroll to today (or selected date) on first launch
+    LaunchedEffect(Unit) {
+        // Find index of today or selected date
+        val todayIndex = dates.indexOfFirst { it.third == selectedDate }.takeIf { it != -1 } 
+            ?: dates.indexOfFirst { it.third == LocalDate.now().format(DateTimeFormatter.ofPattern("EEE d", Locale.getDefault())) }
+        
+        if (todayIndex != -1) {
+            listState.scrollToItem(todayIndex)
+        }
+    }
+
+    LazyRow(
         modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
+            .fillMaxWidth(),
+        state = listState,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        contentPadding = PaddingValues(horizontal = 16.dp)
     ) {
-        dates.forEach { (day, date) ->
-            val isSelected = "$day $date" == selectedDate
-            Column(
+        items(dates) { (day, date, fullDate) ->
+            val isSelected = fullDate == selectedDate
+            
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isSelected) BrandBlue else Color.White
+                ),
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = if (isSelected) 8.dp else 4.dp
+                ),
                 modifier = Modifier
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(if (isSelected) BrandBlue else Color.Transparent)
-                    .clickable { onDateSelected("$day $date") }
-                    .padding(horizontal = 12.dp, vertical = 12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .width(60.dp) // Fixed width for consistency
+                    .clickable { onDateSelected(fullDate) }
             ) {
-                Text(
-                    text = date,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = if (isSelected) Color.White else TextPrimary
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = day.uppercase(),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (isSelected) Color.White.copy(alpha = 0.8f) else TextSecondary
-                )
+                Column(
+                    modifier = Modifier
+                        .padding(vertical = 14.dp)
+                        .fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = date,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isSelected) Color.White else Color.Black
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = day.uppercase(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (isSelected) Color.White.copy(alpha = 0.8f) else Color.Black.copy(alpha = 0.6f)
+                    )
+                }
             }
         }
     }

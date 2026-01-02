@@ -2,6 +2,7 @@ package com.codesmithslabs.thedogtail.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,6 +32,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.codesmithslabs.thedogtail.R
 import com.codesmithslabs.thedogtail.ui.theme.BrandBackground
+import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
 import com.codesmithslabs.thedogtail.ui.theme.TextPrimary
 import com.codesmithslabs.thedogtail.ui.theme.TextSecondary
 
@@ -81,15 +83,15 @@ fun HomeHeader(
 ) {
     Row(
         modifier = modifier
-            .fillMaxWidth()
-            .padding(24.dp),
+            .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
                 .size(48.dp)
                 .clip(CircleShape)
-                .background(BrandBackground),
+                .background(BrandBackground)
+                .border(1.dp, BrandBlue, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             profileImage()

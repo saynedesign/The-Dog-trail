@@ -23,6 +23,9 @@ import com.codesmithslabs.thedogtail.ui.screens.onboarding.OnboardingViewModel
 import com.codesmithslabs.thedogtail.ui.screens.userinfo.UserInfoContract
 import com.codesmithslabs.thedogtail.ui.screens.userinfo.UserInfoScreen
 import com.codesmithslabs.thedogtail.ui.screens.userinfo.UserInfoViewModel
+import com.codesmithslabs.thedogtail.ui.screens.createhabit.CreateHabitContract
+import com.codesmithslabs.thedogtail.ui.screens.createhabit.CreateHabitScreen
+import com.codesmithslabs.thedogtail.ui.screens.createhabit.CreateHabitViewModel
 import com.codesmithslabs.thedogtail.ui.theme.TheDogTailTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -103,7 +106,7 @@ class MainActivity : ComponentActivity() {
                                 viewModel.effect.collect { effect ->
                                     when (effect) {
                                         is HomeContract.Effect.NavigateToAddHabit -> {
-                                            // navController.navigate("create_habit")
+                                            navController.navigate("create_habit")
                                         }
 
                                         is HomeContract.Effect.NavigateToHabitDetails -> {
@@ -114,6 +117,29 @@ class MainActivity : ComponentActivity() {
                             }
 
                             HomeScreen(
+                                state = state,
+                                onEvent = viewModel::handleEvent
+                            )
+                        }
+                        
+                        composable("create_habit") {
+                            val viewModel = hiltViewModel<CreateHabitViewModel>()
+                            val state by viewModel.state.collectAsState()
+
+                            LaunchedEffect(Unit) {
+                                viewModel.effect.collect { effect ->
+                                    when (effect) {
+                                        is CreateHabitContract.Effect.NavigateBack -> {
+                                            navController.popBackStack()
+                                        }
+                                        is CreateHabitContract.Effect.ShowToast -> {
+                                            // TODO: Show toast
+                                        }
+                                    }
+                                }
+                            }
+
+                            CreateHabitScreen(
                                 state = state,
                                 onEvent = viewModel::handleEvent
                             )
