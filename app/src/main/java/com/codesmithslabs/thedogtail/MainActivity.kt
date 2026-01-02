@@ -34,82 +34,90 @@ class MainActivity : ComponentActivity() {
         setContent {
             TheDogTailTheme {
                 val navController = rememberNavController()
+                val mainViewModel = hiltViewModel<MainViewModel>()
+                val isLoading by mainViewModel.isLoading.collectAsState()
+                val startDestination by mainViewModel.startDestination.collectAsState()
 
-                NavHost(navController = navController, startDestination = "onboarding") {
-                    composable("onboarding") {
-                        val viewModel = hiltViewModel<OnboardingViewModel>()
-                        val state by viewModel.state.collectAsState()
+                if (!isLoading) {
+                    NavHost(navController = navController, startDestination = startDestination) {
+                        composable("onboarding") {
+                            val viewModel = hiltViewModel<OnboardingViewModel>()
+                            val state by viewModel.state.collectAsState()
 
-                        LaunchedEffect(Unit) {
-                            viewModel.effect.collect { effect ->
-                                when (effect) {
-                                    is OnboardingContract.Effect.NavigateToUserInfo -> {
-                                        navController.navigate("user_info")
-                                    }
-                                    is OnboardingContract.Effect.NavigateToHome -> {
-                                        navController.navigate("home") {
-                                            popUpTo("onboarding") { inclusive = true }
+                            LaunchedEffect(Unit) {
+                                viewModel.effect.collect { effect ->
+                                    when (effect) {
+                                        is OnboardingContract.Effect.NavigateToUserInfo -> {
+                                            navController.navigate("user_info")
                                         }
-                                    }
-                                    is OnboardingContract.Effect.NavigateToLogin -> {
-                                        // TODO: Navigate to Login
+
+                                        is OnboardingContract.Effect.NavigateToHome -> {
+                                            navController.navigate("home") {
+                                                popUpTo("onboarding") { inclusive = true }
+                                            }
+                                        }
+
+                                        is OnboardingContract.Effect.NavigateToLogin -> {
+                                            // TODO: Navigate to Login
+                                        }
                                     }
                                 }
                             }
+
+                            Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                                // Pass innerPadding if needed, or handle in screen
+                                OnboardingScreen(
+                                    state = state,
+                                    onEvent = viewModel::handleEvent
+                                )
+                            }
                         }
 
-                        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                            // Pass innerPadding if needed, or handle in screen
-                            OnboardingScreen(
+                        composable("user_info") {
+                            val viewModel = hiltViewModel<UserInfoViewModel>()
+                            val state by viewModel.state.collectAsState()
+
+                            LaunchedEffect(Unit) {
+                                viewModel.effect.collect { effect ->
+                                    when (effect) {
+                                        is UserInfoContract.Effect.NavigateToHome -> {
+                                            navController.navigate("home") {
+                                                popUpTo("onboarding") { inclusive = true }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            UserInfoScreen(
                                 state = state,
                                 onEvent = viewModel::handleEvent
                             )
                         }
-                    }
 
-                    composable("user_info") {
-                        val viewModel = hiltViewModel<UserInfoViewModel>()
-                        val state by viewModel.state.collectAsState()
+                        composable("home") {
+                            val viewModel = hiltViewModel<HomeViewModel>()
+                            val state by viewModel.state.collectAsState()
 
-                        LaunchedEffect(Unit) {
-                            viewModel.effect.collect { effect ->
-                                when (effect) {
-                                    is UserInfoContract.Effect.NavigateToHome -> {
-                                        navController.navigate("home") {
-                                            popUpTo("onboarding") { inclusive = true }
+                            LaunchedEffect(Unit) {
+                                viewModel.effect.collect { effect ->
+                                    when (effect) {
+                                        is HomeContract.Effect.NavigateToAddHabit -> {
+                                            // navController.navigate("create_habit")
+                                        }
+
+                                        is HomeContract.Effect.NavigateToHabitDetails -> {
+                                            // navController.navigate("habit_details/${effect.habitId}")
                                         }
                                     }
                                 }
                             }
+
+                            HomeScreen(
+                                state = state,
+                                onEvent = viewModel::handleEvent
+                            )
                         }
-
-                        UserInfoScreen(
-                            state = state,
-                            onEvent = viewModel::handleEvent
-                        )
-                    }
-
-                    composable("home") {
-                        val viewModel = hiltViewModel<HomeViewModel>()
-                        val state by viewModel.state.collectAsState()
-
-                        LaunchedEffect(Unit) {
-                            viewModel.effect.collect { effect ->
-                                when (effect) {
-                                    is HomeContract.Effect.NavigateToAddHabit -> {
-                                        // navController.navigate("create_habit")
-                                    }
-                                    is HomeContract.Effect.NavigateToHabitDetails -> {
-                                        // navController.navigate("habit_details/${effect.habitId}")
-                                    }
-                                }
-                            }
-                        }
-
-                        HomeScreen(
-                            state = state,
-                            onEvent = viewModel::handleEvent
-                        )
                     }
                 }
             }

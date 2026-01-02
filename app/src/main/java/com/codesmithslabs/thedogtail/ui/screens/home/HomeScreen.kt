@@ -39,7 +39,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.codesmithslabs.thedogtail.ui.components.HabitCard
 import com.codesmithslabs.thedogtail.ui.components.HomeHeader
 import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
@@ -89,12 +91,20 @@ fun HomeScreen(
                     userName = state.userName,
                     subtitle = "Let's make habits together!",
                     profileImage = {
-                        // Placeholder for profile image
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = null,
-                            tint = Color.White
-                        )
+                        if (state.userImageUri != null) {
+                            AsyncImage(
+                                model = state.userImageUri,
+                                contentDescription = "Profile Image",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Icon(
+                                imageVector = Icons.Default.Person,
+                                contentDescription = null,
+                                tint = Color.White
+                            )
+                        }
                     },
                     onNotificationClick = { /* TODO */ },
                     modifier = Modifier.padding(horizontal = 0.dp) // Reset default padding from component

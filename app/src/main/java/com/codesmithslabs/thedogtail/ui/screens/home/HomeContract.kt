@@ -4,7 +4,8 @@ import com.codesmithslabs.thedogtail.data.HabitEntity
 
 interface HomeContract {
     data class State(
-        val userName: String = "Mert",
+        val userName: String = "",
+        val userImageUri: String? = null,
         val selectedDate: String = "Sat 3", // Placeholder
         val habits: List<HabitEntity> = emptyList(),
         val isLoading: Boolean = false

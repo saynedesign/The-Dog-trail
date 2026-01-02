@@ -3,6 +3,7 @@ package com.codesmithslabs.thedogtail.ui.screens.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.codesmithslabs.thedogtail.data.HabitDao
+import com.codesmithslabs.thedogtail.data.UserDao
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +15,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val habitDao: HabitDao
+    private val habitDao: HabitDao,
+    private val userDao: UserDao
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeContract.State())
@@ -24,7 +26,22 @@ class HomeViewModel @Inject constructor(
     val effect = _effect.receiveAsFlow()
 
     init {
+        loadUserData()
         loadHabits()
+    }
+
+    private fun loadUserData() {
+        viewModelScope.launch {
+            // Get the single user (Flow<UserEntity?>)
+            userDao.getUser().collect { user ->
+                if (user != null) {
+                    _state.value = _state.value.copy(
+                        userName = user.name,
+                        userImageUri = user.profileImageUri
+                    )
+                }
+            }
+        }
     }
 
     private fun loadHabits() {
