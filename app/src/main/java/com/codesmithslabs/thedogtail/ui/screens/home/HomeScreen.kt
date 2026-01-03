@@ -26,6 +26,8 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
@@ -92,7 +94,10 @@ fun HomeScreen(
                     .fillMaxWidth()
                     .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
             ) {
-                HomeBottomNavigation(modifier = Modifier.align(Alignment.BottomCenter))
+                HomeBottomNavigation(
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                    onProfileClick = { onEvent(HomeContract.Event.OnProfileClicked) }
+                )
             }
         }
     ) { innerPadding ->
@@ -187,7 +192,20 @@ fun HomeScreen(
                         else -> Icons.Default.Check
                     },
                     iconTint = Color(habit.color),
-                    onClick = { onEvent(HomeContract.Event.OnHabitClicked(habit.id)) }
+                    onClick = { onEvent(HomeContract.Event.OnHabitClicked(habit.id)) },
+                    rightContent = {
+                        Checkbox(
+                            checked = habit.isCompletedToday,
+                            onCheckedChange = { isChecked ->
+                                onEvent(HomeContract.Event.OnToggleHabit(habit.id, isChecked))
+                            },
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = BrandBlue,
+                                uncheckedColor = TextSecondary,
+                                checkmarkColor = Color.White
+                            )
+                        )
+                    }
                 )
             }
             
@@ -200,7 +218,10 @@ fun HomeScreen(
 }
 
 @Composable
-fun HomeBottomNavigation(modifier: Modifier = Modifier) {
+fun HomeBottomNavigation(
+    modifier: Modifier = Modifier,
+    onProfileClick: () -> Unit = {}
+) {
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -240,7 +261,7 @@ fun HomeBottomNavigation(modifier: Modifier = Modifier) {
                 imageVector = Icons.Default.Person,
                 contentDescription = "Profile",
                 tint = TextSecondary,
-                modifier = Modifier.size(28.dp).clickable { /*TODO*/ }
+                modifier = Modifier.size(28.dp).clickable { onProfileClick() }
             )
         }
     }

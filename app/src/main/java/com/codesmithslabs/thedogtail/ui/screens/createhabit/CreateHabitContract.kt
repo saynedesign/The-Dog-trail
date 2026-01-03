@@ -10,7 +10,12 @@ interface CreateHabitContract {
         val isAtLeast: Boolean = true, // At least vs At most
         val currentPreviewValue: Float = 4f, // For the slider preview
         val isLoading: Boolean = false,
-        val isError: Boolean = false
+        val isError: Boolean = false,
+        // Advanced Options
+        val isAdvancedOptionsExpanded: Boolean = false,
+        val reminderEnabled: Boolean = false,
+        val reminderTime: String = "08:00",
+        val selectedDays: Set<Int> = setOf(1, 2, 3, 4, 5, 6, 7)
     )
 
     enum class HabitType {
@@ -23,6 +28,13 @@ interface CreateHabitContract {
         data class OnTargetChange(val target: String) : Event()
         data class OnUnitNameChange(val unitName: String) : Event()
         data class OnGoalTypeChange(val isAtLeast: Boolean) : Event() // At least / At most
+        
+        // Advanced Options
+        data object OnToggleAdvancedOptions : Event()
+        data class OnReminderToggle(val enabled: Boolean) : Event()
+        data class OnReminderTimeChange(val time: String) : Event()
+        data class OnDayToggle(val day: Int) : Event() // 1=Mon, 7=Sun
+
         data object OnSaveClicked : Event()
         data object OnBackClicked : Event()
     }

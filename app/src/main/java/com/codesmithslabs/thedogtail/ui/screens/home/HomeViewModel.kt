@@ -63,6 +63,20 @@ class HomeViewModel @Inject constructor(
             is HomeContract.Event.OnDateSelected -> {
                 _state.value = _state.value.copy(selectedDate = event.date)
             }
+            is HomeContract.Event.OnToggleHabit -> {
+                toggleHabit(event.habitId, event.isDone)
+            }
+            is HomeContract.Event.OnProfileClicked -> {
+                sendEffect(HomeContract.Effect.NavigateToProfile)
+            }
+        }
+    }
+
+    private fun toggleHabit(habitId: Long, isDone: Boolean) {
+        viewModelScope.launch {
+            val habit = _state.value.habits.find { it.id == habitId } ?: return@launch
+            val updatedHabit = habit.copy(isCompletedToday = isDone)
+            habitDao.updateHabit(updatedHabit)
         }
     }
 

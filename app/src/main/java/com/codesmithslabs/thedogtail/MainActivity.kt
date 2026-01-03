@@ -6,26 +6,34 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import com.codesmithslabs.thedogtail.ui.screens.onboarding.OnboardingScreen
-import androidx.compose.runtime.LaunchedEffect
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.codesmithslabs.thedogtail.ui.screens.createhabit.CreateHabitContract
+import com.codesmithslabs.thedogtail.ui.screens.createhabit.CreateHabitScreen
+import com.codesmithslabs.thedogtail.ui.screens.createhabit.CreateHabitViewModel
+import com.codesmithslabs.thedogtail.ui.screens.habitdetail.HabitDetailContract
+import com.codesmithslabs.thedogtail.ui.screens.habitdetail.HabitDetailScreen
+import com.codesmithslabs.thedogtail.ui.screens.habitdetail.HabitDetailViewModel
 import com.codesmithslabs.thedogtail.ui.screens.home.HomeContract
 import com.codesmithslabs.thedogtail.ui.screens.home.HomeScreen
 import com.codesmithslabs.thedogtail.ui.screens.home.HomeViewModel
 import com.codesmithslabs.thedogtail.ui.screens.onboarding.OnboardingContract
+import com.codesmithslabs.thedogtail.ui.screens.onboarding.OnboardingScreen
 import com.codesmithslabs.thedogtail.ui.screens.onboarding.OnboardingViewModel
+import com.codesmithslabs.thedogtail.ui.screens.profile.ProfileContract
+import com.codesmithslabs.thedogtail.ui.screens.profile.ProfileScreen
+import com.codesmithslabs.thedogtail.ui.screens.profile.ProfileViewModel
 import com.codesmithslabs.thedogtail.ui.screens.userinfo.UserInfoContract
 import com.codesmithslabs.thedogtail.ui.screens.userinfo.UserInfoScreen
 import com.codesmithslabs.thedogtail.ui.screens.userinfo.UserInfoViewModel
-import com.codesmithslabs.thedogtail.ui.screens.createhabit.CreateHabitContract
-import com.codesmithslabs.thedogtail.ui.screens.createhabit.CreateHabitScreen
-import com.codesmithslabs.thedogtail.ui.screens.createhabit.CreateHabitViewModel
 import com.codesmithslabs.thedogtail.ui.theme.TheDogTailTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -110,7 +118,10 @@ class MainActivity : ComponentActivity() {
                                         }
 
                                         is HomeContract.Effect.NavigateToHabitDetails -> {
-                                            // navController.navigate("habit_details/${effect.habitId}")
+                                            navController.navigate("habit_details/${effect.habitId}")
+                                        }
+                                        is HomeContract.Effect.NavigateToProfile -> {
+                                            navController.navigate("profile")
                                         }
                                     }
                                 }
@@ -140,6 +151,52 @@ class MainActivity : ComponentActivity() {
                             }
 
                             CreateHabitScreen(
+                                state = state,
+                                onEvent = viewModel::handleEvent
+                            )
+                        }
+
+                        composable("profile") {
+                            val viewModel = hiltViewModel<ProfileViewModel>()
+                            val state by viewModel.state.collectAsState()
+
+                            LaunchedEffect(Unit) {
+                                viewModel.effect.collect { effect ->
+                                    when (effect) {
+                                        is ProfileContract.Effect.NavigateBack -> {
+                                            navController.popBackStack()
+                                        }
+                                    }
+                                }
+                            }
+
+                            ProfileScreen(
+                                state = state,
+                                onEvent = viewModel::handleEvent
+                            )
+                        }
+
+                        composable(
+                            "habit_details/{habitId}",
+                            arguments = listOf(navArgument("habitId") { type = NavType.LongType })
+                        ) {
+                            val viewModel = hiltViewModel<HabitDetailViewModel>()
+                            val state by viewModel.state.collectAsState()
+
+                            LaunchedEffect(Unit) {
+                                viewModel.effect.collect { effect ->
+                                    when (effect) {
+                                        is HabitDetailContract.Effect.NavigateBack -> {
+                                            navController.popBackStack()
+                                        }
+                                        is HabitDetailContract.Effect.NavigateToEdit -> {
+                                            // TODO
+                                        }
+                                    }
+                                }
+                            }
+
+                            HabitDetailScreen(
                                 state = state,
                                 onEvent = viewModel::handleEvent
                             )

@@ -16,5 +16,10 @@ data class HabitEntity(
     val isAtLeast: Boolean = true, // true = At Least, false = At Most
     val color: Long = 0xFF5D3FD3, // Default BrandBlue
     val icon: String = "",
-    val createdTimestamp: Long = System.currentTimeMillis()
+    val createdTimestamp: Long = System.currentTimeMillis(),
+    // New fields
+    val reminderEnabled: Boolean = false,
+    val reminderTime: String = "08:00",
+    val selectedDays: String = "1,2,3,4,5,6,7", // Mon=1, Sun=7
+    val isCompletedToday: Boolean = false // Quick way to track daily status for MVP
 )

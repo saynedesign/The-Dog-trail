@@ -1,5 +1,10 @@
 package com.codesmithslabs.thedogtail.ui.screens.createhabit
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -11,7 +16,9 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Book
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -49,7 +56,7 @@ fun CreateHabitScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 24.dp), // Matched HomeScreen horizontal padding? No, HomeScreen was 16.dp recently. Let's use 20.dp or 24.dp for comfort.
+                .padding(horizontal = 24.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             item {
@@ -131,34 +138,132 @@ fun CreateHabitScreen(
             }
             
              item {
-                 // Advanced options placeholder
-                 Card(
-                     shape = RoundedCornerShape(16.dp),
-                     colors = CardDefaults.cardColors(containerColor = Color.White),
-                     modifier = Modifier.fillMaxWidth().clickable { /* TODO */ }
-                 ) {
-                     Row(
-                         modifier = Modifier.padding(16.dp),
-                         horizontalArrangement = Arrangement.SpaceBetween,
-                         verticalAlignment = Alignment.CenterVertically
-                     ) {
-                         Text(
-                             text = "Advanced Options",
-                             style = MaterialTheme.typography.titleMedium,
-                             fontWeight = FontWeight.Bold
-                         )
-                         Icon(
-                             imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                             contentDescription = null,
-                             tint = TextSecondary
-                         )
-                     }
-                 }
+                 AdvancedOptionsCard(
+                     isExpanded = state.isAdvancedOptionsExpanded,
+                     reminderEnabled = state.reminderEnabled,
+                     reminderTime = state.reminderTime,
+                     selectedDays = state.selectedDays,
+                     onToggleExpand = { onEvent(CreateHabitContract.Event.OnToggleAdvancedOptions) },
+                     onReminderToggle = { onEvent(CreateHabitContract.Event.OnReminderToggle(it)) },
+                     onReminderTimeChange = { onEvent(CreateHabitContract.Event.OnReminderTimeChange(it)) },
+                     onDayToggle = { onEvent(CreateHabitContract.Event.OnDayToggle(it)) }
+                 )
              }
              
              item {
                  Spacer(modifier = Modifier.height(32.dp))
              }
+        }
+    }
+}
+
+@Composable
+fun AdvancedOptionsCard(
+    isExpanded: Boolean,
+    reminderEnabled: Boolean,
+    reminderTime: String,
+    selectedDays: Set<Int>,
+    onToggleExpand: () -> Unit,
+    onReminderToggle: (Boolean) -> Unit,
+    onReminderTimeChange: (String) -> Unit,
+    onDayToggle: (Int) -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onToggleExpand() }
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Advanced Options",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Icon(
+                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    tint = TextSecondary
+                )
+            }
+            
+            AnimatedVisibility(
+                visible = isExpanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 24.dp)) {
+                    Divider(color = BrandBackground)
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    // Reminder Section
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Notifications, contentDescription = null, tint = BrandBlue)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Reminders", fontWeight = FontWeight.SemiBold)
+                        }
+                        Switch(
+                            checked = reminderEnabled,
+                            onCheckedChange = onReminderToggle,
+                            colors = SwitchDefaults.colors(checkedThumbColor = BrandBlue, checkedTrackColor = BrandBlue.copy(alpha = 0.2f))
+                        )
+                    }
+                    
+                    if (reminderEnabled) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text("REMINDER TIME", style = MaterialTheme.typography.labelSmall, color = TextSecondary, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        HabitOutlinedTextField(
+                            value = reminderTime,
+                            onValueChange = onReminderTimeChange,
+                            placeholder = "08:00",
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        
+                        Spacer(modifier = Modifier.height(24.dp))
+                        Text("DAYS", style = MaterialTheme.typography.labelSmall, color = TextSecondary, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            val days = listOf("M", "T", "W", "T", "F", "S", "S")
+                            days.forEachIndexed { index, dayLabel ->
+                                val dayValue = index + 1
+                                val isSelected = selectedDays.contains(dayValue)
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(CircleShape)
+                                        .background(if (isSelected) BrandBlue else BrandBackground)
+                                        .clickable { onDayToggle(dayValue) },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = dayLabel,
+                                        color = if (isSelected) Color.White else TextSecondary,
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.labelMedium
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }

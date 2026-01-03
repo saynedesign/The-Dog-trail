@@ -41,6 +41,26 @@ class CreateHabitViewModel @Inject constructor(
             is CreateHabitContract.Event.OnGoalTypeChange -> {
                 _state.value = _state.value.copy(isAtLeast = event.isAtLeast)
             }
+            is CreateHabitContract.Event.OnToggleAdvancedOptions -> {
+                _state.value = _state.value.copy(isAdvancedOptionsExpanded = !_state.value.isAdvancedOptionsExpanded)
+            }
+            is CreateHabitContract.Event.OnReminderToggle -> {
+                _state.value = _state.value.copy(reminderEnabled = event.enabled)
+            }
+            is CreateHabitContract.Event.OnReminderTimeChange -> {
+                _state.value = _state.value.copy(reminderTime = event.time)
+            }
+            is CreateHabitContract.Event.OnDayToggle -> {
+                val currentDays = _state.value.selectedDays.toMutableSet()
+                if (currentDays.contains(event.day)) {
+                    if (currentDays.size > 1) { // Prevent empty days
+                        currentDays.remove(event.day)
+                    }
+                } else {
+                    currentDays.add(event.day)
+                }
+                _state.value = _state.value.copy(selectedDays = currentDays)
+            }
             is CreateHabitContract.Event.OnSaveClicked -> {
                 saveHabit()
             }
@@ -70,7 +90,10 @@ class CreateHabitViewModel @Inject constructor(
                     isAtLeast = currentState.isAtLeast,
                     // Default values for now
                     icon = currentState.habitIcon ?: "",
-                    color = 0xFF4B68FF // BrandBlue
+                    color = 0xFF4B68FF, // BrandBlue
+                    reminderEnabled = currentState.reminderEnabled,
+                    reminderTime = currentState.reminderTime,
+                    selectedDays = currentState.selectedDays.sorted().joinToString(",")
                 )
                 habitDao.insertHabit(habit)
                 _effect.send(CreateHabitContract.Effect.NavigateBack)

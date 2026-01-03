@@ -14,11 +14,14 @@ interface HomeContract {
     sealed class Event {
         data object OnAddHabitClicked : Event()
         data class OnHabitClicked(val habitId: Long) : Event()
+        data class OnToggleHabit(val habitId: Long, val isDone: Boolean) : Event()
         data class OnDateSelected(val date: String) : Event()
+        data object OnProfileClicked : Event()
     }
 
     sealed class Effect {
         data object NavigateToAddHabit : Effect()
         data class NavigateToHabitDetails(val habitId: Long) : Effect()
+        data object NavigateToProfile : Effect()
     }
 }
