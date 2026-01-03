@@ -16,4 +16,7 @@ interface UserDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertUser(user: UserEntity)
+
+    @Query("UPDATE user_info SET journal = :journal, journalLastUpdated = :updatedAt WHERE id = :id")
+    suspend fun updateJournal(id: Long, journal: String, updatedAt: Long)
 }

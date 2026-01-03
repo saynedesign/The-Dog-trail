@@ -11,5 +11,7 @@ data class UserEntity(
     val dob: String, // Storing as String for simplicity "DD/MM/YYYY"
     val height: Float, // In cm
     val profileImageUri: String? = null,
-    val createdTimestamp: Long = System.currentTimeMillis()
+    val createdTimestamp: Long = System.currentTimeMillis(),
+    val journal: String? = null,
+    val journalLastUpdated: Long? = null
 )

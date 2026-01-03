@@ -195,7 +195,7 @@ fun HomeScreen(
                     onClick = { onEvent(HomeContract.Event.OnHabitClicked(habit.id)) },
                     rightContent = {
                         Checkbox(
-                            checked = habit.isCompletedToday,
+                            checked = state.completedForSelectedDate.contains(habit.id),
                             onCheckedChange = { isChecked ->
                                 onEvent(HomeContract.Event.OnToggleHabit(habit.id, isChecked))
                             },

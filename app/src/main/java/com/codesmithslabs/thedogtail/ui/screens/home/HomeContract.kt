@@ -1,13 +1,18 @@
 package com.codesmithslabs.thedogtail.ui.screens.home
 
 import com.codesmithslabs.thedogtail.data.HabitEntity
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 interface HomeContract {
     data class State(
         val userName: String = "",
         val userImageUri: String? = null,
-        val selectedDate: String = "Sat 3", // Placeholder
+        val selectedDate: String = LocalDate.now().format(DateTimeFormatter.ofPattern("EEE d", Locale.getDefault())),
+        val selectedEpochDay: Long = LocalDate.now().toEpochDay(),
         val habits: List<HabitEntity> = emptyList(),
+        val completedForSelectedDate: Set<Long> = emptySet(),
         val isLoading: Boolean = false
     )
 

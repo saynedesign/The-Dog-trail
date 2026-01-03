@@ -54,14 +54,12 @@ fun CalendarStrip(
     onDateSelected: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Generate dates: Past 30 days + Today + Next 7 days
     val dates = remember {
         val today = LocalDate.now()
         val dateFormatter = DateTimeFormatter.ofPattern("d", Locale.getDefault())
         val dayFormatter = DateTimeFormatter.ofPattern("EEE", Locale.getDefault())
         val fullDateFormatter = DateTimeFormatter.ofPattern("EEE d", Locale.getDefault()) // Format to match selectedDate string
-
-        (-30..7).map { offset ->
+        (-30..0).map { offset ->
             val date = today.plusDays(offset.toLong())
             Triple(
                 date.format(dayFormatter),

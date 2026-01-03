@@ -2,15 +2,15 @@ package com.codesmithslabs.thedogtail.ui.screens.profile
 
 interface ProfileContract {
     data class State(
-        val userName: String = "Mert Kahveci",
-        val userLevel: Int = 12,
-        val consistency: Int = 85,
-        val yearlyGridData: List<Int> = List(48) { (0..4).random() }, // Mock data
+        val userName: String = "",
+        val userLevel: Int = 0,
+        val consistency: Int = 0,
+        val yearlyGridData: List<Int> = emptyList(),
         val milestones: List<Milestone> = emptyList(),
         val insights: List<Insight> = emptyList(),
-        val journalQuote: String = "I want to build these habits to prove to myself that I am capable of change, and to have more energy for my kids on the weekends.",
-        val journalLastUpdated: String = "Updated 2 days ago",
-        val isLoading: Boolean = false
+        val journalQuote: String = "",
+        val journalLastUpdated: String = "",
+        val isLoading: Boolean = true
     )
 
     data class Milestone(
