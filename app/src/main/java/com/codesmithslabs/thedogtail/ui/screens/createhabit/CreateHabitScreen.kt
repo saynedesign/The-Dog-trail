@@ -104,6 +104,33 @@ fun CreateHabitScreen(
                         }
                     }
                 }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Description / My Why Input
+                Card(
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(
+                            text = "MY WHY (Optional)",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TextSecondary,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        HabitOutlinedTextField(
+                            value = state.description,
+                            onValueChange = { onEvent(CreateHabitContract.Event.OnDescriptionChange(it)) },
+                            placeholder = "Why do you want to build this habit?",
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = false,
+                            minLines = 3
+                        )
+                    }
+                }
             }
 
             item {
@@ -131,6 +158,13 @@ fun CreateHabitScreen(
                         onGoalTypeChange = { onEvent(CreateHabitContract.Event.OnGoalTypeChange(it)) }
                     )
                 }
+            } else if (state.habitType == CreateHabitContract.HabitType.TIMER) {
+                item {
+                    TimerSettings(
+                        duration = state.target,
+                        onDurationChange = { onEvent(CreateHabitContract.Event.OnTargetChange(it)) }
+                    )
+                }
             }
 
             item {
@@ -139,11 +173,9 @@ fun CreateHabitScreen(
             
              item {
                  AdvancedOptionsCard(
-                     isExpanded = state.isAdvancedOptionsExpanded,
                      reminderEnabled = state.reminderEnabled,
                      reminderTime = state.reminderTime,
                      selectedDays = state.selectedDays,
-                     onToggleExpand = { onEvent(CreateHabitContract.Event.OnToggleAdvancedOptions) },
                      onReminderToggle = { onEvent(CreateHabitContract.Event.OnReminderToggle(it)) },
                      onReminderTimeChange = { onEvent(CreateHabitContract.Event.OnReminderTimeChange(it)) },
                      onDayToggle = { onEvent(CreateHabitContract.Event.OnDayToggle(it)) }
@@ -158,110 +190,169 @@ fun CreateHabitScreen(
 }
 
 @Composable
+fun TimerSettings(
+    duration: String,
+    onDurationChange: (String) -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Timer, contentDescription = null, tint = BrandBlue)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "Timer Goal",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("DURATION (MINUTES)", style = MaterialTheme.typography.labelSmall, color = TextSecondary, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(8.dp))
+            HabitOutlinedTextField(
+                value = duration,
+                onValueChange = onDurationChange,
+                placeholder = "25",
+                singleLine = true,
+                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+    }
+}
+
+@Composable
 fun AdvancedOptionsCard(
-    isExpanded: Boolean,
     reminderEnabled: Boolean,
     reminderTime: String,
     selectedDays: Set<Int>,
-    onToggleExpand: () -> Unit,
     onReminderToggle: (Boolean) -> Unit,
     onReminderTimeChange: (String) -> Unit,
     onDayToggle: (Int) -> Unit
 ) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+    val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
+        contract = androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            onReminderToggle(true)
+        }
+    }
+
+    val calendar = java.util.Calendar.getInstance()
+    // Parse current reminderTime to set initial picker values if possible
+    val timeParts = reminderTime.split(":")
+    val initialHour = timeParts.getOrNull(0)?.toIntOrNull() ?: 8
+    val initialMinute = timeParts.getOrNull(1)?.toIntOrNull() ?: 0
+
+    val timePickerDialog = android.app.TimePickerDialog(
+        context,
+        { _, hourOfDay, minute ->
+            val formattedTime = String.format("%02d:%02d", hourOfDay, minute)
+            onReminderTimeChange(formattedTime)
+        },
+        initialHour,
+        initialMinute,
+        true // is24HourView
+    )
+
     Card(
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column {
+        Column(modifier = Modifier.padding(24.dp)) {
+            // Days Section (Always Visible)
+            Text("FREQUENCY", style = MaterialTheme.typography.labelSmall, color = TextSecondary, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(16.dp))
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onToggleExpand() }
-                    .padding(16.dp),
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                val days = listOf("M", "T", "W", "T", "F", "S", "S")
+                days.forEachIndexed { index, dayLabel ->
+                    val dayValue = index + 1
+                    val isSelected = selectedDays.contains(dayValue)
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(CircleShape)
+                            .background(if (isSelected) BrandBlue else BrandBackground)
+                            .clickable { onDayToggle(dayValue) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = dayLabel,
+                            color = if (isSelected) Color.White else TextSecondary,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+            Divider(color = BrandBackground)
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Reminder Section
+            Row(
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = "Advanced Options",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Icon(
-                    imageVector = if (isExpanded) Icons.Default.KeyboardArrowDown else Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                    contentDescription = null,
-                    tint = TextSecondary
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Notifications, contentDescription = null, tint = BrandBlue)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Reminders", fontWeight = FontWeight.SemiBold)
+                }
+                Switch(
+                    checked = reminderEnabled,
+                    onCheckedChange = { isChecked ->
+                        if (isChecked) {
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                                if (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                                    onReminderToggle(true)
+                                } else {
+                                    permissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                                }
+                            } else {
+                                onReminderToggle(true)
+                            }
+                        } else {
+                            onReminderToggle(false)
+                        }
+                    },
+                    colors = SwitchDefaults.colors(checkedThumbColor = BrandBlue, checkedTrackColor = BrandBlue.copy(alpha = 0.2f))
                 )
             }
             
-            AnimatedVisibility(
-                visible = isExpanded,
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut()
-            ) {
-                Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 24.dp)) {
-                    Divider(color = BrandBackground)
-                    Spacer(modifier = Modifier.height(16.dp))
-                    
-                    // Reminder Section
-                    Row(
+            if (reminderEnabled) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("REMINDER TIME", style = MaterialTheme.typography.labelSmall, color = TextSecondary, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(8.dp))
+                
+                Box(modifier = Modifier.clickable { timePickerDialog.show() }) {
+                    HabitOutlinedTextField(
+                        value = reminderTime,
+                        onValueChange = {}, // Read-only via text input, changed via picker
+                        placeholder = "08:00",
+                        singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Notifications, contentDescription = null, tint = BrandBlue)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Reminders", fontWeight = FontWeight.SemiBold)
-                        }
-                        Switch(
-                            checked = reminderEnabled,
-                            onCheckedChange = onReminderToggle,
-                            colors = SwitchDefaults.colors(checkedThumbColor = BrandBlue, checkedTrackColor = BrandBlue.copy(alpha = 0.2f))
+                        enabled = false, // Disable direct text input to force picker
+                        colors = OutlinedTextFieldDefaults.colors(
+                            disabledTextColor = TextPrimary,
+                            disabledBorderColor = BrandBackground,
+                            disabledLabelColor = TextSecondary,
+                            disabledPlaceholderColor = TextSecondary
                         )
-                    }
-                    
-                    if (reminderEnabled) {
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text("REMINDER TIME", style = MaterialTheme.typography.labelSmall, color = TextSecondary, fontWeight = FontWeight.Bold)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        HabitOutlinedTextField(
-                            value = reminderTime,
-                            onValueChange = onReminderTimeChange,
-                            placeholder = "08:00",
-                            singleLine = true,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                        
-                        Spacer(modifier = Modifier.height(24.dp))
-                        Text("DAYS", style = MaterialTheme.typography.labelSmall, color = TextSecondary, fontWeight = FontWeight.Bold)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            val days = listOf("M", "T", "W", "T", "F", "S", "S")
-                            days.forEachIndexed { index, dayLabel ->
-                                val dayValue = index + 1
-                                val isSelected = selectedDays.contains(dayValue)
-                                Box(
-                                    modifier = Modifier
-                                        .size(36.dp)
-                                        .clip(CircleShape)
-                                        .background(if (isSelected) BrandBlue else BrandBackground)
-                                        .clickable { onDayToggle(dayValue) },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = dayLabel,
-                                        color = if (isSelected) Color.White else TextSecondary,
-                                        fontWeight = FontWeight.Bold,
-                                        style = MaterialTheme.typography.labelMedium
-                                    )
-                                }
-                            }
-                        }
-                    }
+                    )
+                    // Overlay to capture clicks if enabled=false blocks clicks
+                    Box(modifier = Modifier.matchParentSize().clickable { timePickerDialog.show() })
                 }
             }
         }
@@ -269,7 +360,12 @@ fun AdvancedOptionsCard(
 }
 
 @Composable
-fun CreateHabitTopBar(onBack: () -> Unit, onSave: () -> Unit) {
+fun CreateHabitTopBar(
+    onBack: () -> Unit, 
+    onSave: () -> Unit,
+    title: String = "New Habit",
+    saveButtonText: String = "Save"
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -283,7 +379,7 @@ fun CreateHabitTopBar(onBack: () -> Unit, onSave: () -> Unit) {
         }
         
         Text(
-            text = "New Habit",
+            text = title,
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = TextPrimary
@@ -298,7 +394,7 @@ fun CreateHabitTopBar(onBack: () -> Unit, onSave: () -> Unit) {
             shape = RoundedCornerShape(20.dp),
             contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp)
         ) {
-            Text("Save", fontWeight = FontWeight.Bold)
+            Text(saveButtonText, fontWeight = FontWeight.Bold)
         }
     }
 }

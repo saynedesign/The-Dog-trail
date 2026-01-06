@@ -11,10 +11,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.codesmithslabs.thedogtail.data.HabitLogDao
+import java.time.LocalDate
 
 @HiltViewModel
 class HabitDetailViewModel @Inject constructor(
     private val habitDao: HabitDao,
+    private val habitLogDao: HabitLogDao,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -27,18 +30,70 @@ class HabitDetailViewModel @Inject constructor(
     val effect = _effect.receiveAsFlow()
 
     init {
-        loadHabit()
+        loadData()
     }
 
-    private fun loadHabit() {
+    private fun loadData() {
         viewModelScope.launch {
             try {
+                // Load Habit
                 val habit = habitDao.getHabitById(habitId)
-                _state.value = _state.value.copy(habit = habit, isLoading = false)
+                
+                // Load Logs
+                habitLogDao.getLogsForHabit(habitId).collect { logs ->
+                    val streak = calculateStreak(logs)
+                    val completions = logs.size
+                    val totalVal = logs.sumOf { it.value?.toDouble() ?: 0.0 }.toFloat()
+                    // Simple completion rate based on last 30 days? Or total possible days since creation?
+                    // Let's do last 30 days consistency
+                    val rate = calculateConsistency(logs)
+
+                    _state.value = _state.value.copy(
+                        habit = habit,
+                        logs = logs,
+                        currentStreak = streak,
+                        totalCompletions = completions,
+                        totalValue = totalVal,
+                        completionRate = rate,
+                        isLoading = false
+                    )
+                }
             } catch (e: Exception) {
                 _state.value = _state.value.copy(isLoading = false, isError = true)
             }
         }
+    }
+
+    private fun calculateStreak(logs: List<com.codesmithslabs.thedogtail.data.HabitLogEntity>): Int {
+        if (logs.isEmpty()) return 0
+        
+        val today = LocalDate.now().toEpochDay()
+        val logDates = logs.map { it.dateEpochDay }.toSet()
+        
+        var currentStreak = 0
+        var checkDate = today
+        
+        // If not done today, check yesterday to start streak (unless today is done)
+        if (!logDates.contains(checkDate)) {
+             checkDate--
+             if (!logDates.contains(checkDate)) return 0 // Streak broken or not started
+        }
+
+        while (logDates.contains(checkDate)) {
+            currentStreak++
+            checkDate--
+        }
+        return currentStreak
+    }
+
+    private fun calculateConsistency(logs: List<com.codesmithslabs.thedogtail.data.HabitLogEntity>): Int {
+        if (logs.isEmpty()) return 0
+        val today = LocalDate.now()
+        val thirtyDaysAgo = today.minusDays(29).toEpochDay()
+        val todayEpoch = today.toEpochDay()
+        
+        val logsInLast30Days = logs.count { it.dateEpochDay in thirtyDaysAgo..todayEpoch }
+        return ((logsInLast30Days / 30f) * 100).toInt()
     }
 
     fun handleEvent(event: HabitDetailContract.Event) {
@@ -53,7 +108,9 @@ class HabitDetailViewModel @Inject constructor(
                 }
             }
             HabitDetailContract.Event.OnEditClicked -> {
-                // TODO: Implement Edit
+                viewModelScope.launch { 
+                    _effect.send(HabitDetailContract.Effect.NavigateToEdit(habitId)) 
+                }
             }
         }
     }

@@ -2,7 +2,9 @@ package com.codesmithslabs.thedogtail.ui.screens.createhabit
 
 interface CreateHabitContract {
     data class State(
+        val habitId: Long? = null, // If not null, we are in edit mode
         val habitName: String = "",
+        val description: String = "",
         val habitIcon: String? = null,
         val habitType: HabitType = HabitType.NUMERIC,
         val target: String = "10",
@@ -24,6 +26,7 @@ interface CreateHabitContract {
 
     sealed class Event {
         data class OnNameChange(val name: String) : Event()
+        data class OnDescriptionChange(val description: String) : Event()
         data class OnTypeChange(val type: HabitType) : Event()
         data class OnTargetChange(val target: String) : Event()
         data class OnUnitNameChange(val unitName: String) : Event()

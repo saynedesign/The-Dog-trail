@@ -6,6 +6,7 @@ import com.codesmithslabs.thedogtail.data.HabitDao
 import com.codesmithslabs.thedogtail.data.UserDao
 import com.codesmithslabs.thedogtail.data.HabitLogDao
 import com.codesmithslabs.thedogtail.data.HabitLogEntity
+import com.codesmithslabs.thedogtail.data.HabitEntity
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -32,6 +33,7 @@ class HomeViewModel @Inject constructor(
     val effect = _effect.receiveAsFlow()
 
     private var logsCache: List<HabitLogEntity> = emptyList()
+    private var allHabitsCache: List<HabitEntity> = emptyList()
 
     init {
         loadUserData()
@@ -56,7 +58,8 @@ class HomeViewModel @Inject constructor(
     private fun loadHabits() {
         viewModelScope.launch {
             habitDao.getAllHabits().collect { habits ->
-                _state.value = _state.value.copy(habits = habits)
+                allHabitsCache = habits
+                updateHabitsForSelectedDate()
             }
         }
     }
@@ -65,18 +68,31 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             habitLogDao.getAllLogs().collect { logs ->
                 logsCache = logs
-                updateCompletedForSelectedDate()
+                updateHabitLogsForSelectedDate()
             }
         }
     }
 
-    private fun updateCompletedForSelectedDate() {
+    private fun updateHabitsForSelectedDate() {
+        val selectedDate = LocalDate.ofEpochDay(_state.value.selectedEpochDay)
+        // LocalDate.dayOfWeek.value returns 1 (Mon) to 7 (Sun)
+        val dayOfWeek = selectedDate.dayOfWeek.value 
+        
+        val filteredHabits = allHabitsCache.filter { habit ->
+             // Parse "1,2,3" string. If empty or null, assume everyday or handle gracefully.
+             // Based on HabitEntity default "1,2,3,4,5,6,7", it should be fine.
+             val scheduledDays = habit.selectedDays.split(",").mapNotNull { it.trim().toIntOrNull() }.toSet()
+             scheduledDays.contains(dayOfWeek)
+        }
+        _state.value = _state.value.copy(habits = filteredHabits)
+    }
+
+    private fun updateHabitLogsForSelectedDate() {
         val day = _state.value.selectedEpochDay
-        val completed = logsCache.asSequence()
+        val logsForDay = logsCache.asSequence()
             .filter { it.dateEpochDay == day }
-            .map { it.habitId }
-            .toSet()
-        _state.value = _state.value.copy(completedForSelectedDate = completed)
+            .associateBy { it.habitId }
+        _state.value = _state.value.copy(habitLogs = logsForDay)
     }
 
     private fun epochDayFor(fullDateString: String): Long {
@@ -102,13 +118,31 @@ class HomeViewModel @Inject constructor(
             is HomeContract.Event.OnDateSelected -> {
                 val epoch = epochDayFor(event.date)
                 _state.value = _state.value.copy(selectedDate = event.date, selectedEpochDay = epoch)
-                updateCompletedForSelectedDate()
+                updateHabitsForSelectedDate()
+                updateHabitLogsForSelectedDate()
             }
             is HomeContract.Event.OnToggleHabit -> {
                 toggleHabit(event.habitId, event.isDone)
             }
+            is HomeContract.Event.OnUpdateHabitValue -> {
+                updateHabitValue(event.habitId, event.newValue)
+            }
+            is HomeContract.Event.OnTimerClicked -> {
+                sendEffect(HomeContract.Effect.NavigateToTimer(event.habitId))
+            }
             is HomeContract.Event.OnProfileClicked -> {
                 sendEffect(HomeContract.Effect.NavigateToProfile)
+            }
+            is HomeContract.Event.OnEditHabitClicked -> {
+                sendEffect(HomeContract.Effect.NavigateToEditHabit(event.habitId))
+            }
+            is HomeContract.Event.OnDeleteHabitClicked -> {
+                viewModelScope.launch {
+                    val habit = habitDao.getHabitById(event.habitId)
+                    if (habit != null) {
+                        habitDao.deleteHabit(habit)
+                    }
+                }
             }
         }
     }
@@ -118,9 +152,26 @@ class HomeViewModel @Inject constructor(
             val day = _state.value.selectedEpochDay
             val existing = habitLogDao.getLogForDay(habitId, day)
             if (isDone && existing == null) {
-                habitLogDao.insertLog(HabitLogEntity(habitId = habitId, dateEpochDay = day))
+                habitLogDao.insertLog(HabitLogEntity(habitId = habitId, dateEpochDay = day, value = 1f))
             } else if (!isDone && existing != null) {
                 habitLogDao.deleteLog(existing)
+            }
+        }
+    }
+
+    private fun updateHabitValue(habitId: Long, newValue: Float) {
+        viewModelScope.launch {
+            val day = _state.value.selectedEpochDay
+            val existing = habitLogDao.getLogForDay(habitId, day)
+            if (existing != null) {
+                if (newValue <= 0 && existing.value != null && existing.value <= 0) {
+                     // Maybe delete if 0? For now just update
+                     habitLogDao.insertLog(existing.copy(value = newValue))
+                } else {
+                    habitLogDao.insertLog(existing.copy(value = newValue))
+                }
+            } else {
+                habitLogDao.insertLog(HabitLogEntity(habitId = habitId, dateEpochDay = day, value = newValue))
             }
         }
     }

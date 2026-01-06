@@ -18,6 +18,9 @@ interface HabitLogDao {
     @Query("SELECT * FROM habit_logs WHERE habitId = :habitId AND dateEpochDay = :dateEpochDay LIMIT 1")
     suspend fun getLogForDay(habitId: Long, dateEpochDay: Long): HabitLogEntity?
 
+    @Query("SELECT * FROM habit_logs WHERE habitId = :habitId ORDER BY dateEpochDay DESC")
+    fun getLogsForHabit(habitId: Long): Flow<List<HabitLogEntity>>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertLog(log: HabitLogEntity)
 

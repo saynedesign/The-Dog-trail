@@ -76,7 +76,19 @@ fun HabitOutlinedTextField(
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    singleLine: Boolean = true
+    singleLine: Boolean = true,
+    minLines: Int = 1,
+    enabled: Boolean = true,
+    colors: androidx.compose.material3.TextFieldColors = OutlinedTextFieldDefaults.colors(
+        focusedContainerColor = Color.White,
+        unfocusedContainerColor = Color.White,
+        disabledContainerColor = Color.White,
+        focusedBorderColor = BrandBlue,
+        unfocusedBorderColor = Color(0xFFE0E0E0),
+        cursorColor = BrandBlue,
+        focusedTextColor = BrandBlue,
+        unfocusedTextColor = BrandBlue
+    )
 ) {
     OutlinedTextField(
         value = value,
@@ -87,17 +99,10 @@ fun HabitOutlinedTextField(
         leadingIcon = leadingIcon,
         trailingIcon = trailingIcon,
         singleLine = singleLine,
+        minLines = minLines,
+        enabled = enabled,
         shape = RoundedCornerShape(16.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = Color.White,
-            unfocusedContainerColor = Color.White,
-            disabledContainerColor = Color.White,
-            focusedBorderColor = BrandBlue,
-            unfocusedBorderColor = Color(0xFFE0E0E0),
-            cursorColor = BrandBlue,
-            focusedTextColor = BrandBlue,
-            unfocusedTextColor = BrandBlue
-        ),
+        colors = colors,
         keyboardOptions = keyboardOptions
     )
 }

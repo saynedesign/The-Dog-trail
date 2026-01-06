@@ -31,6 +31,9 @@ import com.codesmithslabs.thedogtail.ui.screens.onboarding.OnboardingViewModel
 import com.codesmithslabs.thedogtail.ui.screens.profile.ProfileContract
 import com.codesmithslabs.thedogtail.ui.screens.profile.ProfileScreen
 import com.codesmithslabs.thedogtail.ui.screens.profile.ProfileViewModel
+import com.codesmithslabs.thedogtail.ui.screens.timer.TimerContract
+import com.codesmithslabs.thedogtail.ui.screens.timer.TimerScreen
+import com.codesmithslabs.thedogtail.ui.screens.timer.TimerViewModel
 import com.codesmithslabs.thedogtail.ui.screens.userinfo.UserInfoContract
 import com.codesmithslabs.thedogtail.ui.screens.userinfo.UserInfoScreen
 import com.codesmithslabs.thedogtail.ui.screens.userinfo.UserInfoViewModel
@@ -50,6 +53,15 @@ class MainActivity : ComponentActivity() {
                 val startDestination by mainViewModel.startDestination.collectAsState()
 
                 if (!isLoading) {
+                    // Handle notification click
+                    LaunchedEffect(Unit) {
+                        val habitId = intent.getLongExtra("habitId", -1L)
+                        if (habitId != -1L) {
+                            navController.navigate("habit_details/$habitId")
+                            intent.removeExtra("habitId")
+                        }
+                    }
+
                     NavHost(navController = navController, startDestination = startDestination) {
                         composable("onboarding") {
                             val viewModel = hiltViewModel<OnboardingViewModel>()
@@ -123,6 +135,12 @@ class MainActivity : ComponentActivity() {
                                         is HomeContract.Effect.NavigateToProfile -> {
                                             navController.navigate("profile")
                                         }
+                                        is HomeContract.Effect.NavigateToTimer -> {
+                                            navController.navigate("timer/${effect.habitId}")
+                                        }
+                                        is HomeContract.Effect.NavigateToEditHabit -> {
+                                            navController.navigate("create_habit?habitId=${effect.habitId}")
+                                        }
                                     }
                                 }
                             }
@@ -133,7 +151,13 @@ class MainActivity : ComponentActivity() {
                             )
                         }
                         
-                        composable("create_habit") {
+                        composable(
+                            "create_habit?habitId={habitId}",
+                            arguments = listOf(navArgument("habitId") {
+                                type = NavType.LongType
+                                defaultValue = -1L
+                            })
+                        ) {
                             val viewModel = hiltViewModel<CreateHabitViewModel>()
                             val state by viewModel.state.collectAsState()
 
@@ -177,6 +201,34 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable(
+                            "timer/{habitId}",
+                            arguments = listOf(navArgument("habitId") { type = NavType.LongType })
+                        ) { backStackEntry ->
+                            val viewModel = hiltViewModel<TimerViewModel>()
+                            val state by viewModel.state.collectAsState()
+                            val habitId = backStackEntry.arguments?.getLong("habitId") ?: 0L
+
+                            LaunchedEffect(habitId) {
+                                viewModel.handleEvent(TimerContract.Event.LoadHabit(habitId))
+                            }
+
+                            LaunchedEffect(Unit) {
+                                viewModel.effect.collect { effect ->
+                                    when (effect) {
+                                        is TimerContract.Effect.NavigateBack -> {
+                                            navController.popBackStack()
+                                        }
+                                    }
+                                }
+                            }
+
+                            TimerScreen(
+                                state = state,
+                                onEvent = viewModel::handleEvent
+                            )
+                        }
+
+                        composable(
                             "habit_details/{habitId}",
                             arguments = listOf(navArgument("habitId") { type = NavType.LongType })
                         ) {
@@ -190,7 +242,7 @@ class MainActivity : ComponentActivity() {
                                             navController.popBackStack()
                                         }
                                         is HabitDetailContract.Effect.NavigateToEdit -> {
-                                            // TODO
+                                            navController.navigate("create_habit?habitId=${effect.habitId}")
                                         }
                                     }
                                 }
