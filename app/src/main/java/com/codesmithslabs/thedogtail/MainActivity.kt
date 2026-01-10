@@ -1,6 +1,7 @@
 package com.codesmithslabs.thedogtail
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -19,6 +20,9 @@ import androidx.navigation.navArgument
 import com.codesmithslabs.thedogtail.ui.screens.createhabit.CreateHabitContract
 import com.codesmithslabs.thedogtail.ui.screens.createhabit.CreateHabitScreen
 import com.codesmithslabs.thedogtail.ui.screens.createhabit.CreateHabitViewModel
+import com.codesmithslabs.thedogtail.ui.screens.editprofile.EditProfileContract
+import com.codesmithslabs.thedogtail.ui.screens.editprofile.EditProfileScreen
+import com.codesmithslabs.thedogtail.ui.screens.editprofile.EditProfileViewModel
 import com.codesmithslabs.thedogtail.ui.screens.habitdetail.HabitDetailContract
 import com.codesmithslabs.thedogtail.ui.screens.habitdetail.HabitDetailScreen
 import com.codesmithslabs.thedogtail.ui.screens.habitdetail.HabitDetailViewModel
@@ -190,11 +194,41 @@ class MainActivity : ComponentActivity() {
                                         is ProfileContract.Effect.NavigateBack -> {
                                             navController.popBackStack()
                                         }
+
+                                        ProfileContract.Effect.NavigateToEditProfile -> {
+                                            navController.navigate("edit_profile")
+                                        }
+                                        is ProfileContract.Effect.ShowToast -> {
+                                            Toast.makeText(this@MainActivity, effect.message, Toast.LENGTH_SHORT).show()
+                                        }
                                     }
                                 }
                             }
 
                             ProfileScreen(
+                                state = state,
+                                onEvent = viewModel::handleEvent
+                            )
+                        }
+
+                        composable("edit_profile") {
+                            val viewModel = hiltViewModel<EditProfileViewModel>()
+                            val state by viewModel.state.collectAsState()
+
+                            LaunchedEffect(Unit) {
+                                viewModel.effect.collect { effect ->
+                                    when (effect) {
+                                        is EditProfileContract.Effect.NavigateBack -> {
+                                            navController.popBackStack()
+                                        }
+                                        is EditProfileContract.Effect.ShowToast -> {
+                                            Toast.makeText(this@MainActivity, effect.message, Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                }
+                            }
+
+                            EditProfileScreen(
                                 state = state,
                                 onEvent = viewModel::handleEvent
                             )

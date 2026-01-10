@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -43,13 +44,17 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SwipeToDismissBox
 import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -70,11 +75,50 @@ fun HomeScreen(
     onEvent: (HomeContract.Event) -> Unit
 ) {
     val view = LocalView.current
+    val haptic = LocalHapticFeedback.current
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as android.app.Activity).window
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
         }
+    }
+
+    if (state.showDeleteDialog) {
+        val habit = state.habits.find { it.id == state.selectedHabitId }
+        AlertDialog(
+            onDismissRequest = { onEvent(HomeContract.Event.OnDismissDialog) },
+            title = { Text("Delete Habit") },
+            text = { Text("Are you sure you want to delete '${habit?.title ?: "this habit"}'?") },
+            confirmButton = {
+                TextButton(onClick = { onEvent(HomeContract.Event.OnConfirmDelete) }) {
+                    Text("Delete", color = Color.Red)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { onEvent(HomeContract.Event.OnDismissDialog) }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (state.showEditDialog) {
+        val habit = state.habits.find { it.id == state.selectedHabitId }
+        AlertDialog(
+            onDismissRequest = { onEvent(HomeContract.Event.OnDismissDialog) },
+            title = { Text("Edit Habit") },
+            text = { Text("Do you want to edit '${habit?.title ?: "this habit"}'?") },
+            confirmButton = {
+                TextButton(onClick = { onEvent(HomeContract.Event.OnConfirmEdit) }) {
+                    Text("Edit")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { onEvent(HomeContract.Event.OnDismissDialog) }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -198,12 +242,18 @@ fun HomeScreen(
                             SwipeToDismissBoxValue.EndToStart -> {
                                 // Swipe Left -> Delete
                                 onEvent(HomeContract.Event.OnDeleteHabitClicked(habit.id))
-                                true // Dismiss and delete
+                                false // Dismiss and delete
                             }
                             SwipeToDismissBoxValue.Settled -> false
                         }
                     }
                 )
+
+                LaunchedEffect(dismissState.targetValue) {
+                    if (dismissState.targetValue != SwipeToDismissBoxValue.Settled) {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                    }
+                }
 
                 SwipeToDismissBox(
                     state = dismissState,

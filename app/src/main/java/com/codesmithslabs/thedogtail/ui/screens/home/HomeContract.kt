@@ -14,7 +14,10 @@ interface HomeContract {
         val selectedEpochDay: Long = LocalDate.now().toEpochDay(),
         val habits: List<HabitEntity> = emptyList(),
         val habitLogs: Map<Long, HabitLogEntity> = emptyMap(), // Map of HabitID to Log for selected date
-        val isLoading: Boolean = false
+        val isLoading: Boolean = false,
+        val showDeleteDialog: Boolean = false,
+        val showEditDialog: Boolean = false,
+        val selectedHabitId: Long? = null
     )
 
     sealed class Event {
@@ -27,6 +30,9 @@ interface HomeContract {
         data class OnTimerClicked(val habitId: Long) : Event()
         data class OnEditHabitClicked(val habitId: Long) : Event()
         data class OnDeleteHabitClicked(val habitId: Long) : Event()
+        data object OnDismissDialog : Event()
+        data object OnConfirmDelete : Event()
+        data object OnConfirmEdit : Event()
     }
 
     sealed class Effect {

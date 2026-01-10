@@ -134,15 +134,48 @@ class HomeViewModel @Inject constructor(
                 sendEffect(HomeContract.Effect.NavigateToProfile)
             }
             is HomeContract.Event.OnEditHabitClicked -> {
-                sendEffect(HomeContract.Effect.NavigateToEditHabit(event.habitId))
+                _state.value = _state.value.copy(
+                    showEditDialog = true,
+                    selectedHabitId = event.habitId
+                )
             }
             is HomeContract.Event.OnDeleteHabitClicked -> {
-                viewModelScope.launch {
-                    val habit = habitDao.getHabitById(event.habitId)
-                    if (habit != null) {
-                        habitDao.deleteHabit(habit)
+                _state.value = _state.value.copy(
+                    showDeleteDialog = true,
+                    selectedHabitId = event.habitId
+                )
+            }
+            is HomeContract.Event.OnDismissDialog -> {
+                _state.value = _state.value.copy(
+                    showDeleteDialog = false,
+                    showEditDialog = false,
+                    selectedHabitId = null
+                )
+            }
+            is HomeContract.Event.OnConfirmDelete -> {
+                val habitId = _state.value.selectedHabitId
+                if (habitId != null) {
+                    viewModelScope.launch {
+                        val habit = habitDao.getHabitById(habitId)
+                        if (habit != null) {
+                            habitDao.deleteHabit(habit)
+                        }
                     }
                 }
+                _state.value = _state.value.copy(
+                    showDeleteDialog = false,
+                    selectedHabitId = null
+                )
+            }
+            is HomeContract.Event.OnConfirmEdit -> {
+                val habitId = _state.value.selectedHabitId
+                if (habitId != null) {
+                    sendEffect(HomeContract.Effect.NavigateToEditHabit(habitId))
+                }
+                _state.value = _state.value.copy(
+                    showEditDialog = false,
+                    selectedHabitId = null
+                )
             }
         }
     }
