@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Person
@@ -59,10 +60,16 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import coil.compose.AsyncImage
 import com.codesmithslabs.thedogtail.data.HabitEntity
 import com.codesmithslabs.thedogtail.ui.components.HabitCard
 import com.codesmithslabs.thedogtail.ui.components.HomeHeader
+import com.codesmithslabs.thedogtail.ui.screens.mood.MoodStatsScreen
+import com.codesmithslabs.thedogtail.ui.screens.mood.MoodViewModel
+import com.codesmithslabs.thedogtail.ui.screens.mood.MoodContract
 import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
 import com.codesmithslabs.thedogtail.ui.theme.BrandSurface
 import com.codesmithslabs.thedogtail.ui.theme.TextPrimary
@@ -125,19 +132,21 @@ fun HomeScreen(
         modifier = Modifier.fillMaxSize(),
         containerColor = BrandSurface,
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { onEvent(HomeContract.Event.OnAddHabitClicked) },
-                containerColor = BrandBlue,
-                contentColor = Color.White,
-                shape = CircleShape,
-                elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 8.dp),
-                modifier = Modifier.size(64.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Add Habit",
-                    modifier = Modifier.size(32.dp)
-                )
+            if (state.currentTab == HomeContract.HomeTab.HABITS) {
+                FloatingActionButton(
+                    onClick = { onEvent(HomeContract.Event.OnAddHabitClicked) },
+                    containerColor = BrandBlue,
+                    contentColor = Color.White,
+                    shape = CircleShape,
+                    elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 8.dp),
+                    modifier = Modifier.size(64.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add Habit",
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
             }
         },
         floatingActionButtonPosition = FabPosition.Center,
@@ -149,71 +158,89 @@ fun HomeScreen(
                     .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
             ) {
                 HomeBottomNavigation(
-                    modifier = Modifier.align(Alignment.BottomCenter),
-                    onProfileClick = { onEvent(HomeContract.Event.OnProfileClicked) }
-                )
+                        currentTab = state.currentTab,
+                        modifier = Modifier.align(Alignment.BottomCenter),
+                        onHomeClick = { onEvent(HomeContract.Event.OnHomeClicked) },
+                        onProfileClick = { onEvent(HomeContract.Event.OnProfileClicked) },
+                        onMoodClick = { onEvent(HomeContract.Event.OnMoodClicked) }
+                    )
             }
         }
     ) { innerPadding ->
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(top = innerPadding.calculateTopPadding()) // Only top padding from scaffold
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp) // Reduced spacing
-        ) {
-            item {
-                HomeHeader(
-                    userName = state.userName,
-                    subtitle = "Let's make habits together!",
-                    profileImage = {
-                        if (state.userImageUri != null) {
-                            AsyncImage(
-                                model = state.userImageUri, // Use URI string directly
-                                contentDescription = "Profile Image",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
-                            Icon(
-                                imageVector = Icons.Default.Person,
-                                contentDescription = null,
-                                tint = BrandBlue
-                            )
-                        }
-                    },
-                    onNotificationClick = { /* TODO */ },
-                    modifier = Modifier.padding(horizontal = 0.dp)
+        if (state.currentTab == HomeContract.HomeTab.MOOD) {
+            val moodViewModel = hiltViewModel<MoodViewModel>()
+            val moodState by moodViewModel.state.collectAsState()
+            
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                MoodStatsScreen(
+                    state = moodState,
+                    onEvent = moodViewModel::handleEvent
                 )
             }
-
-
-            item {
-                CalendarStrip(
-                    selectedDate = state.selectedDate,
-                    onDateSelected = { onEvent(HomeContract.Event.OnDateSelected(it)) }
-                )
-            }
-
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Habits",
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = TextPrimary
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(top = innerPadding.calculateTopPadding()) // Only top padding from scaffold
+                    .padding(horizontal = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp) // Reduced spacing
+            ) {
+                item {
+                    HomeHeader(
+                        userName = state.userName,
+                        subtitle = "Let's make habits together!",
+                        profileImage = {
+                            if (state.userImageUri != null) {
+                                AsyncImage(
+                                    model = state.userImageUri, // Use URI string directly
+                                    contentDescription = "Profile Image",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Icon(
+                                    imageVector = Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = BrandBlue
+                                )
+                            }
+                        },
+                        onNotificationClick = { /* TODO */ },
+                        modifier = Modifier.padding(horizontal = 0.dp)
                     )
-                    
-                    // Simple + button
-                     Box(
-                        modifier = Modifier
-                            .size(32.dp)
-                            .background(BrandSurface, CircleShape)
-                            .clickable { onEvent(HomeContract.Event.OnAddHabitClicked) },
+                }
+    
+    
+                item {
+                    CalendarStrip(
+                        selectedDate = state.selectedDate,
+                        onDateSelected = { onEvent(HomeContract.Event.OnDateSelected(it)) }
+                    )
+                }
+    
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Habits",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                        
+                        // Simple + button
+                         Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .background(BrandSurface, CircleShape)
+                                .clickable { onEvent(HomeContract.Event.OnAddHabitClicked) },
                         contentAlignment = Alignment.Center
                     ) {
                          Icon(
@@ -388,11 +415,15 @@ fun HomeScreen(
         }
     }
 }
+}
 
 @Composable
 fun HomeBottomNavigation(
+    currentTab: HomeContract.HomeTab,
     modifier: Modifier = Modifier,
-    onProfileClick: () -> Unit = {}
+    onHomeClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
+    onMoodClick: () -> Unit = {}
 ) {
     Card(
         modifier = modifier
@@ -407,34 +438,44 @@ fun HomeBottomNavigation(
             horizontalArrangement = Arrangement.SpaceAround,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                imageVector = Icons.Default.Home,
-                contentDescription = "Home",
-                tint = BrandBlue,
-                modifier = Modifier.size(28.dp).clickable { /*TODO*/ }
-            )
-            Icon(
-                imageVector = Icons.Default.Explore,
-                contentDescription = "Explore",
-                tint = TextSecondary,
-                modifier = Modifier.size(28.dp).clickable { /*TODO*/ }
-            )
+            IconButton(onClick = onHomeClick) {
+                Icon(
+                    imageVector = Icons.Default.Home,
+                    contentDescription = "Home",
+                    tint = if (currentTab == HomeContract.HomeTab.HABITS) BrandBlue else TextSecondary,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+            
+            IconButton(onClick = onMoodClick) {
+                Icon(
+                    imageVector = Icons.Default.Face,
+                    contentDescription = "Mood",
+                    tint = if (currentTab == HomeContract.HomeTab.MOOD) BrandBlue else TextSecondary,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
             
             // Spacer for FAB
             Spacer(modifier = Modifier.size(48.dp))
 
-            Icon(
-                imageVector = Icons.Default.BarChart,
-                contentDescription = "Stats",
-                tint = TextSecondary,
-                modifier = Modifier.size(28.dp).clickable { /*TODO*/ }
-            )
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = "Profile",
-                tint = TextSecondary,
-                modifier = Modifier.size(28.dp).clickable { onProfileClick() }
-            )
+            IconButton(onClick = { /* TODO: Stats */ }) {
+                Icon(
+                    imageVector = Icons.Default.BarChart,
+                    contentDescription = "Stats",
+                    tint = TextSecondary,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+            
+            IconButton(onClick = onProfileClick) {
+                Icon(
+                    imageVector = Icons.Default.Person,
+                    contentDescription = "Profile",
+                    tint = TextSecondary,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
         }
     }
 }

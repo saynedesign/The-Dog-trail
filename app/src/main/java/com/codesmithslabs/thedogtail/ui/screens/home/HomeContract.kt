@@ -7,7 +7,12 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 interface HomeContract {
+    enum class HomeTab {
+        HABITS, MOOD
+    }
+
     data class State(
+        val currentTab: HomeTab = HomeTab.HABITS,
         val userName: String = "",
         val userImageUri: String? = null,
         val selectedDate: String = LocalDate.now().format(DateTimeFormatter.ofPattern("EEE d", Locale.getDefault())),
@@ -27,6 +32,8 @@ interface HomeContract {
         data class OnUpdateHabitValue(val habitId: Long, val newValue: Float) : Event()
         data class OnDateSelected(val date: String) : Event()
         data object OnProfileClicked : Event()
+        data object OnMoodClicked : Event()
+        data object OnHomeClicked : Event()
         data class OnTimerClicked(val habitId: Long) : Event()
         data class OnEditHabitClicked(val habitId: Long) : Event()
         data class OnDeleteHabitClicked(val habitId: Long) : Event()
@@ -40,6 +47,7 @@ interface HomeContract {
         data class NavigateToHabitDetails(val habitId: Long) : Effect()
         data class NavigateToEditHabit(val habitId: Long) : Effect()
         data object NavigateToProfile : Effect()
+        data object NavigateToMoodStats : Effect()
         data class NavigateToTimer(val habitId: Long) : Effect()
     }
 }

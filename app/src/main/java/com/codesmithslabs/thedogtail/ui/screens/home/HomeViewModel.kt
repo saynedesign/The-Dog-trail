@@ -133,6 +133,12 @@ class HomeViewModel @Inject constructor(
             is HomeContract.Event.OnProfileClicked -> {
                 sendEffect(HomeContract.Effect.NavigateToProfile)
             }
+            is HomeContract.Event.OnMoodClicked -> {
+                _state.value = _state.value.copy(currentTab = HomeContract.HomeTab.MOOD)
+            }
+            is HomeContract.Event.OnHomeClicked -> {
+                _state.value = _state.value.copy(currentTab = HomeContract.HomeTab.HABITS)
+            }
             is HomeContract.Event.OnEditHabitClicked -> {
                 _state.value = _state.value.copy(
                     showEditDialog = true,
