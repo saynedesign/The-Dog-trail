@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.codesmithslabs.thedogtail.data.HabitDao
 import com.codesmithslabs.thedogtail.data.HabitEntity
+import com.codesmithslabs.thedogtail.util.NotificationScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,8 +14,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-
-import com.codesmithslabs.thedogtail.util.NotificationScheduler
 
 @HiltViewModel
 class CreateHabitViewModel @Inject constructor(
@@ -46,13 +45,29 @@ class CreateHabitViewModel @Inject constructor(
                         habitId = habit.id,
                         habitName = habit.title,
                         description = habit.description,
-                        habitIcon = habit.icon,
+                        habitIcon = habit.icon.ifEmpty { "📝" },
                         habitType = try {
                             CreateHabitContract.HabitType.valueOf(habit.type)
                         } catch (e: Exception) {
-                            CreateHabitContract.HabitType.NUMERIC
+                            CreateHabitContract.HabitType.YES_NO
                         },
-                        target = if (habit.type == "TIMER") habit.targetValue.toLong().toString() else habit.targetValue.toInt().toString(), // Handle float/int conversion
+                        habitColor = habit.color,
+                        isOneTime = habit.isOneTime,
+                        frequency = try {
+                            CreateHabitContract.Frequency.valueOf(habit.frequency)
+                        } catch (e: Exception) {
+                            CreateHabitContract.Frequency.DAILY
+                        },
+                        timeOfDay = try {
+                            CreateHabitContract.TimeOfDay.valueOf(habit.timeOfDay.uppercase())
+                        } catch (e: Exception) {
+                            CreateHabitContract.TimeOfDay.ANYTIME
+                        },
+                        scheduledDate = habit.scheduledDate ?: System.currentTimeMillis(),
+                        endDate = habit.endDate,
+                        endDateEnabled = habit.endDate != null,
+                        
+                        target = if (habit.type == "TIMER") habit.targetValue.toLong().toString() else habit.targetValue.toInt().toString(),
                         unitName = habit.unit,
                         isAtLeast = habit.isAtLeast,
                         reminderEnabled = habit.reminderEnabled,
@@ -80,18 +95,42 @@ class CreateHabitViewModel @Inject constructor(
             is CreateHabitContract.Event.OnTypeChange -> {
                 _state.value = _state.value.copy(habitType = event.type)
             }
-            is CreateHabitContract.Event.OnTargetChange -> {
-                _state.value = _state.value.copy(target = event.target)
+            
+            // New Events
+            is CreateHabitContract.Event.OnToggleOneTime -> {
+                _state.value = _state.value.copy(isOneTime = event.isOneTime)
             }
-            is CreateHabitContract.Event.OnUnitNameChange -> {
-                _state.value = _state.value.copy(unitName = event.unitName)
+            is CreateHabitContract.Event.OnColorChange -> {
+                _state.value = _state.value.copy(habitColor = event.color)
             }
-            is CreateHabitContract.Event.OnGoalTypeChange -> {
-                _state.value = _state.value.copy(isAtLeast = event.isAtLeast)
+            is CreateHabitContract.Event.OnIconChange -> {
+                _state.value = _state.value.copy(habitIcon = event.icon)
             }
-            is CreateHabitContract.Event.OnToggleAdvancedOptions -> {
-                _state.value = _state.value.copy(isAdvancedOptionsExpanded = !_state.value.isAdvancedOptionsExpanded)
+            is CreateHabitContract.Event.OnFrequencyChange -> {
+                _state.value = _state.value.copy(frequency = event.frequency)
+                // Auto-select days based on frequency if needed
+                if (event.frequency == CreateHabitContract.Frequency.DAILY) {
+                    _state.value = _state.value.copy(selectedDays = setOf(1, 2, 3, 4, 5, 6, 7))
+                }
             }
+            is CreateHabitContract.Event.OnTimeOfDayChange -> {
+                _state.value = _state.value.copy(timeOfDay = event.timeOfDay)
+            }
+            is CreateHabitContract.Event.OnDateChange -> {
+                _state.value = _state.value.copy(scheduledDate = event.date)
+            }
+            is CreateHabitContract.Event.OnEndDateToggle -> {
+                _state.value = _state.value.copy(endDateEnabled = event.enabled)
+                if (!event.enabled) {
+                    _state.value = _state.value.copy(endDate = null)
+                } else if (_state.value.endDate == null) {
+                    _state.value = _state.value.copy(endDate = System.currentTimeMillis())
+                }
+            }
+            is CreateHabitContract.Event.OnEndDateChange -> {
+                _state.value = _state.value.copy(endDate = event.date)
+            }
+            
             is CreateHabitContract.Event.OnReminderToggle -> {
                 _state.value = _state.value.copy(reminderEnabled = event.enabled)
             }
@@ -109,6 +148,9 @@ class CreateHabitViewModel @Inject constructor(
                 }
                 _state.value = _state.value.copy(selectedDays = currentDays)
             }
+            is CreateHabitContract.Event.OnToggleIconPicker -> {
+                _state.value = _state.value.copy(showIconPicker = event.show)
+            }
             is CreateHabitContract.Event.OnSaveClicked -> {
                 saveHabit()
             }
@@ -123,7 +165,7 @@ class CreateHabitViewModel @Inject constructor(
     private fun saveHabit() {
         val currentState = _state.value
         if (currentState.habitName.isBlank()) {
-            // TODO: Show error
+            // TODO: Show error via Effect
             return
         }
 
@@ -135,63 +177,70 @@ class CreateHabitViewModel @Inject constructor(
                     title = currentState.habitName,
                     description = currentState.description,
                     type = currentState.habitType.name,
-                    targetValue = currentState.target.toFloatOrNull() ?: 0f,
+                    targetValue = currentState.target.toFloatOrNull() ?: 1f,
                     unit = currentState.unitName,
                     isAtLeast = currentState.isAtLeast,
-                    // Default values for now
-                    icon = currentState.habitIcon ?: "",
-                    color = 0xFF4B68FF, // BrandBlue
+                    
+                    icon = currentState.habitIcon,
+                    color = currentState.habitColor,
+                    
+                    // New Fields
+                    isOneTime = currentState.isOneTime,
+                    frequency = currentState.frequency.name,
+                    timeOfDay = currentState.timeOfDay.name,
+                    scheduledDate = if (currentState.isOneTime) currentState.scheduledDate else null,
+                    endDate = if (currentState.endDateEnabled) currentState.endDate else null,
+                    
                     reminderEnabled = currentState.reminderEnabled,
                     reminderTime = currentState.reminderTime,
                     selectedDays = currentState.selectedDays.sorted().joinToString(","),
-                    createdTimestamp = System.currentTimeMillis() // Only used for new habits
+                    createdTimestamp = System.currentTimeMillis()
                 )
                 
                 if (currentState.habitId != null) {
+                    // Update existing
                     val existingHabit = habitDao.getHabitById(currentState.habitId)
                     if (existingHabit != null) {
-                        val updatedHabit = existingHabit.copy(
-                            title = currentState.habitName,
-                            description = currentState.description,
-                            type = currentState.habitType.name,
-                            targetValue = currentState.target.toFloatOrNull() ?: 0f,
-                            unit = currentState.unitName,
-                            isAtLeast = currentState.isAtLeast,
-                            icon = currentState.habitIcon ?: existingHabit.icon,
-                            reminderEnabled = currentState.reminderEnabled,
-                            reminderTime = currentState.reminderTime,
-                            selectedDays = currentState.selectedDays.sorted().joinToString(",")
+                        // Merge fields if necessary, but here we overwrite mostly
+                        val updatedHabit = habit.copy(
+                            createdTimestamp = existingHabit.createdTimestamp, // Preserve creation time
+                            isCompletedToday = existingHabit.isCompletedToday // Preserve status
                         )
                         habitDao.updateHabit(updatedHabit)
-                        
-                        // Re-schedule reminder if updated
-                        if (currentState.reminderEnabled) {
-                            notificationScheduler.scheduleReminder(
-                                habitId = currentState.habitId,
-                                habitName = currentState.habitName,
-                                time = currentState.reminderTime,
-                                days = currentState.selectedDays
-                            )
-                        }
+                        scheduleNotification(currentState, currentState.habitId)
                     }
                 } else {
+                    // Insert new
                     val habitId = habitDao.insertHabit(habit)
-                    
-                    if (currentState.reminderEnabled) {
-                        notificationScheduler.scheduleReminder(
-                            habitId = habitId,
-                            habitName = currentState.habitName,
-                            time = currentState.reminderTime,
-                            days = currentState.selectedDays
-                        )
-                    }
+                    scheduleNotification(currentState, habitId)
                 }
                 
                 _effect.send(CreateHabitContract.Effect.NavigateBack)
             } catch (e: Exception) {
                 _state.value = currentState.copy(isLoading = false, isError = true)
-                // _effect.send(CreateHabitContract.Effect.ShowToast("Error saving habit"))
             }
+        }
+    }
+    
+    private fun scheduleNotification(state: CreateHabitContract.State, habitId: Long) {
+        if (state.reminderEnabled) {
+            if (state.isOneTime) {
+                notificationScheduler.scheduleOneTimeReminder(
+                    habitId = habitId,
+                    habitName = state.habitName,
+                    scheduledDate = state.scheduledDate,
+                    time = state.reminderTime
+                )
+            } else {
+                notificationScheduler.scheduleReminder(
+                    habitId = habitId,
+                    habitName = state.habitName,
+                    time = state.reminderTime,
+                    days = state.selectedDays
+                )
+            }
+        } else {
+            notificationScheduler.cancelReminder(habitId)
         }
     }
 }

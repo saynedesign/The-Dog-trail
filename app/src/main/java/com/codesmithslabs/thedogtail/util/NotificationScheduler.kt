@@ -62,11 +62,53 @@ class NotificationScheduler @Inject constructor(
             }
         }
     }
+
+    fun scheduleOneTimeReminder(habitId: Long, habitName: String, scheduledDate: Long, time: String) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val (hour, minute) = time.split(":").map { it.toInt() }
+
+        val calendar = Calendar.getInstance().apply {
+            timeInMillis = scheduledDate
+            set(Calendar.HOUR_OF_DAY, hour)
+            set(Calendar.MINUTE, minute)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+
+        if (calendar.timeInMillis <= System.currentTimeMillis()) {
+            return // Don't schedule for the past
+        }
+
+        val intent = Intent(context, HabitReminderReceiver::class.java).apply {
+            putExtra("habitName", habitName)
+            putExtra("habitId", habitId)
+        }
+
+        // Unique RequestCode: habitId * 100 (0 for one-time)
+        val requestCode = (habitId * 100).toInt()
+
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            requestCode,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        try {
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                calendar.timeInMillis,
+                pendingIntent
+            )
+        } catch (e: SecurityException) {
+            e.printStackTrace()
+        }
+    }
     
     fun cancelReminder(habitId: Long) {
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        // Cancel for all possible days
-        for (dayOfWeek in 1..7) {
+        // Cancel for all possible days (1..7) and the one-time slot (0)
+        for (dayOfWeek in 0..7) {
              val intent = Intent(context, HabitReminderReceiver::class.java)
              val requestCode = (habitId * 100 + dayOfWeek).toInt()
              val pendingIntent = PendingIntent.getBroadcast(

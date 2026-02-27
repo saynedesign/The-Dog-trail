@@ -6,38 +6,39 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.codesmithslabs.thedogtail.ui.components.HabitOutlinedTextField
 import com.codesmithslabs.thedogtail.ui.theme.BrandBackground
 import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
-import com.codesmithslabs.thedogtail.ui.theme.BrandPurple
-import com.codesmithslabs.thedogtail.ui.theme.BrandSurface
 import com.codesmithslabs.thedogtail.ui.theme.TextPrimary
 import com.codesmithslabs.thedogtail.ui.theme.TextSecondary
+import java.text.SimpleDateFormat
+import java.util.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateHabitScreen(
     state: CreateHabitContract.State,
@@ -50,7 +51,7 @@ fun CreateHabitScreen(
                 onSave = { onEvent(CreateHabitContract.Event.OnSaveClicked) }
             )
         },
-        containerColor = BrandBackground
+        containerColor = Color.White // Design has white background
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -60,299 +61,429 @@ fun CreateHabitScreen(
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             item {
-                Text(
-                    text = "WHAT DO YOU WANT TO DO?",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TextSecondary,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(top = 16.dp)
+                // Toggle: Regular Habit / One-Time Task
+                HabitTypeToggle(
+                    isOneTime = state.isOneTime,
+                    onToggle = { onEvent(CreateHabitContract.Event.OnToggleOneTime(it)) }
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                // Name Input
-                Card(
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        HabitOutlinedTextField(
-                            value = state.habitName,
-                            onValueChange = { onEvent(CreateHabitContract.Event.OnNameChange(it)) },
-                            placeholder = "Enter habit name",
-                            modifier = Modifier.weight(1f),
-                            singleLine = true
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        // Icon Picker Placeholder
-                        Box(
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(BrandBlue.copy(alpha = 0.1f))
-                                .clickable { /* TODO: Open Icon Picker */ },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Book, // Default/Placeholder
-                                contentDescription = "Icon",
-                                tint = BrandBlue
-                            )
-                        }
-                    }
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // Description / My Why Input
-                Card(
-                    shape = RoundedCornerShape(16.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = "MY WHY (Optional)",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = TextSecondary,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        HabitOutlinedTextField(
-                            value = state.description,
-                            onValueChange = { onEvent(CreateHabitContract.Event.OnDescriptionChange(it)) },
-                            placeholder = "Why do you want to build this habit?",
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = false,
-                            minLines = 3
-                        )
-                    }
-                }
             }
 
             item {
+                // Name Input
                 Text(
-                    text = "HOW TO MEASURE IT?",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TextSecondary,
+                    text = if (state.isOneTime) "Task Name" else "Habit Name",
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                TypeSelector(
-                    selectedType = state.habitType,
-                    onTypeSelect = { onEvent(CreateHabitContract.Event.OnTypeChange(it)) }
+                HabitOutlinedTextField(
+                    value = state.habitName,
+                    onValueChange = { onEvent(CreateHabitContract.Event.OnNameChange(it)) },
+                    placeholder = if (state.isOneTime) "Task Name" else "Habit Name",
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
                 )
             }
 
-            if (state.habitType == CreateHabitContract.HabitType.NUMERIC) {
+            item {
+                // Icon Picker
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Icon",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    TextButton(onClick = { onEvent(CreateHabitContract.Event.OnToggleIconPicker(true)) }) {
+                        Text("View All", color = BrandBlue)
+                        Icon(Icons.Default.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))
+                    }
+                }
+                IconPicker(
+                    selectedIcon = state.habitIcon,
+                    onIconSelect = { onEvent(CreateHabitContract.Event.OnIconChange(it)) }
+                )
+            }
+
+            item {
+                // Color Picker
+                Text(
+                    text = "Color",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                ColorPicker(
+                    selectedColor = state.habitColor,
+                    onColorSelect = { onEvent(CreateHabitContract.Event.OnColorChange(it)) }
+                )
+            }
+
+            if (!state.isOneTime) {
                 item {
-                    GoalSettings(
-                        target = state.target,
-                        unitName = state.unitName,
-                        isAtLeast = state.isAtLeast,
-                        onTargetChange = { onEvent(CreateHabitContract.Event.OnTargetChange(it)) },
-                        onUnitNameChange = { onEvent(CreateHabitContract.Event.OnUnitNameChange(it)) },
-                        onGoalTypeChange = { onEvent(CreateHabitContract.Event.OnGoalTypeChange(it)) }
+                    // Regular Habit: Repeat Frequency
+                    Text(
+                        text = "Repeat",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    FrequencySelector(
+                        selectedFrequency = state.frequency,
+                        onFrequencySelect = { onEvent(CreateHabitContract.Event.OnFrequencyChange(it)) }
                     )
                 }
-            } else if (state.habitType == CreateHabitContract.HabitType.TIMER) {
+
                 item {
-                    TimerSettings(
-                        duration = state.target,
-                        onDurationChange = { onEvent(CreateHabitContract.Event.OnTargetChange(it)) }
+                    // Regular Habit: Days Selection
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "On these day:",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("All day", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Checkbox(
+                                checked = state.selectedDays.size == 7,
+                                onCheckedChange = { isChecked ->
+                                    if (isChecked) {
+                                        // Select all
+                                        (1..7).forEach { onEvent(CreateHabitContract.Event.OnDayToggle(it)) }
+                                    } else {
+                                        // Keep at least one, maybe reset to today? Or do nothing as user can toggle individual
+                                    }
+                                },
+                                colors = CheckboxDefaults.colors(checkedColor = BrandBlue)
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    DaySelector(
+                        selectedDays = state.selectedDays,
+                        onDayToggle = { onEvent(CreateHabitContract.Event.OnDayToggle(it)) }
+                    )
+                }
+            } else {
+                item {
+                    // One-Time Task: Date Picker
+                    Text(
+                        text = "When",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    DatePickerRow(
+                        date = state.scheduledDate,
+                        onDateChange = { onEvent(CreateHabitContract.Event.OnDateChange(it)) }
                     )
                 }
             }
 
             item {
-                 CommitmentCard(state)
+                // Do it at (Time of Day)
+                Text(
+                    text = "Do it at:",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+                TimeOfDaySelector(
+                    selectedTime = state.timeOfDay,
+                    onTimeSelect = { onEvent(CreateHabitContract.Event.OnTimeOfDayChange(it)) }
+                )
+            }
+
+            if (!state.isOneTime) {
+                item {
+                    // End Habit On
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "End Habit on",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Switch(
+                            checked = state.endDateEnabled,
+                            onCheckedChange = { onEvent(CreateHabitContract.Event.OnEndDateToggle(it)) },
+                            colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = BrandBlue)
+                        )
+                    }
+                    if (state.endDateEnabled && state.endDate != null) {
+                         Spacer(modifier = Modifier.height(8.dp))
+                         DatePickerRow(
+                            date = state.endDate,
+                            onDateChange = { onEvent(CreateHabitContract.Event.OnEndDateChange(it)) }
+                        )
+                    }
+                }
+            }
+
+            item {
+                // Set Reminder
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Set Reminder",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Switch(
+                        checked = state.reminderEnabled,
+                        onCheckedChange = { onEvent(CreateHabitContract.Event.OnReminderToggle(it)) },
+                        colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = BrandBlue)
+                    )
+                }
+                
+                if (state.reminderEnabled) {
+                     Spacer(modifier = Modifier.height(8.dp))
+                     ReminderTimePicker(
+                         time = state.reminderTime,
+                         onTimeChange = { onEvent(CreateHabitContract.Event.OnReminderTimeChange(it)) }
+                     )
+                }
             }
             
-             item {
-                 AdvancedOptionsCard(
-                     reminderEnabled = state.reminderEnabled,
-                     reminderTime = state.reminderTime,
-                     selectedDays = state.selectedDays,
-                     onReminderToggle = { onEvent(CreateHabitContract.Event.OnReminderToggle(it)) },
-                     onReminderTimeChange = { onEvent(CreateHabitContract.Event.OnReminderTimeChange(it)) },
-                     onDayToggle = { onEvent(CreateHabitContract.Event.OnDayToggle(it)) }
-                 )
-             }
-             
-             item {
-                 Spacer(modifier = Modifier.height(32.dp))
-             }
+            item {
+                Spacer(modifier = Modifier.height(32.dp))
+                Button(
+                    onClick = { onEvent(CreateHabitContract.Event.OnSaveClicked) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    shape = RoundedCornerShape(28.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = BrandBlue)
+                ) {
+                    Text("Save", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                }
+                Spacer(modifier = Modifier.height(32.dp))
+            }
+        }
+        
+        if (state.showIconPicker) {
+            AllIconsSheet(
+                selectedIcon = state.habitIcon,
+                onIconSelect = { 
+                    onEvent(CreateHabitContract.Event.OnIconChange(it))
+                    onEvent(CreateHabitContract.Event.OnToggleIconPicker(false))
+                },
+                onDismiss = { onEvent(CreateHabitContract.Event.OnToggleIconPicker(false)) }
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AllIconsSheet(
+    selectedIcon: String,
+    onIconSelect: (String) -> Unit,
+    onDismiss: () -> Unit
+) {
+    val allIcons = listOf(
+        "📝", "💧", "🏃", "🧘", "📚", "💊", "🥦", "🍎", "🥑", "🥕",
+        "🏋️", "🤸", "🚴", "🏊", "🧗", "⛹️", "🏌️", "🏇", "🏄", "🚣",
+        "🛌", "🚿", "🧹", "🧺", "🧼", "🧽", "🧴", "🪥", "🦷", "💆",
+        "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🐻", "🐼", "🐨", "🐯",
+        "🦁", "🐮", "🐷", "🐸", "🐵", "🐔", "🐧", "🐦", "🐤", "🐣",
+        "🚗", "🚕", "🚙", "🚌", "🚎", "🏎️", "🚓", "🚑", "🚒", "🚐",
+        "💻", "🖥️", "🖨️", "🖱️", "🖲️", "🕹️", "🗜️", "💽", "💾", "💿",
+        "📕", "📖", "📗", "📘", "📙", "📚", "📓", "📒", "📃", "📜",
+        "🎨", "🎬", "🎤", "🎧", "🎼", "🎹", "🥁", "🎷", "🎺", "🎸",
+        "⚽", "🏀", "🏈", "⚾", "🥎", "🎾", "🏐", "🏉", "🥏", "🎱",
+        "💰", "💴", "💵", "💶", "💷", "💸", "💳", "🧾", "💹", "💱"
+    )
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        containerColor = Color.White
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 32.dp)
+        ) {
+            Text(
+                text = "Select Icon",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+            
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(16.dp),
+                modifier = Modifier.heightIn(max = 400.dp)
+            ) {
+                val chunkedIcons = allIcons.chunked(5)
+                items(chunkedIcons) { rowIcons ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        rowIcons.forEach { icon ->
+                            val isSelected = icon == selectedIcon
+                            Box(
+                                modifier = Modifier
+                                    .size(56.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(if (isSelected) BrandBlue.copy(alpha = 0.1f) else Color.White)
+                                    .border(
+                                        width = if (isSelected) 2.dp else 1.dp,
+                                        color = if (isSelected) BrandBlue else Color(0xFFEEEEEE),
+                                        shape = RoundedCornerShape(16.dp)
+                                    )
+                                    .clickable { onIconSelect(icon) },
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(text = icon, fontSize = 24.sp)
+                            }
+                        }
+                        // Fill remaining space
+                        repeat(5 - rowIcons.size) {
+                            Spacer(modifier = Modifier.size(56.dp))
+                        }
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
-fun TimerSettings(
-    duration: String,
-    onDurationChange: (String) -> Unit
+fun HabitTypeToggle(
+    isOneTime: Boolean,
+    onToggle: (Boolean) -> Unit
 ) {
-    Card(
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(48.dp)
+            .background(Color(0xFFF5F5F5), RoundedCornerShape(12.dp))
+            .padding(4.dp)
     ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Timer, contentDescription = null, tint = BrandBlue)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Timer Goal",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("DURATION (MINUTES)", style = MaterialTheme.typography.labelSmall, color = TextSecondary, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(8.dp))
-            HabitOutlinedTextField(
-                value = duration,
-                onValueChange = onDurationChange,
-                placeholder = "25",
-                singleLine = true,
-                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .clip(RoundedCornerShape(8.dp))
+                .background(if (!isOneTime) BrandBlue else Color.Transparent)
+                .clickable { onToggle(false) },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "Regular Habit",
+                color = if (!isOneTime) Color.White else TextPrimary,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .clip(RoundedCornerShape(8.dp))
+                .background(if (isOneTime) BrandBlue else Color.Transparent)
+                .clickable { onToggle(true) },
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "One-Time Task",
+                color = if (isOneTime) Color.White else TextPrimary,
+                fontWeight = FontWeight.SemiBold
             )
         }
     }
 }
 
 @Composable
-fun AdvancedOptionsCard(
-    reminderEnabled: Boolean,
-    reminderTime: String,
-    selectedDays: Set<Int>,
-    onReminderToggle: (Boolean) -> Unit,
-    onReminderTimeChange: (String) -> Unit,
-    onDayToggle: (Int) -> Unit
+fun IconPicker(
+    selectedIcon: String,
+    onIconSelect: (String) -> Unit
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
-
-    val permissionLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
-        contract = androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            onReminderToggle(true)
+    val icons = listOf("🏈", "🏆", "🎖️", "🏀", "⛸️", "📝", "💧", "🏃", "🧘", "📚", "💊", "🥦")
+    
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        contentPadding = PaddingValues(vertical = 8.dp)
+    ) {
+        items(icons) { icon ->
+            val isSelected = icon == selectedIcon
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .border(
+                        width = if (isSelected) 2.dp else 1.dp,
+                        color = if (isSelected) BrandBlue else Color(0xFFEEEEEE),
+                        shape = RoundedCornerShape(16.dp)
+                    )
+                    .clip(RoundedCornerShape(16.dp))
+                    .clickable { onIconSelect(icon) }
+                    .background(if (isSelected) BrandBlue.copy(alpha = 0.1f) else Color.White),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(text = icon, fontSize = 24.sp)
+            }
         }
     }
+}
 
-    val calendar = java.util.Calendar.getInstance()
-    // Parse current reminderTime to set initial picker values if possible
-    val timeParts = reminderTime.split(":")
-    val initialHour = timeParts.getOrNull(0)?.toIntOrNull() ?: 8
-    val initialMinute = timeParts.getOrNull(1)?.toIntOrNull() ?: 0
-
-    val timePickerDialog = android.app.TimePickerDialog(
-        context,
-        { _, hourOfDay, minute ->
-            val formattedTime = String.format("%02d:%02d", hourOfDay, minute)
-            onReminderTimeChange(formattedTime)
-        },
-        initialHour,
-        initialMinute,
-        true // is24HourView
+@Composable
+fun ColorPicker(
+    selectedColor: Long,
+    onColorSelect: (Long) -> Unit
+) {
+    val colors = listOf(
+        0xFFFFF9C4, 0xFFFFCC80, 0xFFBCAAA4, 0xFFA1887F, 0xFFFF8A80,
+        0xFFFFAB91, 0xFFF48FB1, 0xFFF8BBD0, 0xFFCE93D8, 0xFFB39DDB,
+        0xFF90CAF9, 0xFF80CBC4, 0xFF80DEEA, 0xFFA5D6A7, 0xFFC0CA33
     )
-
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(modifier = Modifier.padding(24.dp)) {
-            // Days Section (Always Visible)
-            Text("FREQUENCY", style = MaterialTheme.typography.labelSmall, color = TextSecondary, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(16.dp))
+    
+    // Simple FlowRow replacement using nested Rows since FlowRow is experimental/newer
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        val rows = colors.chunked(5)
+        for (rowColors in rows) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                val days = listOf("M", "T", "W", "T", "F", "S", "S")
-                days.forEachIndexed { index, dayLabel ->
-                    val dayValue = index + 1
-                    val isSelected = selectedDays.contains(dayValue)
+                for (color in rowColors) {
+                    val isSelected = selectedColor == color
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
+                            .size(48.dp)
                             .clip(CircleShape)
-                            .background(if (isSelected) BrandBlue else BrandBackground)
-                            .clickable { onDayToggle(dayValue) },
+                            .background(Color(color))
+                            .clickable { onColorSelect(color) },
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = dayLabel,
-                            color = if (isSelected) Color.White else TextSecondary,
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.labelMedium
-                        )
+                        if (isSelected) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = null,
+                                tint = Color.White
+                            )
+                        }
                     }
                 }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-            Divider(color = BrandBackground)
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Reminder Section
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Notifications, contentDescription = null, tint = BrandBlue)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Reminders", fontWeight = FontWeight.SemiBold)
-                }
-                Switch(
-                    checked = reminderEnabled,
-                    onCheckedChange = { isChecked ->
-                        if (isChecked) {
-                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                                if (androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.POST_NOTIFICATIONS) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-                                    onReminderToggle(true)
-                                } else {
-                                    permissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
-                                }
-                            } else {
-                                onReminderToggle(true)
-                            }
-                        } else {
-                            onReminderToggle(false)
-                        }
-                    },
-                    colors = SwitchDefaults.colors(checkedThumbColor = BrandBlue, checkedTrackColor = BrandBlue.copy(alpha = 0.2f))
-                )
-            }
-            
-            if (reminderEnabled) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text("REMINDER TIME", style = MaterialTheme.typography.labelSmall, color = TextSecondary, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                Box(modifier = Modifier.clickable { timePickerDialog.show() }) {
-                    HabitOutlinedTextField(
-                        value = reminderTime,
-                        onValueChange = {}, // Read-only via text input, changed via picker
-                        placeholder = "08:00",
-                        singleLine = true,
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = false, // Disable direct text input to force picker
-                        colors = OutlinedTextFieldDefaults.colors(
-                            disabledTextColor = TextPrimary,
-                            disabledBorderColor = BrandBackground,
-                            disabledLabelColor = TextSecondary,
-                            disabledPlaceholderColor = TextSecondary
-                        )
-                    )
-                    // Overlay to capture clicks if enabled=false blocks clicks
-                    Box(modifier = Modifier.matchParentSize().clickable { timePickerDialog.show() })
+                // Fill remaining space if row is not full
+                repeat(5 - rowColors.size) {
+                    Spacer(modifier = Modifier.size(48.dp))
                 }
             }
         }
@@ -360,11 +491,188 @@ fun AdvancedOptionsCard(
 }
 
 @Composable
+fun FrequencySelector(
+    selectedFrequency: CreateHabitContract.Frequency,
+    onFrequencySelect: (CreateHabitContract.Frequency) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        CreateHabitContract.Frequency.entries.forEach { frequency ->
+            val isSelected = frequency == selectedFrequency
+            Button(
+                onClick = { onFrequencySelect(frequency) },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isSelected) BrandBlue else Color.White,
+                    contentColor = if (isSelected) Color.White else TextPrimary
+                ),
+                border = if (!isSelected) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEEEEEE)) else null,
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = frequency.name.lowercase().replaceFirstChar { it.uppercase() },
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun DaySelector(
+    selectedDays: Set<Int>,
+    onDayToggle: (Int) -> Unit
+) {
+    val days = listOf("S", "M", "T", "W", "T", "F", "S") // Starting Sunday? Or Mon?
+    // HabitEntity uses 1=Mon, 7=Sun generally, but Calendar uses 1=Sun.
+    // Let's assume standard UI S M T W T F S usually means Sun -> Sat.
+    // So S=7 (Sun) or 1? Let's map indices 0..6 to days.
+    // If we assume 1=Mon, then S(Sun)=7, S(Sat)=6.
+    // Order in UI: S, M, T, W, T, F, S -> Sun, Mon, Tue, Wed, Thu, Fri, Sat
+    // Values: 7, 1, 2, 3, 4, 5, 6
+    
+    val dayValues = listOf(7, 1, 2, 3, 4, 5, 6)
+    
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        days.forEachIndexed { index, label ->
+            val dayValue = dayValues[index]
+            val isSelected = selectedDays.contains(dayValue)
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(if (isSelected) BrandBlue else Color(0xFFF5F5F5))
+                    .clickable { onDayToggle(dayValue) },
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = label,
+                    color = if (isSelected) Color.White else TextSecondary,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun DatePickerRow(
+    date: Long,
+    onDateChange: (Long) -> Unit
+) {
+    val context = LocalContext.current
+    val calendar = Calendar.getInstance()
+    calendar.timeInMillis = date
+    
+    val datePickerDialog = android.app.DatePickerDialog(
+        context,
+        { _, year, month, dayOfMonth ->
+            calendar.set(year, month, dayOfMonth)
+            onDateChange(calendar.timeInMillis)
+        },
+        calendar.get(Calendar.YEAR),
+        calendar.get(Calendar.MONTH),
+        calendar.get(Calendar.DAY_OF_MONTH)
+    )
+
+    val dateFormat = SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.getDefault())
+    val dateString = dateFormat.format(Date(date))
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(56.dp)
+            .background(Color(0xFFF9F9F9), RoundedCornerShape(12.dp))
+            .clickable { datePickerDialog.show() }
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Default.CalendarToday, contentDescription = null, tint = BrandBlue, modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(text = dateString, color = TextPrimary)
+        }
+        Icon(Icons.Default.Edit, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(16.dp))
+    }
+}
+
+@Composable
+fun TimeOfDaySelector(
+    selectedTime: CreateHabitContract.TimeOfDay,
+    onTimeSelect: (CreateHabitContract.TimeOfDay) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        val options = listOf(CreateHabitContract.TimeOfDay.MORNING, CreateHabitContract.TimeOfDay.AFTERNOON, CreateHabitContract.TimeOfDay.EVENING)
+        options.forEach { time ->
+            val isSelected = time == selectedTime
+            Button(
+                onClick = { onTimeSelect(time) },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.White,
+                    contentColor = TextPrimary
+                ),
+                border = androidx.compose.foundation.BorderStroke(
+                    1.dp, 
+                    if (isSelected) BrandBlue else Color(0xFFEEEEEE)
+                ),
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = time.name.lowercase().replaceFirstChar { it.uppercase() },
+                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                    color = if (isSelected) BrandBlue else TextPrimary
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ReminderTimePicker(
+    time: String,
+    onTimeChange: (String) -> Unit
+) {
+    val context = LocalContext.current
+    val timeParts = time.split(":")
+    val hour = timeParts.getOrNull(0)?.toIntOrNull() ?: 8
+    val minute = timeParts.getOrNull(1)?.toIntOrNull() ?: 0
+
+    val timePickerDialog = android.app.TimePickerDialog(
+        context,
+        { _, hourOfDay, m ->
+            onTimeChange(String.format("%02d:%02d", hourOfDay, m))
+        },
+        hour,
+        minute,
+        true
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { timePickerDialog.show() }
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text("Time: ", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+        Text(time, style = MaterialTheme.typography.bodyMedium, color = BrandBlue)
+    }
+}
+
+@Composable
 fun CreateHabitTopBar(
-    onBack: () -> Unit, 
-    onSave: () -> Unit,
-    title: String = "New Habit",
-    saveButtonText: String = "Save"
+    onBack: () -> Unit,
+    onSave: () -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -379,276 +687,13 @@ fun CreateHabitTopBar(
         }
         
         Text(
-            text = title,
+            text = "Create New Habit",
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = TextPrimary
         )
         
-        Button(
-            onClick = onSave,
-            colors = ButtonDefaults.buttonColors(
-                containerColor = BrandBlue,
-                contentColor = Color.White
-            ),
-            shape = RoundedCornerShape(20.dp),
-            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp)
-        ) {
-            Text(saveButtonText, fontWeight = FontWeight.Bold)
-        }
-    }
-}
-
-@Composable
-fun TypeSelector(
-    selectedType: CreateHabitContract.HabitType,
-    onTypeSelect: (CreateHabitContract.HabitType) -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        TypeCard(
-            title = "Numeric",
-            icon = Icons.Default.List, // Or similar
-            isSelected = selectedType == CreateHabitContract.HabitType.NUMERIC,
-            onClick = { onTypeSelect(CreateHabitContract.HabitType.NUMERIC) },
-            modifier = Modifier.weight(1f)
-        )
-        TypeCard(
-            title = "Yes / No",
-            icon = Icons.Default.Check,
-            isSelected = selectedType == CreateHabitContract.HabitType.YES_NO,
-            onClick = { onTypeSelect(CreateHabitContract.HabitType.YES_NO) },
-            modifier = Modifier.weight(1f)
-        )
-        TypeCard(
-            title = "Timer",
-            icon = Icons.Default.Timer,
-            isSelected = selectedType == CreateHabitContract.HabitType.TIMER,
-            onClick = { onTypeSelect(CreateHabitContract.HabitType.TIMER) },
-            modifier = Modifier.weight(1f)
-        )
-    }
-}
-
-@Composable
-fun TypeCard(
-    title: String,
-    icon: ImageVector,
-    isSelected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (isSelected) BrandBlue else Color.White
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 8.dp else 0.dp),
-        modifier = modifier
-            .height(100.dp)
-            .clickable { onClick() }
-    ) {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = if (isSelected) Color.White else TextSecondary,
-                modifier = Modifier.size(32.dp)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = title,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
-                color = if (isSelected) Color.White else TextPrimary
-            )
-        }
-    }
-}
-
-@Composable
-fun GoalSettings(
-    target: String,
-    unitName: String,
-    isAtLeast: Boolean,
-    onTargetChange: (String) -> Unit,
-    onUnitNameChange: (String) -> Unit,
-    onGoalTypeChange: (Boolean) -> Unit
-) {
-    Card(
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Column(modifier = Modifier.padding(20.dp)) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.List, // Placeholder for "Settings" icon
-                    contentDescription = null,
-                    tint = BrandBlue
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = "Goal Settings",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Text("TARGET", style = MaterialTheme.typography.labelSmall, color = TextSecondary, fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    HabitOutlinedTextField(
-                        value = target,
-                        onValueChange = onTargetChange,
-                        placeholder = "10",
-                        singleLine = true,
-                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
-                    )
-                }
-                Column(modifier = Modifier.weight(1f)) {
-                    Text("UNIT NAME", style = MaterialTheme.typography.labelSmall, color = TextSecondary, fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.height(8.dp))
-                    HabitOutlinedTextField(
-                        value = unitName,
-                        onValueChange = onUnitNameChange,
-                        placeholder = "Pages",
-                        singleLine = true
-                    )
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // At Least / At Most Toggle
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp)
-                    .background(BrandBackground, RoundedCornerShape(12.dp))
-                    .padding(4.dp)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(if (isAtLeast) Color.White else Color.Transparent)
-                        .clickable { onGoalTypeChange(true) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "At Least",
-                        color = if (isAtLeast) BrandBlue else TextSecondary,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(if (!isAtLeast) Color.White else Color.Transparent)
-                        .clickable { onGoalTypeChange(false) },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "At Most",
-                        color = if (!isAtLeast) BrandBlue else TextSecondary,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Preview Section (Mock for now, could be interactive)
-            Text("PREVIEW", style = MaterialTheme.typography.labelSmall, color = TextSecondary, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .background(BrandBackground, RoundedCornerShape(12.dp))
-            ) {
-                 Box(
-                     modifier = Modifier
-                         .fillMaxHeight()
-                         .fillMaxWidth(0.4f)
-                         .background(BrandBlue, RoundedCornerShape(topStart = 12.dp, bottomStart = 12.dp)),
-                     contentAlignment = Alignment.Center
-                 ) {
-                     Text("4 / ${target.ifEmpty { "10" }}", color = Color.White, fontWeight = FontWeight.Bold)
-                 }
-                 Box(
-                     modifier = Modifier
-                         .fillMaxHeight()
-                         .weight(1f),
-                     contentAlignment = Alignment.Center
-                 ) {
-                     Text("Swipe to log", color = TextSecondary)
-                 }
-            }
-        }
-    }
-}
-
-@Composable
-fun CommitmentCard(state: CreateHabitContract.State) {
-    Card(
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .background(
-                    brush = Brush.verticalGradient(
-                        colors = listOf(Color(0xFF2E3244), Color(0xFF1E1E2E))
-                    )
-                )
-                .padding(24.dp)
-        ) {
-            Column {
-                Text(
-                    text = "YOUR COMMITMENT",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color.White.copy(alpha = 0.6f),
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                Text(
-                    text = buildString {
-                        append("I will ")
-                        append(state.habitName.ifEmpty { "..." })
-                        append(" for ")
-                        if (state.habitType == CreateHabitContract.HabitType.NUMERIC) {
-                            append("${state.target} ${state.unitName}")
-                        } else {
-                            append("completion")
-                        }
-                        // Placeholder for Time and Place as they are not yet in UI inputs
-                        append(" every day.")
-                    },
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = Color.White,
-                    fontWeight = FontWeight.Normal
-                )
-                
-                // TODO: Add visual blocks like in the design if needed, for now text is fine
-            }
-        }
+        // Spacer to balance the close icon
+        Spacer(modifier = Modifier.size(48.dp))
     }
 }

@@ -21,5 +21,12 @@ data class HabitEntity(
     val reminderEnabled: Boolean = false,
     val reminderTime: String = "08:00",
     val selectedDays: String = "1,2,3,4,5,6,7", // Mon=1, Sun=7
-    val isCompletedToday: Boolean = false // Quick way to track daily status for MVP
+    val isCompletedToday: Boolean = false, // Quick way to track daily status for MVP
+    
+    // New Fields for Design Update
+    val isOneTime: Boolean = false,
+    val scheduledDate: Long? = null, // For One-Time Task
+    val endDate: Long? = null, // For Regular Habit
+    val timeOfDay: String = "Anytime", // Morning, Afternoon, Evening
+    val frequency: String = "Daily" // Daily, Weekly, Monthly
 )
