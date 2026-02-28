@@ -64,6 +64,31 @@ class ProfileViewModel @Inject constructor(
             ProfileContract.Event.OnLogoutClicked -> {
                 viewModelScope.launch { _effect.send(ProfileContract.Effect.ShowToast("Logout feature coming soon!")) }
             }
+            ProfileContract.Event.OnPreferencesClicked -> {
+                viewModelScope.launch { _effect.send(ProfileContract.Effect.NavigateToPreferences) }
+            }
+            ProfileContract.Event.OnPersonalInfoClicked -> {
+                // Map to Edit Profile for now
+                viewModelScope.launch { _effect.send(ProfileContract.Effect.NavigateToEditProfile) }
+            }
+            ProfileContract.Event.OnAccountSecurityClicked -> {
+                viewModelScope.launch { _effect.send(ProfileContract.Effect.ShowToast("Account & Security coming soon!")) }
+            }
+            ProfileContract.Event.OnLinkedAccountsClicked -> {
+                viewModelScope.launch { _effect.send(ProfileContract.Effect.ShowToast("Linked Accounts coming soon!")) }
+            }
+            ProfileContract.Event.OnAppAppearanceClicked -> {
+                viewModelScope.launch { _effect.send(ProfileContract.Effect.ShowToast("App Appearance coming soon!")) }
+            }
+            ProfileContract.Event.OnDataAnalyticsClicked -> {
+                viewModelScope.launch { _effect.send(ProfileContract.Effect.ShowToast("Data & Analytics coming soon!")) }
+            }
+            ProfileContract.Event.OnHelpSupportClicked -> {
+                viewModelScope.launch { _effect.send(ProfileContract.Effect.ShowToast("Help & Support coming soon!")) }
+            }
+            ProfileContract.Event.OnLevelBannerClicked -> {
+                viewModelScope.launch { _effect.send(ProfileContract.Effect.ShowToast("Level Details coming soon!")) }
+            }
         }
     }
 }

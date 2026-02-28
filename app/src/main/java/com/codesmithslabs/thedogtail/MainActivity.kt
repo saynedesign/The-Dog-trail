@@ -35,6 +35,9 @@ import com.codesmithslabs.thedogtail.ui.screens.mood.MoodViewModel
 import com.codesmithslabs.thedogtail.ui.screens.onboarding.OnboardingContract
 import com.codesmithslabs.thedogtail.ui.screens.onboarding.OnboardingScreen
 import com.codesmithslabs.thedogtail.ui.screens.onboarding.OnboardingViewModel
+import com.codesmithslabs.thedogtail.ui.screens.preferences.PreferencesContract
+import com.codesmithslabs.thedogtail.ui.screens.preferences.PreferencesScreen
+import com.codesmithslabs.thedogtail.ui.screens.preferences.PreferencesViewModel
 import com.codesmithslabs.thedogtail.ui.screens.profile.ProfileContract
 import com.codesmithslabs.thedogtail.ui.screens.profile.ProfileScreen
 import com.codesmithslabs.thedogtail.ui.screens.profile.ProfileViewModel
@@ -210,6 +213,9 @@ class MainActivity : ComponentActivity() {
                                         is ProfileContract.Effect.ShowToast -> {
                                             Toast.makeText(this@MainActivity, effect.message, Toast.LENGTH_SHORT).show()
                                         }
+                                        is ProfileContract.Effect.NavigateToPreferences -> {
+                                            navController.navigate("preferences")
+                                        }
                                     }
                                 }
                             }
@@ -239,6 +245,29 @@ class MainActivity : ComponentActivity() {
                             }
 
                             EditProfileScreen(
+                                state = state,
+                                onEvent = viewModel::handleEvent
+                            )
+                        }
+
+                        composable("preferences") {
+                            val viewModel = hiltViewModel<PreferencesViewModel>()
+                            val state by viewModel.state.collectAsState()
+
+                            LaunchedEffect(Unit) {
+                                viewModel.effect.collect { effect ->
+                                    when (effect) {
+                                        is PreferencesContract.Effect.NavigateBack -> {
+                                            navController.popBackStack()
+                                        }
+                                        is PreferencesContract.Effect.ShowToast -> {
+                                            Toast.makeText(this@MainActivity, effect.message, Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                }
+                            }
+
+                            PreferencesScreen(
                                 state = state,
                                 onEvent = viewModel::handleEvent
                             )

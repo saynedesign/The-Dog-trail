@@ -487,7 +487,7 @@ fun HomeBottomNavigation(
     ) {
         Row(
             modifier = Modifier.fillMaxSize(),
-            horizontalArrangement = Arrangement.SpaceAround,
+            horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = onHomeClick) {
@@ -507,9 +507,6 @@ fun HomeBottomNavigation(
                     modifier = Modifier.size(28.dp)
                 )
             }
-            
-            // Spacer for FAB
-            Spacer(modifier = Modifier.size(48.dp))
 
             IconButton(onClick = onReportClick) {
                 Icon(
