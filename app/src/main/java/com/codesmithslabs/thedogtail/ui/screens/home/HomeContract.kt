@@ -8,7 +8,7 @@ import java.util.Locale
 
 interface HomeContract {
     enum class HomeTab {
-        HABITS, MOOD
+        HABITS, MOOD, REPORT, PROFILE
     }
 
     data class State(
@@ -33,6 +33,7 @@ interface HomeContract {
         data class OnDateSelected(val date: String) : Event()
         data object OnProfileClicked : Event()
         data object OnMoodClicked : Event()
+        data object OnReportClicked : Event()
         data object OnHomeClicked : Event()
         data class OnTimerClicked(val habitId: Long) : Event()
         data class OnEditHabitClicked(val habitId: Long) : Event()
@@ -40,6 +41,7 @@ interface HomeContract {
         data object OnDismissDialog : Event()
         data object OnConfirmDelete : Event()
         data object OnConfirmEdit : Event()
+        data object OnEditProfileRequested : Event()
     }
 
     sealed class Effect {
@@ -47,6 +49,7 @@ interface HomeContract {
         data class NavigateToHabitDetails(val habitId: Long) : Effect()
         data class NavigateToEditHabit(val habitId: Long) : Effect()
         data object NavigateToProfile : Effect()
+        data object NavigateToEditProfile : Effect()
         data object NavigateToMoodStats : Effect()
         data class NavigateToTimer(val habitId: Long) : Effect()
     }

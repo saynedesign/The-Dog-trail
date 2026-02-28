@@ -67,13 +67,22 @@ import coil.compose.AsyncImage
 import com.codesmithslabs.thedogtail.data.HabitEntity
 import com.codesmithslabs.thedogtail.ui.components.HabitCard
 import com.codesmithslabs.thedogtail.ui.components.HomeHeader
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
 import com.codesmithslabs.thedogtail.ui.screens.mood.MoodStatsScreen
 import com.codesmithslabs.thedogtail.ui.screens.mood.MoodViewModel
 import com.codesmithslabs.thedogtail.ui.screens.mood.MoodContract
+import com.codesmithslabs.thedogtail.ui.screens.profile.ProfileContract
+import com.codesmithslabs.thedogtail.ui.screens.profile.ProfileScreen
+import com.codesmithslabs.thedogtail.ui.screens.profile.ProfileViewModel
 import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
 import com.codesmithslabs.thedogtail.ui.theme.BrandSurface
 import com.codesmithslabs.thedogtail.ui.theme.TextPrimary
 import com.codesmithslabs.thedogtail.ui.theme.TextSecondary
+
+import com.codesmithslabs.thedogtail.ui.screens.report.ReportScreen
+import com.codesmithslabs.thedogtail.ui.screens.report.ReportViewModel
+import com.codesmithslabs.thedogtail.ui.screens.report.ReportContract
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -162,7 +171,8 @@ fun HomeScreen(
                         modifier = Modifier.align(Alignment.BottomCenter),
                         onHomeClick = { onEvent(HomeContract.Event.OnHomeClicked) },
                         onProfileClick = { onEvent(HomeContract.Event.OnProfileClicked) },
-                        onMoodClick = { onEvent(HomeContract.Event.OnMoodClicked) }
+                        onMoodClick = { onEvent(HomeContract.Event.OnMoodClicked) },
+                        onReportClick = { onEvent(HomeContract.Event.OnReportClicked) }
                     )
             }
         }
@@ -174,13 +184,54 @@ fun HomeScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding)
+                    .padding(bottom = innerPadding.calculateBottomPadding())
             ) {
                 MoodStatsScreen(
                     state = moodState,
-                    onEvent = moodViewModel::handleEvent
+                    onEvent = moodViewModel::handleEvent,
+                    modifier = Modifier.fillMaxSize()
                 )
             }
+        } else if (state.currentTab == HomeContract.HomeTab.REPORT) {
+            val reportViewModel = hiltViewModel<ReportViewModel>()
+            val reportState by reportViewModel.state.collectAsState()
+            
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(bottom = innerPadding.calculateBottomPadding())
+            ) {
+                ReportScreen(
+                    state = reportState,
+                    onEvent = reportViewModel::handleEvent,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        } else if (state.currentTab == HomeContract.HomeTab.PROFILE) {
+            val profileViewModel = hiltViewModel<ProfileViewModel>()
+             val profileState by profileViewModel.state.collectAsState()
+             val context = LocalContext.current
+ 
+             LaunchedEffect(Unit) {
+                 profileViewModel.effect.collect { effect ->
+                     when (effect) {
+                         is ProfileContract.Effect.NavigateToEditProfile -> {
+                             onEvent(HomeContract.Event.OnEditProfileRequested)
+                         }
+                         is ProfileContract.Effect.ShowToast -> {
+                             Toast.makeText(context, effect.message, Toast.LENGTH_SHORT).show()
+                         }
+                         else -> {}
+                     }
+                 }
+             }
+
+            ProfileScreen(
+                state = profileState,
+                onEvent = profileViewModel::handleEvent,
+                modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding()),
+                showBackButton = false
+            )
         } else {
             LazyColumn(
                 modifier = Modifier
@@ -423,7 +474,8 @@ fun HomeBottomNavigation(
     modifier: Modifier = Modifier,
     onHomeClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
-    onMoodClick: () -> Unit = {}
+    onMoodClick: () -> Unit = {},
+    onReportClick: () -> Unit = {}
 ) {
     Card(
         modifier = modifier
@@ -459,11 +511,11 @@ fun HomeBottomNavigation(
             // Spacer for FAB
             Spacer(modifier = Modifier.size(48.dp))
 
-            IconButton(onClick = { /* TODO: Stats */ }) {
+            IconButton(onClick = onReportClick) {
                 Icon(
                     imageVector = Icons.Default.BarChart,
                     contentDescription = "Stats",
-                    tint = TextSecondary,
+                    tint = if (currentTab == HomeContract.HomeTab.REPORT) BrandBlue else TextSecondary,
                     modifier = Modifier.size(28.dp)
                 )
             }
@@ -472,7 +524,7 @@ fun HomeBottomNavigation(
                 Icon(
                     imageVector = Icons.Default.Person,
                     contentDescription = "Profile",
-                    tint = TextSecondary,
+                    tint = if (currentTab == HomeContract.HomeTab.PROFILE) BrandBlue else TextSecondary,
                     modifier = Modifier.size(28.dp)
                 )
             }

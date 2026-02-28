@@ -31,12 +31,15 @@ import com.codesmithslabs.thedogtail.ui.theme.TextSecondary
 @Composable
 fun ProfileScreen(
     state: ProfileContract.State,
-    onEvent: (ProfileContract.Event) -> Unit
+    onEvent: (ProfileContract.Event) -> Unit,
+    modifier: Modifier = Modifier,
+    showBackButton: Boolean = false
 ) {
     Scaffold(
+        modifier = modifier,
         topBar = {
             ProfileTopBar(
-                onBack = { onEvent(ProfileContract.Event.OnBackClicked) }
+                onBack = if (showBackButton) { { onEvent(ProfileContract.Event.OnBackClicked) } } else null
             )
         },
         containerColor = BrandSurface
@@ -98,7 +101,7 @@ fun ProfileScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileTopBar(onBack: () -> Unit) {
+fun ProfileTopBar(onBack: (() -> Unit)? = null) {
     CenterAlignedTopAppBar(
         title = {
             Text(
@@ -108,8 +111,10 @@ fun ProfileTopBar(onBack: () -> Unit) {
             )
         },
         navigationIcon = {
-            IconButton(onClick = onBack) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+            if (onBack != null) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                }
             }
         },
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(

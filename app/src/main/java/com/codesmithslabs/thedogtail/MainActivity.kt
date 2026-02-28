@@ -151,6 +151,9 @@ class MainActivity : ComponentActivity() {
                                         is HomeContract.Effect.NavigateToEditHabit -> {
                                             navController.navigate("create_habit?habitId=${effect.habitId}")
                                         }
+                                        is HomeContract.Effect.NavigateToEditProfile -> {
+                                            navController.navigate("edit_profile")
+                                        }
                                     }
                                 }
                             }
@@ -213,7 +216,8 @@ class MainActivity : ComponentActivity() {
 
                             ProfileScreen(
                                 state = state,
-                                onEvent = viewModel::handleEvent
+                                onEvent = viewModel::handleEvent,
+                                showBackButton = true
                             )
                         }
 

@@ -37,7 +37,8 @@ import java.util.Locale
 @Composable
 fun MoodStatsScreen(
     state: MoodContract.State,
-    onEvent: (MoodContract.Event) -> Unit
+    onEvent: (MoodContract.Event) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     if (state.showAddMoodDialog) {
         MoodSelectionDialog(
@@ -47,9 +48,10 @@ fun MoodStatsScreen(
     }
 
     if (state.showHistory) {
-        MoodHistoryScreen(state, onEvent)
+        MoodHistoryScreen(state, onEvent, modifier)
     } else {
         Scaffold(
+            modifier = modifier,
             topBar = {
                 CenterAlignedTopAppBar(
                     title = {

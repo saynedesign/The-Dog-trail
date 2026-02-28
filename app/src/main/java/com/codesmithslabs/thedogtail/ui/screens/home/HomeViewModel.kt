@@ -131,10 +131,13 @@ class HomeViewModel @Inject constructor(
                 sendEffect(HomeContract.Effect.NavigateToTimer(event.habitId))
             }
             is HomeContract.Event.OnProfileClicked -> {
-                sendEffect(HomeContract.Effect.NavigateToProfile)
+                _state.value = _state.value.copy(currentTab = HomeContract.HomeTab.PROFILE)
             }
             is HomeContract.Event.OnMoodClicked -> {
                 _state.value = _state.value.copy(currentTab = HomeContract.HomeTab.MOOD)
+            }
+            is HomeContract.Event.OnReportClicked -> {
+                _state.value = _state.value.copy(currentTab = HomeContract.HomeTab.REPORT)
             }
             is HomeContract.Event.OnHomeClicked -> {
                 _state.value = _state.value.copy(currentTab = HomeContract.HomeTab.HABITS)
@@ -182,6 +185,9 @@ class HomeViewModel @Inject constructor(
                     showEditDialog = false,
                     selectedHabitId = null
                 )
+            }
+            is HomeContract.Event.OnEditProfileRequested -> {
+                sendEffect(HomeContract.Effect.NavigateToEditProfile)
             }
         }
     }

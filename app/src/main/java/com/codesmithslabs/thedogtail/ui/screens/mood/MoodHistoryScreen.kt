@@ -30,9 +30,11 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun MoodHistoryScreen(
     state: MoodContract.State,
-    onEvent: (MoodContract.Event) -> Unit
+    onEvent: (MoodContract.Event) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Scaffold(
+        modifier = modifier,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
