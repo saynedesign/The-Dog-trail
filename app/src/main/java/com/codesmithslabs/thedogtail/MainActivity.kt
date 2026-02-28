@@ -20,6 +20,9 @@ import androidx.navigation.navArgument
 import com.codesmithslabs.thedogtail.ui.screens.createhabit.CreateHabitContract
 import com.codesmithslabs.thedogtail.ui.screens.createhabit.CreateHabitScreen
 import com.codesmithslabs.thedogtail.ui.screens.createhabit.CreateHabitViewModel
+import com.codesmithslabs.thedogtail.ui.screens.achievements.AchievementsContract
+import com.codesmithslabs.thedogtail.ui.screens.achievements.AchievementsScreen
+import com.codesmithslabs.thedogtail.ui.screens.achievements.AchievementsViewModel
 import com.codesmithslabs.thedogtail.ui.screens.editprofile.EditProfileContract
 import com.codesmithslabs.thedogtail.ui.screens.editprofile.EditProfileScreen
 import com.codesmithslabs.thedogtail.ui.screens.editprofile.EditProfileViewModel
@@ -157,6 +160,12 @@ class MainActivity : ComponentActivity() {
                                         is HomeContract.Effect.NavigateToEditProfile -> {
                                             navController.navigate("edit_profile")
                                         }
+                                        is HomeContract.Effect.NavigateToPreferences -> {
+                                            navController.navigate("preferences")
+                                        }
+                                        is HomeContract.Effect.NavigateToAchievements -> {
+                                            navController.navigate("achievements")
+                                        }
                                     }
                                 }
                             }
@@ -216,6 +225,9 @@ class MainActivity : ComponentActivity() {
                                         is ProfileContract.Effect.NavigateToPreferences -> {
                                             navController.navigate("preferences")
                                         }
+                                        is ProfileContract.Effect.NavigateToAchievements -> {
+                                            navController.navigate("achievements")
+                                        }
                                     }
                                 }
                             }
@@ -268,6 +280,26 @@ class MainActivity : ComponentActivity() {
                             }
 
                             PreferencesScreen(
+                                state = state,
+                                onEvent = viewModel::handleEvent
+                            )
+                        }
+
+                        composable("achievements") {
+                            val viewModel = hiltViewModel<AchievementsViewModel>()
+                            val state by viewModel.state.collectAsState()
+
+                            LaunchedEffect(Unit) {
+                                viewModel.effect.collect { effect ->
+                                    when (effect) {
+                                        is AchievementsContract.Effect.NavigateBack -> {
+                                            navController.popBackStack()
+                                        }
+                                    }
+                                }
+                            }
+
+                            AchievementsScreen(
                                 state = state,
                                 onEvent = viewModel::handleEvent
                             )

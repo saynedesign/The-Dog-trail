@@ -6,7 +6,9 @@ interface ProfileContract {
         val userDob: String = "",
         val userHeight: Float = 0f,
         val profileImageUri: String? = null,
-        val isLoading: Boolean = true
+        val isLoading: Boolean = true,
+        val level: Int = 1,
+        val totalHabitCount: Int = 0
     )
 
     sealed class Event {
@@ -30,6 +32,7 @@ interface ProfileContract {
         data object NavigateBack : Effect()
         data object NavigateToEditProfile : Effect()
         data object NavigateToPreferences : Effect()
+        data object NavigateToAchievements : Effect()
         data class ShowToast(val message: String) : Effect()
     }
 }

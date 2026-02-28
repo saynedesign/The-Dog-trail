@@ -71,7 +71,7 @@ fun ProfileScreen(
 
                 item {
                     LevelBanner(
-                        level = 9, // Hardcoded for UI match or pass via state if available
+                        level = state.level,
                         onClick = { onEvent(ProfileContract.Event.OnLevelBannerClicked) }
                     )
                 }

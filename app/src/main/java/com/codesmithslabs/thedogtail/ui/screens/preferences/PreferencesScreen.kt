@@ -10,6 +10,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -37,18 +38,24 @@ fun PreferencesScreen(
         val currentHour = calendar.get(Calendar.HOUR_OF_DAY)
         val currentMinute = calendar.get(Calendar.MINUTE)
 
-        TimePickerDialog(
-            context,
-            { _, hourOfDay, minute ->
-                val formattedTime = String.format("%02d:%02d", hourOfDay, minute)
-                onEvent(PreferencesContract.Event.OnTimeSelected(formattedTime))
-            },
-            currentHour,
-            currentMinute,
-            true // 24 hour format
-        ).apply {
-            setOnCancelListener { onEvent(PreferencesContract.Event.OnTimePickerDismiss) }
-            show()
+        DisposableEffect(state.timePickerType) {
+            val dialog = TimePickerDialog(
+                context,
+                { _, hourOfDay, minute ->
+                    val formattedTime = String.format("%02d:%02d", hourOfDay, minute)
+                    onEvent(PreferencesContract.Event.OnTimeSelected(formattedTime))
+                },
+                currentHour,
+                currentMinute,
+                true // 24 hour format
+            )
+            
+            dialog.setOnCancelListener { onEvent(PreferencesContract.Event.OnTimePickerDismiss) }
+            dialog.show()
+            
+            onDispose {
+                dialog.dismiss()
+            }
         }
     }
 

@@ -26,5 +26,8 @@ interface HabitLogDao {
 
     @Delete
     suspend fun deleteLog(log: HabitLogEntity)
+
+    @Query("SELECT COUNT(*) FROM habit_logs")
+    fun countAllLogs(): Flow<Int>
 }
 

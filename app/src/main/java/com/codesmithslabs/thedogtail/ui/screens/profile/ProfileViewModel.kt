@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.codesmithslabs.thedogtail.data.HabitLogDao
 import com.codesmithslabs.thedogtail.data.UserDao
 import com.codesmithslabs.thedogtail.data.UserEntity
+import com.codesmithslabs.thedogtail.util.LevelSystem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,16 +37,22 @@ class ProfileViewModel @Inject constructor(
 
     private fun loadData() {
         viewModelScope.launch {
-            userDao.getUser().collectLatest { user ->
-                _state.update { currentState ->
-                    currentState.copy(
-                        userName = user?.name ?: "",
-                        userDob = user?.dob ?: "",
-                        userHeight = user?.height ?: 0f,
-                        profileImageUri = user?.profileImageUri,
-                        isLoading = false
-                    )
-                }
+            combine(
+                userDao.getUser(),
+                habitLogDao.countAllLogs()
+            ) { user, count ->
+                val level = LevelSystem.getLevelForHabitCount(count)
+                ProfileContract.State(
+                    userName = user?.name ?: "",
+                    userDob = user?.dob ?: "",
+                    userHeight = user?.height ?: 0f,
+                    profileImageUri = user?.profileImageUri,
+                    isLoading = false,
+                    level = level,
+                    totalHabitCount = count
+                )
+            }.collectLatest { newState ->
+                _state.value = newState
             }
         }
     }
@@ -87,7 +94,7 @@ class ProfileViewModel @Inject constructor(
                 viewModelScope.launch { _effect.send(ProfileContract.Effect.ShowToast("Help & Support coming soon!")) }
             }
             ProfileContract.Event.OnLevelBannerClicked -> {
-                viewModelScope.launch { _effect.send(ProfileContract.Effect.ShowToast("Level Details coming soon!")) }
+                viewModelScope.launch { _effect.send(ProfileContract.Effect.NavigateToAchievements) }
             }
         }
     }

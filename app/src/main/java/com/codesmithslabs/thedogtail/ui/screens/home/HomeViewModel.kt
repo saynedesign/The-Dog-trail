@@ -189,6 +189,12 @@ class HomeViewModel @Inject constructor(
             is HomeContract.Event.OnEditProfileRequested -> {
                 sendEffect(HomeContract.Effect.NavigateToEditProfile)
             }
+            is HomeContract.Event.OnPreferencesRequested -> {
+                sendEffect(HomeContract.Effect.NavigateToPreferences)
+            }
+            is HomeContract.Event.OnAchievementsRequested -> {
+                sendEffect(HomeContract.Effect.NavigateToAchievements)
+            }
         }
     }
 

@@ -218,6 +218,12 @@ fun HomeScreen(
                          is ProfileContract.Effect.NavigateToEditProfile -> {
                              onEvent(HomeContract.Event.OnEditProfileRequested)
                          }
+                         is ProfileContract.Effect.NavigateToPreferences -> {
+                             onEvent(HomeContract.Event.OnPreferencesRequested)
+                         }
+                         is ProfileContract.Effect.NavigateToAchievements -> {
+                             onEvent(HomeContract.Event.OnAchievementsRequested)
+                         }
                          is ProfileContract.Effect.ShowToast -> {
                              Toast.makeText(context, effect.message, Toast.LENGTH_SHORT).show()
                          }

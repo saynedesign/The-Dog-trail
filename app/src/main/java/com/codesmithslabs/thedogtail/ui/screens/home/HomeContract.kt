@@ -42,6 +42,8 @@ interface HomeContract {
         data object OnConfirmDelete : Event()
         data object OnConfirmEdit : Event()
         data object OnEditProfileRequested : Event()
+        data object OnPreferencesRequested : Event()
+        data object OnAchievementsRequested : Event()
     }
 
     sealed class Effect {
@@ -50,6 +52,8 @@ interface HomeContract {
         data class NavigateToEditHabit(val habitId: Long) : Effect()
         data object NavigateToProfile : Effect()
         data object NavigateToEditProfile : Effect()
+        data object NavigateToPreferences : Effect()
+        data object NavigateToAchievements : Effect()
         data object NavigateToMoodStats : Effect()
         data class NavigateToTimer(val habitId: Long) : Effect()
     }
