@@ -51,217 +51,214 @@ fun CreateHabitScreen(
                 onSave = { onEvent(CreateHabitContract.Event.OnSaveClicked) }
             )
         },
-        containerColor = Color.White // Design has white background
+        containerColor = BrandBackground
     ) { padding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)
+                .padding(horizontal = 16.dp),
+            contentPadding = PaddingValues(vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                // Toggle: Regular Habit / One-Time Task
-                HabitTypeToggle(
-                    isOneTime = state.isOneTime,
-                    onToggle = { onEvent(CreateHabitContract.Event.OnToggleOneTime(it)) }
-                )
+                CreateHabitSection {
+                    HabitTypeToggle(
+                        isOneTime = state.isOneTime,
+                        onToggle = { onEvent(CreateHabitContract.Event.OnToggleOneTime(it)) }
+                    )
+                }
             }
 
             item {
-                // Name Input
-                Text(
-                    text = if (state.isOneTime) "Task Name" else "Habit Name",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                HabitOutlinedTextField(
-                    value = state.habitName,
-                    onValueChange = { onEvent(CreateHabitContract.Event.OnNameChange(it)) },
-                    placeholder = if (state.isOneTime) "Task Name" else "Habit Name",
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-            }
-
-            item {
-                // Icon Picker
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                CreateHabitSection {
                     Text(
-                        text = "Icon",
+                        text = if (state.isOneTime) "Task Name" else "Habit Name",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
-                    TextButton(onClick = { onEvent(CreateHabitContract.Event.OnToggleIconPicker(true)) }) {
-                        Text("View All", color = BrandBlue)
-                        Icon(Icons.Default.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))
-                    }
+                    HabitOutlinedTextField(
+                        value = state.habitName,
+                        onValueChange = { onEvent(CreateHabitContract.Event.OnNameChange(it)) },
+                        placeholder = if (state.isOneTime) "Task Name" else "Habit Name",
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true
+                    )
                 }
-                IconPicker(
-                    selectedIcon = state.habitIcon,
-                    onIconSelect = { onEvent(CreateHabitContract.Event.OnIconChange(it)) }
-                )
             }
 
             item {
-                // Color Picker
-                Text(
-                    text = "Color",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                ColorPicker(
-                    selectedColor = state.habitColor,
-                    onColorSelect = { onEvent(CreateHabitContract.Event.OnColorChange(it)) }
-                )
-            }
-
-            if (!state.isOneTime) {
-                item {
-                    // Regular Habit: Repeat Frequency
-                    Text(
-                        text = "Repeat",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    FrequencySelector(
-                        selectedFrequency = state.frequency,
-                        onFrequencySelect = { onEvent(CreateHabitContract.Event.OnFrequencyChange(it)) }
-                    )
-                }
-
-                item {
-                    // Regular Habit: Days Selection
+                CreateHabitSection {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "On these day:",
+                            text = "Icon",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
-                        
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("All day", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Checkbox(
-                                checked = state.selectedDays.size == 7,
-                                onCheckedChange = { isChecked ->
-                                    if (isChecked) {
-                                        // Select all
-                                        (1..7).forEach { onEvent(CreateHabitContract.Event.OnDayToggle(it)) }
-                                    } else {
-                                        // Keep at least one, maybe reset to today? Or do nothing as user can toggle individual
-                                    }
-                                },
-                                colors = CheckboxDefaults.colors(checkedColor = BrandBlue)
-                            )
+                        TextButton(onClick = { onEvent(CreateHabitContract.Event.OnToggleIconPicker(true)) }) {
+                            Text("View All", color = BrandBlue)
+                            Icon(Icons.Default.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))
                         }
                     }
-                    Spacer(modifier = Modifier.height(12.dp))
-                    DaySelector(
-                        selectedDays = state.selectedDays,
-                        onDayToggle = { onEvent(CreateHabitContract.Event.OnDayToggle(it)) }
-                    )
-                }
-            } else {
-                item {
-                    // One-Time Task: Date Picker
-                    Text(
-                        text = "When",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(12.dp))
-                    DatePickerRow(
-                        date = state.scheduledDate,
-                        onDateChange = { onEvent(CreateHabitContract.Event.OnDateChange(it)) }
+                    IconPicker(
+                        selectedIcon = state.habitIcon,
+                        onIconSelect = { onEvent(CreateHabitContract.Event.OnIconChange(it)) }
                     )
                 }
             }
 
             item {
-                // Do it at (Time of Day)
-                Text(
-                    text = "Do it at:",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(12.dp))
-                TimeOfDaySelector(
-                    selectedTime = state.timeOfDay,
-                    onTimeSelect = { onEvent(CreateHabitContract.Event.OnTimeOfDayChange(it)) }
-                )
+                CreateHabitSection {
+                    Text(
+                        text = "Color",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    ColorPicker(
+                        selectedColor = state.habitColor,
+                        onColorSelect = { onEvent(CreateHabitContract.Event.OnColorChange(it)) }
+                    )
+                }
             }
 
             if (!state.isOneTime) {
                 item {
-                    // End Habit On
+                    CreateHabitSection {
+                        Text(
+                            text = "Repeat",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        FrequencySelector(
+                            selectedFrequency = state.frequency,
+                            onFrequencySelect = { onEvent(CreateHabitContract.Event.OnFrequencyChange(it)) }
+                        )
+                    }
+                }
+
+                item {
+                    CreateHabitSection {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "On these day:",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text("All day", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Checkbox(
+                                    checked = state.selectedDays.size == 7,
+                                    onCheckedChange = { isChecked ->
+                                        if (isChecked) {
+                                            (1..7).forEach { onEvent(CreateHabitContract.Event.OnDayToggle(it)) }
+                                        }
+                                    },
+                                    colors = CheckboxDefaults.colors(checkedColor = BrandBlue)
+                                )
+                            }
+                        }
+                        DaySelector(
+                            selectedDays = state.selectedDays,
+                            onDayToggle = { onEvent(CreateHabitContract.Event.OnDayToggle(it)) }
+                        )
+                    }
+                }
+            } else {
+                item {
+                    CreateHabitSection {
+                        Text(
+                            text = "When",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        DatePickerRow(
+                            date = state.scheduledDate,
+                            onDateChange = { onEvent(CreateHabitContract.Event.OnDateChange(it)) }
+                        )
+                    }
+                }
+            }
+
+            item {
+                CreateHabitSection {
+                    Text(
+                        text = "Do it at:",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    TimeOfDaySelector(
+                        selectedTime = state.timeOfDay,
+                        onTimeSelect = { onEvent(CreateHabitContract.Event.OnTimeOfDayChange(it)) }
+                    )
+                }
+            }
+
+            if (!state.isOneTime) {
+                item {
+                    CreateHabitSection {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "End Habit on",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Switch(
+                                checked = state.endDateEnabled,
+                                onCheckedChange = { onEvent(CreateHabitContract.Event.OnEndDateToggle(it)) },
+                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = BrandBlue)
+                            )
+                        }
+                        if (state.endDateEnabled && state.endDate != null) {
+                            DatePickerRow(
+                                date = state.endDate,
+                                onDateChange = { onEvent(CreateHabitContract.Event.OnEndDateChange(it)) }
+                            )
+                        }
+                    }
+                }
+            }
+
+            item {
+                CreateHabitSection {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "End Habit on",
+                            text = "Set Reminder",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Switch(
-                            checked = state.endDateEnabled,
-                            onCheckedChange = { onEvent(CreateHabitContract.Event.OnEndDateToggle(it)) },
+                            checked = state.reminderEnabled,
+                            onCheckedChange = { onEvent(CreateHabitContract.Event.OnReminderToggle(it)) },
                             colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = BrandBlue)
                         )
                     }
-                    if (state.endDateEnabled && state.endDate != null) {
-                         Spacer(modifier = Modifier.height(8.dp))
-                         DatePickerRow(
-                            date = state.endDate,
-                            onDateChange = { onEvent(CreateHabitContract.Event.OnEndDateChange(it)) }
+                    if (state.reminderEnabled) {
+                        ReminderTimePicker(
+                            time = state.reminderTime,
+                            onTimeChange = { onEvent(CreateHabitContract.Event.OnReminderTimeChange(it)) }
                         )
                     }
-                }
-            }
-
-            item {
-                // Set Reminder
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Set Reminder",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Switch(
-                        checked = state.reminderEnabled,
-                        onCheckedChange = { onEvent(CreateHabitContract.Event.OnReminderToggle(it)) },
-                        colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = BrandBlue)
-                    )
-                }
-                
-                if (state.reminderEnabled) {
-                     Spacer(modifier = Modifier.height(8.dp))
-                     ReminderTimePicker(
-                         time = state.reminderTime,
-                         onTimeChange = { onEvent(CreateHabitContract.Event.OnReminderTimeChange(it)) }
-                     )
                 }
             }
             
             item {
-                Spacer(modifier = Modifier.height(32.dp))
                 Button(
                     onClick = { onEvent(CreateHabitContract.Event.OnSaveClicked) },
                     modifier = Modifier
@@ -286,6 +283,24 @@ fun CreateHabitScreen(
                 onDismiss = { onEvent(CreateHabitContract.Event.OnToggleIconPicker(false)) }
             )
         }
+    }
+}
+
+@Composable
+fun CreateHabitSection(
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = Color.White,
+        shape = RoundedCornerShape(16.dp),
+        tonalElevation = 1.dp
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+            content = content
+        )
     }
 }
 

@@ -69,6 +69,15 @@ import com.codesmithslabs.thedogtail.ui.components.HabitCard
 import com.codesmithslabs.thedogtail.ui.components.HomeHeader
 import androidx.compose.ui.platform.LocalContext
 import android.widget.Toast
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import com.codesmithslabs.thedogtail.ui.screens.mood.MoodStatsScreen
 import com.codesmithslabs.thedogtail.ui.screens.mood.MoodViewModel
 import com.codesmithslabs.thedogtail.ui.screens.mood.MoodContract
@@ -79,6 +88,8 @@ import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
 import com.codesmithslabs.thedogtail.ui.theme.BrandSurface
 import com.codesmithslabs.thedogtail.ui.theme.TextPrimary
 import com.codesmithslabs.thedogtail.ui.theme.TextSecondary
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.vector.ImageVector
 
 import com.codesmithslabs.thedogtail.ui.screens.report.ReportScreen
 import com.codesmithslabs.thedogtail.ui.screens.report.ReportViewModel
@@ -177,75 +188,97 @@ fun HomeScreen(
             }
         }
     ) { innerPadding ->
-        if (state.currentTab == HomeContract.HomeTab.MOOD) {
-            val moodViewModel = hiltViewModel<MoodViewModel>()
-            val moodState by moodViewModel.state.collectAsState()
-            
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = innerPadding.calculateBottomPadding())
-            ) {
-                MoodStatsScreen(
-                    state = moodState,
-                    onEvent = moodViewModel::handleEvent,
-                    modifier = Modifier.fillMaxSize()
+        AnimatedContent(
+            targetState = state.currentTab,
+            transitionSpec = {
+                val direction = if (targetState.index() > initialState.index()) 1 else -1
+                (slideInHorizontally(
+                    initialOffsetX = { fullWidth -> (fullWidth / 3) * direction },
+                    animationSpec = tween(260)
+                ) + fadeIn(animationSpec = tween(220))).togetherWith(
+                    slideOutHorizontally(
+                        targetOffsetX = { fullWidth -> -(fullWidth / 4) * direction },
+                        animationSpec = tween(220)
+                    ) + fadeOut(animationSpec = tween(180))
                 )
-            }
-        } else if (state.currentTab == HomeContract.HomeTab.REPORT) {
-            val reportViewModel = hiltViewModel<ReportViewModel>()
-            val reportState by reportViewModel.state.collectAsState()
-            
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(bottom = innerPadding.calculateBottomPadding())
-            ) {
-                ReportScreen(
-                    state = reportState,
-                    onEvent = reportViewModel::handleEvent,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-        } else if (state.currentTab == HomeContract.HomeTab.PROFILE) {
-            val profileViewModel = hiltViewModel<ProfileViewModel>()
-             val profileState by profileViewModel.state.collectAsState()
-             val context = LocalContext.current
- 
-             LaunchedEffect(Unit) {
-                 profileViewModel.effect.collect { effect ->
-                     when (effect) {
-                         is ProfileContract.Effect.NavigateToEditProfile -> {
-                             onEvent(HomeContract.Event.OnEditProfileRequested)
-                         }
-                         is ProfileContract.Effect.NavigateToPreferences -> {
-                             onEvent(HomeContract.Event.OnPreferencesRequested)
-                         }
-                         is ProfileContract.Effect.NavigateToAchievements -> {
-                             onEvent(HomeContract.Event.OnAchievementsRequested)
-                         }
-                         is ProfileContract.Effect.ShowToast -> {
-                             Toast.makeText(context, effect.message, Toast.LENGTH_SHORT).show()
-                         }
-                         else -> {}
-                     }
-                 }
-             }
+            },
+            label = "home_tab_transition"
+        ) { currentTab ->
+            when (currentTab) {
+                HomeContract.HomeTab.MOOD -> {
+                    val moodViewModel = hiltViewModel<MoodViewModel>()
+                    val moodState by moodViewModel.state.collectAsState()
 
-            ProfileScreen(
-                state = profileState,
-                onEvent = profileViewModel::handleEvent,
-                modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding()),
-                showBackButton = false
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(top = innerPadding.calculateTopPadding()) // Only top padding from scaffold
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp) // Reduced spacing
-            ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = innerPadding.calculateBottomPadding())
+                    ) {
+                        MoodStatsScreen(
+                            state = moodState,
+                            onEvent = moodViewModel::handleEvent,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
+
+                HomeContract.HomeTab.REPORT -> {
+                    val reportViewModel = hiltViewModel<ReportViewModel>()
+                    val reportState by reportViewModel.state.collectAsState()
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(bottom = innerPadding.calculateBottomPadding())
+                    ) {
+                        ReportScreen(
+                            state = reportState,
+                            onEvent = reportViewModel::handleEvent,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    }
+                }
+
+                HomeContract.HomeTab.PROFILE -> {
+                    val profileViewModel = hiltViewModel<ProfileViewModel>()
+                    val profileState by profileViewModel.state.collectAsState()
+                    val context = LocalContext.current
+
+                    LaunchedEffect(Unit) {
+                        profileViewModel.effect.collect { effect ->
+                            when (effect) {
+                                is ProfileContract.Effect.NavigateToEditProfile -> {
+                                    onEvent(HomeContract.Event.OnEditProfileRequested)
+                                }
+                                is ProfileContract.Effect.NavigateToPreferences -> {
+                                    onEvent(HomeContract.Event.OnPreferencesRequested)
+                                }
+                                is ProfileContract.Effect.NavigateToAchievements -> {
+                                    onEvent(HomeContract.Event.OnAchievementsRequested)
+                                }
+                                is ProfileContract.Effect.ShowToast -> {
+                                    Toast.makeText(context, effect.message, Toast.LENGTH_SHORT).show()
+                                }
+                                else -> {}
+                            }
+                        }
+                    }
+
+                    ProfileScreen(
+                        state = profileState,
+                        onEvent = profileViewModel::handleEvent,
+                        modifier = Modifier.padding(bottom = innerPadding.calculateBottomPadding()),
+                        showBackButton = false
+                    )
+                }
+
+                HomeContract.HomeTab.HABITS -> LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(top = innerPadding.calculateTopPadding())
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
                 item {
                     HomeHeader(
                         userName = state.userName,
@@ -470,8 +503,9 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(120.dp))
             }
         }
+            }
+        }
     }
-}
 }
 
 @Composable
@@ -496,41 +530,72 @@ fun HomeBottomNavigation(
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = onHomeClick) {
-                Icon(
-                    imageVector = Icons.Default.Home,
-                    contentDescription = "Home",
-                    tint = if (currentTab == HomeContract.HomeTab.HABITS) BrandBlue else TextSecondary,
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-            
-            IconButton(onClick = onMoodClick) {
-                Icon(
-                    imageVector = Icons.Default.Face,
-                    contentDescription = "Mood",
-                    tint = if (currentTab == HomeContract.HomeTab.MOOD) BrandBlue else TextSecondary,
-                    modifier = Modifier.size(28.dp)
-                )
-            }
+            HomeBottomNavigationItem(
+                selected = currentTab == HomeContract.HomeTab.HABITS,
+                imageVector = Icons.Default.Home,
+                contentDescription = "Home",
+                onClick = onHomeClick
+            )
 
-            IconButton(onClick = onReportClick) {
-                Icon(
-                    imageVector = Icons.Default.BarChart,
-                    contentDescription = "Stats",
-                    tint = if (currentTab == HomeContract.HomeTab.REPORT) BrandBlue else TextSecondary,
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-            
-            IconButton(onClick = onProfileClick) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Profile",
-                    tint = if (currentTab == HomeContract.HomeTab.PROFILE) BrandBlue else TextSecondary,
-                    modifier = Modifier.size(28.dp)
-                )
-            }
+            HomeBottomNavigationItem(
+                selected = currentTab == HomeContract.HomeTab.MOOD,
+                imageVector = Icons.Default.Face,
+                contentDescription = "Mood",
+                onClick = onMoodClick
+            )
+
+            HomeBottomNavigationItem(
+                selected = currentTab == HomeContract.HomeTab.REPORT,
+                imageVector = Icons.Default.BarChart,
+                contentDescription = "Stats",
+                onClick = onReportClick
+            )
+
+            HomeBottomNavigationItem(
+                selected = currentTab == HomeContract.HomeTab.PROFILE,
+                imageVector = Icons.Default.Person,
+                contentDescription = "Profile",
+                onClick = onProfileClick
+            )
         }
+    }
+}
+
+@Composable
+private fun HomeBottomNavigationItem(
+    selected: Boolean,
+    imageVector: ImageVector,
+    contentDescription: String,
+    onClick: () -> Unit
+) {
+    val tint by animateColorAsState(
+        targetValue = if (selected) BrandBlue else TextSecondary,
+        animationSpec = tween(220),
+        label = "bottom_nav_tint"
+    )
+    val scale by animateFloatAsState(
+        targetValue = if (selected) 1.12f else 1f,
+        animationSpec = tween(220),
+        label = "bottom_nav_scale"
+    )
+
+    IconButton(onClick = onClick) {
+        Icon(
+            imageVector = imageVector,
+            contentDescription = contentDescription,
+            tint = tint,
+            modifier = Modifier
+                .size(28.dp)
+                .scale(scale)
+        )
+    }
+}
+
+private fun HomeContract.HomeTab.index(): Int {
+    return when (this) {
+        HomeContract.HomeTab.HABITS -> 0
+        HomeContract.HomeTab.MOOD -> 1
+        HomeContract.HomeTab.REPORT -> 2
+        HomeContract.HomeTab.PROFILE -> 3
     }
 }

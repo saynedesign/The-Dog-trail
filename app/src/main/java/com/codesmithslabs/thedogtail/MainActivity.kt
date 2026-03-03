@@ -5,6 +5,15 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.LaunchedEffect
@@ -12,7 +21,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavType
+import androidx.navigation.NavDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -55,6 +66,26 @@ import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    private enum class TransitionStyle {
+        Modal, Standard
+    }
+
+    private fun NavDestination.routeName(): String {
+        return route.orEmpty().substringBefore("?").substringBefore("/")
+    }
+
+    private fun NavBackStackEntry.transitionStyle(): TransitionStyle {
+        return when (destination.routeName()) {
+            "create_habit",
+            "edit_profile",
+            "preferences",
+            "achievements",
+            "timer",
+            "mood_stats" -> TransitionStyle.Modal
+            else -> TransitionStyle.Standard
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -75,7 +106,68 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                    NavHost(navController = navController, startDestination = startDestination) {
+                    NavHost(
+                        navController = navController,
+                        startDestination = startDestination,
+                        enterTransition = {
+                            when (targetState.transitionStyle()) {
+                                TransitionStyle.Modal -> {
+                                    slideInVertically(
+                                        initialOffsetY = { fullHeight -> fullHeight / 4 },
+                                        animationSpec = tween(280)
+                                    ) + fadeIn(animationSpec = tween(220))
+                                }
+                                TransitionStyle.Standard -> {
+                                    slideInHorizontally(
+                                        initialOffsetX = { fullWidth -> fullWidth / 3 },
+                                        animationSpec = tween(320)
+                                    ) + fadeIn(animationSpec = tween(240))
+                                }
+                            }
+                        },
+                        exitTransition = {
+                            when (targetState.transitionStyle()) {
+                                TransitionStyle.Modal -> {
+                                    fadeOut(animationSpec = tween(140))
+                                }
+                                TransitionStyle.Standard -> {
+                                    slideOutHorizontally(
+                                        targetOffsetX = { fullWidth -> -(fullWidth / 6) },
+                                        animationSpec = tween(260)
+                                    ) + fadeOut(animationSpec = tween(200))
+                                }
+                            }
+                        },
+                        popEnterTransition = {
+                            when (initialState.transitionStyle()) {
+                                TransitionStyle.Modal -> {
+                                    fadeIn(animationSpec = tween(180))
+                                }
+                                TransitionStyle.Standard -> {
+                                    slideInHorizontally(
+                                        initialOffsetX = { fullWidth -> -(fullWidth / 6) },
+                                        animationSpec = tween(280)
+                                    ) + fadeIn(animationSpec = tween(220))
+                                }
+                            }
+                        },
+                        popExitTransition = {
+                            when (initialState.transitionStyle()) {
+                                TransitionStyle.Modal -> {
+                                    slideOutVertically(
+                                        targetOffsetY = { fullHeight -> fullHeight / 4 },
+                                        animationSpec = tween(260)
+                                    ) + fadeOut(animationSpec = tween(220))
+                                }
+                                TransitionStyle.Standard -> {
+                                    slideOutHorizontally(
+                                        targetOffsetX = { fullWidth -> fullWidth / 3 },
+                                        animationSpec = tween(300)
+                                    ) + fadeOut(animationSpec = tween(220))
+                                }
+                            }
+                        }
+                    ) {
                         composable("onboarding") {
                             val viewModel = hiltViewModel<OnboardingViewModel>()
                             val state by viewModel.state.collectAsState()
