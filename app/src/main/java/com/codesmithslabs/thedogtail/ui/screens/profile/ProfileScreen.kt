@@ -26,17 +26,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
 import com.codesmithslabs.thedogtail.ui.theme.BrandSurface
 import com.codesmithslabs.thedogtail.ui.theme.TextSecondary
+import com.codesmithslabs.thedogtail.ui.theme.WarningOrange
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import coil.compose.AsyncImage
+import com.codesmithslabs.thedogtail.R
 
 @Composable
 fun ProfileScreen(
@@ -50,7 +50,7 @@ fun ProfileScreen(
         topBar = {
             ProfileTopBar()
         },
-        containerColor = BrandSurface
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         if (state.isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -82,46 +82,46 @@ fun ProfileScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(16.dp))
-                            .background(Color.White)
+                            .background(MaterialTheme.colorScheme.surface)
                     ) {
                         ProfileOptionItem(
                             icon = Icons.Default.Settings,
-                            title = "Preferences",
+                            title = stringResource(R.string.profile_preferences),
                             onClick = { onEvent(ProfileContract.Event.OnPreferencesClicked) }
                         )
                         ProfileOptionItem(
                             icon = Icons.Default.Person,
-                            title = "Personal Info",
+                            title = stringResource(R.string.profile_personal_info),
                             onClick = { onEvent(ProfileContract.Event.OnPersonalInfoClicked) }
                         )
                         ProfileOptionItem(
                             icon = Icons.Default.Security,
-                            title = "Account & Security",
+                            title = stringResource(R.string.profile_account_security),
                             onClick = { onEvent(ProfileContract.Event.OnAccountSecurityClicked) }
                         )
                         ProfileOptionItem(
                             icon = Icons.Default.SwapHoriz,
-                            title = "Linked Accounts",
+                            title = stringResource(R.string.profile_linked_accounts),
                             onClick = { onEvent(ProfileContract.Event.OnLinkedAccountsClicked) }
                         )
                         ProfileOptionItem(
                             icon = Icons.Default.Visibility,
-                            title = "App Appearance",
+                            title = stringResource(R.string.profile_app_appearance),
                             onClick = { onEvent(ProfileContract.Event.OnAppAppearanceClicked) }
                         )
                         ProfileOptionItem(
                             icon = Icons.Default.Analytics,
-                            title = "Data & Analytics",
+                            title = stringResource(R.string.profile_data_analytics),
                             onClick = { onEvent(ProfileContract.Event.OnDataAnalyticsClicked) }
                         )
                         ProfileOptionItem(
                             icon = Icons.Default.Description,
-                            title = "Help & Support",
+                            title = stringResource(R.string.profile_help_support),
                             onClick = { onEvent(ProfileContract.Event.OnHelpSupportClicked) }
                         )
                         ProfileOptionItem(
                             icon = Icons.AutoMirrored.Filled.Logout,
-                            title = "Logout",
+                            title = stringResource(R.string.profile_logout),
                             onClick = { onEvent(ProfileContract.Event.OnLogoutClicked) },
                             isDestructive = true,
                             showDivider = false
@@ -140,18 +140,18 @@ fun ProfileTopBar() {
     CenterAlignedTopAppBar(
         title = {
             Text(
-                "Account",
+                stringResource(R.string.profile_account),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
         },
         actions = {
             IconButton(onClick = { /* Handle menu */ }) {
-                Icon(Icons.Default.MoreVert, contentDescription = "More")
+                Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.common_more))
             }
         },
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-            containerColor = BrandSurface
+            containerColor = MaterialTheme.colorScheme.background
         )
     )
 }
@@ -160,7 +160,7 @@ fun ProfileTopBar() {
 fun ProfileHeaderCard(state: ProfileContract.State, onClick: () -> Unit) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -177,13 +177,13 @@ fun ProfileHeaderCard(state: ProfileContract.State, onClick: () -> Unit) {
                 modifier = Modifier
                     .size(64.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFFFE0B2)), // Placeholder color
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center
             ) {
                 if (state.profileImageUri != null) {
                     AsyncImage(
                         model = state.profileImageUri,
-                        contentDescription = "Profile Image",
+                        contentDescription = stringResource(R.string.common_profile_image),
                         modifier = Modifier.fillMaxSize(),
                         contentScale = ContentScale.Crop
                     )
@@ -192,7 +192,7 @@ fun ProfileHeaderCard(state: ProfileContract.State, onClick: () -> Unit) {
                         text = state.userName.take(2).uppercase(),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFFE65100)
+                        color = BrandBlue
                     )
                 }
             }
@@ -201,7 +201,7 @@ fun ProfileHeaderCard(state: ProfileContract.State, onClick: () -> Unit) {
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = state.userName.ifEmpty { "User Name" },
+                    text = state.userName.ifEmpty { stringResource(R.string.profile_user_name_placeholder) },
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
@@ -209,8 +209,8 @@ fun ProfileHeaderCard(state: ProfileContract.State, onClick: () -> Unit) {
                 if (state.userDob.isNotEmpty() || state.userHeight > 0) {
                      Spacer(modifier = Modifier.height(4.dp))
                      val details = buildList {
-                         if (state.userDob.isNotEmpty()) add("Born: ${state.userDob}")
-                         if (state.userHeight > 0) add("Height: ${state.userHeight} cm")
+                         if (state.userDob.isNotEmpty()) add(stringResource(R.string.profile_born, state.userDob))
+                         if (state.userHeight > 0) add(stringResource(R.string.profile_height_cm, state.userHeight))
                      }.joinToString(" • ")
                      
                      Text(
@@ -235,7 +235,7 @@ fun ProfileHeaderCard(state: ProfileContract.State, onClick: () -> Unit) {
 fun LevelBanner(level: Int, onClick: () -> Unit) {
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -251,7 +251,7 @@ fun LevelBanner(level: Int, onClick: () -> Unit) {
             Icon(
                 imageVector = Icons.Default.EmojiEvents,
                 contentDescription = null,
-                tint = Color(0xFFFF6D00), // Orange
+                tint = WarningOrange,
                 modifier = Modifier.size(40.dp)
             )
             
@@ -259,13 +259,13 @@ fun LevelBanner(level: Int, onClick: () -> Unit) {
             
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Level $level",
+                    text = stringResource(R.string.level_label, level),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "You are a rising star! Keep going!",
+                    text = stringResource(R.string.profile_level_subtitle),
                     style = MaterialTheme.typography.bodySmall,
                     color = TextSecondary
                 )
@@ -299,7 +299,7 @@ fun ProfileOptionItem(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = if (isDestructive) Color.Red else Color.Black.copy(alpha = 0.7f),
+            tint = if (isDestructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
             modifier = Modifier.size(24.dp)
         )
         
@@ -309,7 +309,7 @@ fun ProfileOptionItem(
             text = title,
             style = MaterialTheme.typography.bodyLarge,
             fontWeight = FontWeight.SemiBold,
-            color = if (isDestructive) Color.Red else Color.Black.copy(alpha = 0.8f),
+            color = if (isDestructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
             modifier = Modifier.weight(1f)
         )
         

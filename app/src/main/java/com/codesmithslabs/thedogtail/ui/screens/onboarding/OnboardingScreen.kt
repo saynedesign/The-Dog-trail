@@ -29,9 +29,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.codesmithslabs.thedogtail.R
 import com.codesmithslabs.thedogtail.ui.components.HabitButton
+import com.codesmithslabs.thedogtail.ui.theme.AccentGold
+import com.codesmithslabs.thedogtail.ui.theme.AccentPeach
+import com.codesmithslabs.thedogtail.ui.theme.AccentPeachLight
 import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
 import com.codesmithslabs.thedogtail.ui.theme.BrandPurple
 import com.codesmithslabs.thedogtail.ui.theme.TheDogTailTheme
@@ -61,7 +63,7 @@ fun OnboardingScreen(
                 .padding(top = 100.dp)
                 .size(300.dp)
                 .clip(CircleShape)
-                .background(Color.White.copy(alpha = 0.1f))
+                .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.1f))
         )
         
         // Main Content
@@ -95,7 +97,7 @@ fun OnboardingScreen(
                 Box(
                     modifier = Modifier
                         .background(
-                            color = Color.White.copy(alpha = 0.2f),
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f),
                             shape = RoundedCornerShape(50)
                         )
                         .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -103,7 +105,7 @@ fun OnboardingScreen(
                     Text(
                         text = "${stringResource(R.string.onboarding_tagline)} ${stringResource(R.string.onboarding_tagline_emoji)}",
                         style = MaterialTheme.typography.labelMedium,
-                        color = Color(0xFFFFD700), // Gold/Yellow color for text
+                        color = AccentGold,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -113,12 +115,9 @@ fun OnboardingScreen(
                 // Title
                 Text(
                     text = stringResource(R.string.onboarding_title),
-                    style = MaterialTheme.typography.displayMedium.copy(
-                        fontSize = 48.sp,
-                        lineHeight = 56.sp
-                    ),
+                    style = MaterialTheme.typography.displayMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onPrimary
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -127,8 +126,7 @@ fun OnboardingScreen(
                 Text(
                     text = stringResource(R.string.onboarding_subtitle),
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White.copy(alpha = 0.8f),
-                    lineHeight = 24.sp
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                 )
             }
 
@@ -138,7 +136,7 @@ fun OnboardingScreen(
             HabitButton(
                 text = stringResource(R.string.onboarding_button_start),
                 onClick = { onEvent(OnboardingContract.Event.OnStartClicked) },
-                containerColor = Color.White,
+                containerColor = MaterialTheme.colorScheme.onPrimary,
                 contentColor = BrandBlue
             )
 
@@ -150,10 +148,10 @@ fun OnboardingScreen(
             
             Text(
                 text = buildAnnotatedString {
-                    withStyle(style = SpanStyle(color = Color.White.copy(alpha = 0.7f))) {
+                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f))) {
                         append(loginPrompt)
                     }
-                    withStyle(style = SpanStyle(color = Color.White, fontWeight = FontWeight.Bold)) {
+                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)) {
                         append(loginAction)
                     }
                 },
@@ -179,7 +177,7 @@ fun PeopleBubblesPlaceholder() {
                 .padding(start = 40.dp, top = 40.dp)
                 .size(80.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFFFCC80)) // Light Orange
+                .background(AccentPeachLight)
         )
         
         // Bottom Center Bubble
@@ -189,7 +187,7 @@ fun PeopleBubblesPlaceholder() {
                 .offset(y = 20.dp)
                 .size(120.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFFFE0B2)) // Lighter Orange
+                .background(AccentPeach)
         )
         
          // Top Right Bubble
@@ -199,7 +197,7 @@ fun PeopleBubblesPlaceholder() {
                 .padding(end = 20.dp, top = 60.dp)
                 .size(60.dp)
                 .clip(CircleShape)
-                .background(Color(0xFFFFCC80)) 
+                .background(AccentPeachLight)
         )
     }
 }

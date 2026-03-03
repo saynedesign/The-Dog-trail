@@ -22,17 +22,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.codesmithslabs.thedogtail.R
 import com.codesmithslabs.thedogtail.data.HabitEntity
 import com.codesmithslabs.thedogtail.data.HabitLogEntity
-import com.codesmithslabs.thedogtail.ui.theme.BrandBackground
 import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
-import com.codesmithslabs.thedogtail.ui.theme.BrandSurface
+import com.codesmithslabs.thedogtail.ui.theme.SuccessGreen
 import com.codesmithslabs.thedogtail.ui.theme.TextPrimary
 import com.codesmithslabs.thedogtail.ui.theme.TextSecondary
+import com.codesmithslabs.thedogtail.ui.theme.WarningOrange
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -47,21 +49,21 @@ fun HabitDetailScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Progress", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.habit_detail_progress), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { onEvent(HabitDetailContract.Event.OnBackClicked) }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
                     }
                 },
                 actions = {
                     IconButton(onClick = { onEvent(HabitDetailContract.Event.OnEditClicked) }) {
-                        Icon(Icons.Default.Edit, contentDescription = "Edit", tint = BrandBlue)
+                        Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.common_edit), tint = BrandBlue)
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = BrandSurface)
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
         },
-        containerColor = BrandBackground
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Box(modifier = Modifier.padding(padding).fillMaxSize()) {
             if (state.isLoading) {
@@ -120,7 +122,7 @@ fun HabitDetailScreen(
                 }
             } else {
                  Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Habit not found")
+                    Text(stringResource(R.string.habit_detail_not_found))
                 }
             }
         }
@@ -164,7 +166,7 @@ fun HabitHeader(habit: HabitEntity, consistency: Int) {
                     color = TextPrimary
                 )
                 Text(
-                    text = "Keep going! You're on fire \uD83D\uDD25",
+                    text = stringResource(R.string.habit_detail_keep_going),
                     style = MaterialTheme.typography.bodyMedium,
                     color = TextSecondary
                 )
@@ -179,7 +181,7 @@ fun HabitHeader(habit: HabitEntity, consistency: Int) {
                 color = accent
             )
             Text(
-                text = "Consistency",
+                text = stringResource(R.string.habit_detail_consistency),
                 style = MaterialTheme.typography.labelSmall,
                 color = TextSecondary
             )
@@ -205,7 +207,7 @@ fun ScoringBreakdownCard(
 
     Card(
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -216,12 +218,12 @@ fun ScoringBreakdownCard(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Scoring & Progress Logic",
+                text = stringResource(R.string.habit_detail_scoring_logic),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "Consistency = logs in last 30 days ÷ 30 × 100",
+                text = stringResource(R.string.habit_detail_scoring_formula),
                 style = MaterialTheme.typography.bodySmall,
                 color = TextSecondary
             )
@@ -230,17 +232,17 @@ fun ScoringBreakdownCard(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 MetricChip(
-                    title = "Consistency",
+                    title = stringResource(R.string.habit_detail_consistency),
                     value = "$completionRate%",
                     modifier = Modifier.weight(1f)
                 )
                 MetricChip(
-                    title = "30D Logs",
+                    title = stringResource(R.string.habit_detail_30d_logs),
                     value = "$logsInLast30Days / 30",
                     modifier = Modifier.weight(1f)
                 )
                 MetricChip(
-                    title = "Unique Days",
+                    title = stringResource(R.string.habit_detail_unique_days),
                     value = uniqueDaysInLast30Days.toString(),
                     modifier = Modifier.weight(1f)
                 )
@@ -250,12 +252,12 @@ fun ScoringBreakdownCard(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 MetricChip(
-                    title = "Current Streak",
-                    value = "$currentStreak days",
+                    title = stringResource(R.string.habit_detail_current_streak),
+                    value = stringResource(R.string.habit_detail_days_plural, currentStreak),
                     modifier = Modifier.weight(1f)
                 )
                 MetricChip(
-                    title = "Total Check-ins",
+                    title = stringResource(R.string.habit_detail_total_checkins),
                     value = totalCompletions.toString(),
                     modifier = Modifier.weight(1f)
                 )
@@ -285,7 +287,7 @@ fun MetricChip(
 fun SavedDetailsCard(habit: HabitEntity) {
     Card(
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -296,21 +298,28 @@ fun SavedDetailsCard(habit: HabitEntity) {
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Saved Habit Details",
+                text = stringResource(R.string.habit_detail_saved_details),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
-            DetailRow(label = "Type", value = formatTypeLabel(habit.type))
-            DetailRow(label = "Goal Rule", value = formatGoalRule(habit))
-            DetailRow(label = "Frequency", value = habit.frequency.lowercase().replaceFirstChar { it.uppercase() })
-            DetailRow(label = "Selected Days", value = formatSelectedDays(habit.selectedDays))
-            DetailRow(label = "Time of Day", value = habit.timeOfDay.lowercase().replaceFirstChar { it.uppercase() })
-            DetailRow(label = "Reminder", value = if (habit.reminderEnabled) "Enabled at ${habit.reminderTime}" else "Disabled")
-            DetailRow(label = "Schedule", value = formatSchedule(habit))
-            DetailRow(label = "Created", value = formatTimestampDate(habit.createdTimestamp))
+            DetailRow(label = stringResource(R.string.habit_detail_type), value = formatTypeLabel(habit.type))
+            DetailRow(label = stringResource(R.string.habit_detail_goal_rule), value = formatGoalRule(habit))
+            DetailRow(label = stringResource(R.string.habit_detail_frequency), value = formatFrequencyLabel(habit.frequency))
+            DetailRow(label = stringResource(R.string.habit_detail_selected_days), value = formatSelectedDays(habit.selectedDays))
+            DetailRow(label = stringResource(R.string.habit_detail_time_of_day), value = formatTimeOfDayLabel(habit.timeOfDay))
+            DetailRow(
+                label = stringResource(R.string.habit_detail_reminder),
+                value = if (habit.reminderEnabled) {
+                    stringResource(R.string.habit_detail_reminder_enabled_at, habit.reminderTime)
+                } else {
+                    stringResource(R.string.habit_detail_disabled)
+                }
+            )
+            DetailRow(label = stringResource(R.string.habit_detail_schedule), value = formatSchedule(habit))
+            DetailRow(label = stringResource(R.string.habit_detail_created), value = formatTimestampDate(habit.createdTimestamp))
             if (habit.description.isBlank()) {
                 Text(
-                    text = "Description is empty. Add your \"why\" to keep motivation visible.",
+                    text = stringResource(R.string.habit_detail_description_empty),
                     style = MaterialTheme.typography.bodySmall,
                     color = TextSecondary,
                     fontStyle = FontStyle.Italic
@@ -355,7 +364,7 @@ fun YearlyGridCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Yearly Grid",
+                text = stringResource(R.string.habit_detail_yearly_grid),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -371,7 +380,7 @@ fun YearlyGridCard(
         
         Card(
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
             elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -435,7 +444,11 @@ fun YearlyGridCard(
                     horizontalArrangement = Arrangement.End,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Less", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                    Text(
+                        stringResource(R.string.habit_detail_less),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextSecondary
+                    )
                     Spacer(modifier = Modifier.width(8.dp))
                     Box(modifier = Modifier.size(12.dp).background(BrandBlue.copy(alpha = 0.1f), RoundedCornerShape(2.dp)))
                     Spacer(modifier = Modifier.width(4.dp))
@@ -445,7 +458,11 @@ fun YearlyGridCard(
                     Spacer(modifier = Modifier.width(4.dp))
                     Box(modifier = Modifier.size(12.dp).border(0.8.dp, BrandBlue.copy(alpha = 0.2f), RoundedCornerShape(2.dp)))
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("More", style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                    Text(
+                        stringResource(R.string.habit_detail_more),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = TextSecondary
+                    )
                 }
             }
         }
@@ -460,17 +477,22 @@ fun MilestonesSection(
     totalCompletions: Int
 ) {
     Column {
+        val streakValue = if (currentStreak == 1) {
+            stringResource(R.string.habit_detail_day_single, currentStreak)
+        } else {
+            stringResource(R.string.habit_detail_days_plural, currentStreak)
+        }
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "Milestones",
+                text = stringResource(R.string.habit_detail_milestones),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = "VIEW ALL",
+                text = stringResource(R.string.common_view_all),
                 style = MaterialTheme.typography.labelSmall,
                 color = BrandBlue,
                 fontWeight = FontWeight.Bold
@@ -485,16 +507,16 @@ fun MilestonesSection(
         ) {
             StatCard(
                 icon = Icons.Default.LocalFireDepartment,
-                value = "$currentStreak Day${if (currentStreak == 1) "" else "s"}",
-                label = "Streak Master",
-                color = Color(0xFFFF9800),
+                value = streakValue,
+                label = stringResource(R.string.habit_detail_streak_master),
+                color = WarningOrange,
                 modifier = Modifier.weight(1f)
             )
 
             StatCard(
                 icon = Icons.Default.Star,
                 value = formatValue(totalValue),
-                label = "Total $unit",
+                label = stringResource(R.string.habit_detail_total_unit, unit),
                 color = BrandBlue,
                 modifier = Modifier.weight(1f)
             )
@@ -502,8 +524,8 @@ fun MilestonesSection(
             StatCard(
                 icon = Icons.Default.WaterDrop,
                 value = "$totalCompletions",
-                label = "Check-ins",
-                color = Color(0xFF4CAF50),
+                label = stringResource(R.string.habit_detail_check_ins),
+                color = SuccessGreen,
                 modifier = Modifier.weight(1f)
             )
         }
@@ -520,7 +542,7 @@ fun StatCard(
 ) {
     Card(
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = modifier.height(140.dp)
     ) {
@@ -563,7 +585,7 @@ fun MyWhyJournalCard(
 ) {
     Column {
         Text(
-            text = "My \"Why\" Journal",
+            text = stringResource(R.string.habit_detail_my_why_journal),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
@@ -579,14 +601,14 @@ fun MyWhyJournalCard(
                     Icon(
                         imageVector = Icons.Default.Edit,
                         contentDescription = null,
-                        tint = Color.White.copy(alpha = 0.7f),
+                        tint = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
                         modifier = Modifier.size(24.dp)
                     )
                     Spacer(modifier = Modifier.height(12.dp))
                     Text(
-                        text = if (description.isNotBlank()) "\"$description\"" else "\"I want to build this habit to prove to myself that I am capable of change.\"",
+                        text = if (description.isNotBlank()) "\"$description\"" else stringResource(R.string.habit_detail_default_why),
                         style = MaterialTheme.typography.bodyLarge,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         fontStyle = FontStyle.Italic
                     )
                     Spacer(modifier = Modifier.height(24.dp))
@@ -596,17 +618,22 @@ fun MyWhyJournalCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Updated recently",
+                            text = stringResource(R.string.habit_detail_updated_recently),
                             style = MaterialTheme.typography.labelSmall,
-                            color = Color.White.copy(alpha = 0.7f)
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
                         )
                         IconButton(
                             onClick = onEditClick,
                             modifier = Modifier
                                 .size(32.dp)
-                                .background(Color.White.copy(alpha = 0.2f), CircleShape)
+                                .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f), CircleShape)
                         ) {
-                            Icon(Icons.Default.Edit, contentDescription = "Edit", tint = Color.White, modifier = Modifier.size(16.dp))
+                            Icon(
+                                Icons.Default.Edit,
+                                contentDescription = stringResource(R.string.common_edit),
+                                tint = MaterialTheme.colorScheme.onPrimary,
+                                modifier = Modifier.size(16.dp)
+                            )
                         }
                     }
                 }
@@ -615,11 +642,12 @@ fun MyWhyJournalCard(
     }
 }
 
+@Composable
 fun formatTypeLabel(type: String): String {
     return when (type) {
-        "NUMERIC" -> "Numeric"
-        "TIMER" -> "Timer"
-        else -> "Yes / No"
+        "NUMERIC" -> stringResource(R.string.habit_detail_numeric)
+        "TIMER" -> stringResource(R.string.habit_detail_timer)
+        else -> stringResource(R.string.habit_detail_yes_no)
     }
 }
 
@@ -627,42 +655,72 @@ fun formatValue(value: Float): String {
     return if (value % 1.0f == 0f) value.toInt().toString() else value.toString()
 }
 
+@Composable
 fun formatGoalRule(habit: HabitEntity): String {
     return when (habit.type) {
         "NUMERIC", "TIMER" -> {
-            val comparator = if (habit.isAtLeast) "At least" else "At most"
+            val comparator = if (habit.isAtLeast) {
+                stringResource(R.string.habit_detail_at_least)
+            } else {
+                stringResource(R.string.habit_detail_at_most)
+            }
             "$comparator ${formatValue(habit.targetValue)} ${habit.unit}"
         }
-        else -> "Complete once on selected days"
+        else -> stringResource(R.string.habit_detail_complete_once_days)
     }
 }
 
+@Composable
 fun formatSelectedDays(selectedDaysCsv: String): String {
     val dayNameByIso = mapOf(
-        1 to "Mon",
-        2 to "Tue",
-        3 to "Wed",
-        4 to "Thu",
-        5 to "Fri",
-        6 to "Sat",
-        7 to "Sun"
+        1 to stringResource(R.string.report_day_mon),
+        2 to stringResource(R.string.report_day_tue),
+        3 to stringResource(R.string.report_day_wed),
+        4 to stringResource(R.string.report_day_thu),
+        5 to stringResource(R.string.report_day_fri),
+        6 to stringResource(R.string.report_day_sat),
+        7 to stringResource(R.string.report_day_sun)
     )
     val days = selectedDaysCsv
         .split(",")
         .mapNotNull { it.trim().toIntOrNull() }
         .distinct()
         .sorted()
-    if (days.isEmpty()) return "Not set"
-    if (days.size == 7) return "Every day"
+    if (days.isEmpty()) return stringResource(R.string.habit_detail_not_set)
+    if (days.size == 7) return stringResource(R.string.habit_detail_every_day)
     return days.joinToString(", ") { dayNameByIso[it] ?: it.toString() }
 }
 
+@Composable
+fun formatFrequencyLabel(frequency: String): String {
+    return when (frequency.uppercase()) {
+        "DAILY" -> stringResource(R.string.create_habit_frequency_daily)
+        "WEEKLY" -> stringResource(R.string.create_habit_frequency_weekly)
+        "MONTHLY" -> stringResource(R.string.create_habit_frequency_monthly)
+        else -> frequency.lowercase().replaceFirstChar { it.uppercase() }
+    }
+}
+
+@Composable
+fun formatTimeOfDayLabel(timeOfDay: String): String {
+    return when (timeOfDay.uppercase()) {
+        "MORNING" -> stringResource(R.string.create_habit_time_morning)
+        "AFTERNOON" -> stringResource(R.string.create_habit_time_afternoon)
+        "EVENING" -> stringResource(R.string.create_habit_time_evening)
+        else -> timeOfDay.lowercase().replaceFirstChar { it.uppercase() }
+    }
+}
+
+@Composable
 fun formatSchedule(habit: HabitEntity): String {
     return if (habit.isOneTime) {
-        "One-time on ${habit.scheduledDate?.let { formatTimestampDate(it) } ?: "Not set"}"
+        stringResource(
+            R.string.habit_detail_one_time_on,
+            habit.scheduledDate?.let { formatTimestampDate(it) } ?: stringResource(R.string.habit_detail_not_set)
+        )
     } else {
-        val endDate = habit.endDate?.let { formatTimestampDate(it) } ?: "No end date"
-        "Regular habit • End: $endDate"
+        val endDate = habit.endDate?.let { formatTimestampDate(it) } ?: stringResource(R.string.habit_detail_no_end_date)
+        stringResource(R.string.habit_detail_regular_end, endDate)
     }
 }
 

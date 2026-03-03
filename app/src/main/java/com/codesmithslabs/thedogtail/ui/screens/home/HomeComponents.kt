@@ -44,6 +44,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.res.stringResource
+import com.codesmithslabs.thedogtail.R
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -95,7 +97,7 @@ fun CalendarStrip(
             Card(
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = if (isSelected) BrandBlue else Color.White
+                    containerColor = if (isSelected) BrandBlue else MaterialTheme.colorScheme.surface
                 ),
                 elevation = CardDefaults.cardElevation(
                     defaultElevation = if (isSelected) 8.dp else 4.dp
@@ -114,13 +116,13 @@ fun CalendarStrip(
                         text = date,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = if (isSelected) Color.White else Color.Black
+                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = day.uppercase(),
                         style = MaterialTheme.typography.labelSmall,
-                        color = if (isSelected) Color.White.copy(alpha = 0.8f) else Color.Black.copy(alpha = 0.6f)
+                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
                 }
             }
@@ -159,14 +161,14 @@ fun DailyGoalCard(
                     CircularProgressIndicator(
                         progress = { completed.toFloat() / total },
                         modifier = Modifier.size(60.dp),
-                        color = Color.White,
-                        trackColor = Color.White.copy(alpha = 0.3f),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        trackColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f),
                         strokeWidth = 4.dp
                     )
                     Text(
                         text = "${(completed.toFloat() / total * 100).toInt()}%",
                         style = MaterialTheme.typography.labelSmall,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         fontWeight = FontWeight.Bold
                     )
                 }
@@ -175,16 +177,16 @@ fun DailyGoalCard(
                 
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "Your daily goals almost done! \uD83D\uDD25",
+                        text = stringResource(R.string.home_daily_goal_title),
                         style = MaterialTheme.typography.titleMedium,
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         fontWeight = FontWeight.Bold
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "$completed of $total completed",
+                        text = stringResource(R.string.home_daily_goal_progress, completed, total),
                         style = MaterialTheme.typography.bodyMedium,
-                        color = Color.White.copy(alpha = 0.8f)
+                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                     )
                 }
 
@@ -193,15 +195,15 @@ fun DailyGoalCard(
                 Button(
                     onClick = { /* TODO */ },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color.White.copy(alpha = 0.2f),
-                        contentColor = Color.White
+                        containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f),
+                        contentColor = MaterialTheme.colorScheme.onPrimary
                     ),
                     shape = RoundedCornerShape(12.dp),
                     contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
                     modifier = Modifier.height(32.dp)
                 ) {
                     Text(
-                        text = "VIEW ALL",
+                        text = stringResource(R.string.common_view_all),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold
                     )
@@ -221,7 +223,7 @@ fun ChallengeCard(
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(

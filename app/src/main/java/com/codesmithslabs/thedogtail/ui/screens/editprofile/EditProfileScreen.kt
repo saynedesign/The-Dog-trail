@@ -44,10 +44,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.codesmithslabs.thedogtail.R
 import com.codesmithslabs.thedogtail.ui.components.HabitOutlinedTextField
 import com.codesmithslabs.thedogtail.ui.theme.BrandBackground
 import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
@@ -79,10 +81,10 @@ fun EditProfileScreen(
         MaterialTheme(
             colorScheme = lightColorScheme(
                 primary = BrandBlue,
-                onPrimary = Color.White,
-                surface = Color.White,
+                onPrimary = BrandSurface,
+                surface = BrandSurface,
                 onSurface = TextPrimary,
-                surfaceContainerHigh = Color.White, // Dialog background
+                surfaceContainerHigh = BrandSurface,
                 onSurfaceVariant = TextSecondary,
                 primaryContainer = BrandLightBlue,
                 onPrimaryContainer = BrandBlue
@@ -96,14 +98,14 @@ fun EditProfileScreen(
                             onEvent(EditProfileContract.Event.OnDateSelected(datePickerState.selectedDateMillis))
                         }
                     ) {
-                        Text("OK", color = BrandBlue)
+                        Text(stringResource(R.string.common_ok), color = BrandBlue)
                     }
                 },
                 dismissButton = {
                     TextButton(
                         onClick = { onEvent(EditProfileContract.Event.OnToggleDatePicker) }
                     ) {
-                        Text("Cancel", color = TextSecondary)
+                        Text(stringResource(R.string.common_cancel), color = TextSecondary)
                     }
                 }
             ) {
@@ -119,7 +121,7 @@ fun EditProfileScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        "Edit Profile",
+                        stringResource(R.string.edit_profile_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -128,7 +130,7 @@ fun EditProfileScreen(
                     IconButton(onClick = { onEvent(EditProfileContract.Event.OnBackClicked) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.common_back),
                             tint = TextPrimary
                         )
                     }
@@ -153,13 +155,17 @@ fun EditProfileScreen(
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = BrandBlue,
-                        contentColor = Color.White,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
                         disabledContainerColor = BrandBlue.copy(alpha = 0.5f),
-                        disabledContentColor = Color.White
+                        disabledContentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
                     Text(
-                        text = if (state.isLoading) "Saving..." else "Save Changes",
+                        text = if (state.isLoading) {
+                            stringResource(R.string.common_saving)
+                        } else {
+                            stringResource(R.string.edit_profile_save_changes)
+                        },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -197,7 +203,7 @@ fun EditProfileScreen(
                     if (state.profileImageUri != null) {
                         AsyncImage(
                             model = state.profileImageUri,
-                            contentDescription = "Profile Image",
+                            contentDescription = stringResource(R.string.common_profile_image),
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
                         )
@@ -228,7 +234,7 @@ fun EditProfileScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit",
+                            contentDescription = stringResource(R.string.common_edit),
                             tint = BrandBlue,
                             modifier = Modifier.size(16.dp)
                         )
@@ -244,7 +250,7 @@ fun EditProfileScreen(
                 horizontalAlignment = Alignment.Start
             ) {
                 Text(
-                    text = "Full Name",
+                    text = stringResource(R.string.common_full_name),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary,
@@ -254,14 +260,14 @@ fun EditProfileScreen(
                 HabitOutlinedTextField(
                     value = state.name,
                     onValueChange = { onEvent(EditProfileContract.Event.OnNameChange(it)) },
-                    placeholder = "Enter your name",
+                    placeholder = stringResource(R.string.edit_profile_enter_name),
                     modifier = Modifier.fillMaxWidth()
                 )
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 Text(
-                    text = "Date of Birth",
+                    text = stringResource(R.string.common_date_of_birth),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary,
@@ -272,7 +278,7 @@ fun EditProfileScreen(
                     HabitOutlinedTextField(
                         value = state.dob,
                         onValueChange = {}, // Read only, set by date picker
-                        placeholder = "DD/MM/YYYY",
+                        placeholder = stringResource(R.string.edit_profile_dob_placeholder),
                         trailingIcon = {
                             Icon(Icons.Default.DateRange, contentDescription = null, tint = TextSecondary)
                         },
@@ -284,7 +290,7 @@ fun EditProfileScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 Text(
-                    text = "Height",
+                    text = stringResource(R.string.common_height),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary,
@@ -295,7 +301,11 @@ fun EditProfileScreen(
                     HabitOutlinedTextField(
                         value = state.height,
                         onValueChange = { onEvent(EditProfileContract.Event.OnHeightChange(it)) },
-                        placeholder = if (state.isMetric) "175" else "5.9",
+                        placeholder = if (state.isMetric) {
+                            stringResource(R.string.edit_profile_height_metric_placeholder)
+                        } else {
+                            stringResource(R.string.common_height_imperial_placeholder)
+                        },
                         modifier = Modifier.weight(1f)
                     )
                     
@@ -317,8 +327,8 @@ fun EditProfileScreen(
                                 .padding(horizontal = 12.dp, vertical = 8.dp)
                         ) {
                             Text(
-                                "FT",
-                                color = if (!state.isMetric) Color.White else TextSecondary,
+                                stringResource(R.string.common_ft),
+                                color = if (!state.isMetric) MaterialTheme.colorScheme.onPrimary else TextSecondary,
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -331,8 +341,8 @@ fun EditProfileScreen(
                                 .padding(horizontal = 12.dp, vertical = 8.dp)
                         ) {
                             Text(
-                                "CM",
-                                color = if (state.isMetric) Color.White else TextSecondary,
+                                stringResource(R.string.common_cm),
+                                color = if (state.isMetric) MaterialTheme.colorScheme.onPrimary else TextSecondary,
                                 fontWeight = FontWeight.Bold
                             )
                         }

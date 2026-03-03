@@ -14,10 +14,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.codesmithslabs.thedogtail.R
 import com.codesmithslabs.thedogtail.data.MoodEntity
 import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
 import com.codesmithslabs.thedogtail.ui.theme.TextPrimary
@@ -39,22 +39,22 @@ fun MoodHistoryScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        "Mood Stat History",
+                        stringResource(R.string.mood_history_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = { onEvent(MoodContract.Event.OnCloseHistory) }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(R.string.common_back))
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.White
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
-        containerColor = Color.White
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -88,15 +88,15 @@ fun MoodHistoryItem(mood: MoodEntity) {
     val dateString = date.format(dateFormatter)
     val today = java.time.LocalDate.now()
     val displayDate = when (date) {
-        today -> "Today, $dateString"
-        today.minusDays(1) -> "Yesterday, $dateString"
+        today -> stringResource(R.string.mood_history_today_date, dateString)
+        today.minusDays(1) -> stringResource(R.string.mood_history_yesterday_date, dateString)
         else -> dateString
     }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -115,7 +115,7 @@ fun MoodHistoryItem(mood: MoodEntity) {
             ) {
                 Text(
                     text = mood.moodEmoji,
-                    fontSize = 24.sp
+                    style = MaterialTheme.typography.headlineSmall
                 )
             }
             
@@ -132,7 +132,7 @@ fun MoodHistoryItem(mood: MoodEntity) {
                     
                     if (mood.feeling.isNotEmpty()) {
                         Text(
-                            text = " • ${mood.feeling}",
+                            text = stringResource(R.string.mood_history_feeling_separator, mood.feeling),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = TextPrimary

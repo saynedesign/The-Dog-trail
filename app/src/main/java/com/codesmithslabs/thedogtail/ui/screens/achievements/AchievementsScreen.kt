@@ -20,13 +20,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.codesmithslabs.thedogtail.R
+import com.codesmithslabs.thedogtail.ui.theme.AccentGold
+import com.codesmithslabs.thedogtail.ui.theme.AccentOrangeSoft
+import com.codesmithslabs.thedogtail.ui.theme.AccentOrangeStrong
 import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
-import com.codesmithslabs.thedogtail.util.LevelSystem
+import com.codesmithslabs.thedogtail.ui.theme.BrandPurple
 
 @Composable
 fun AchievementsScreen(
@@ -39,8 +42,8 @@ fun AchievementsScreen(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        Color(0xFF7B61FF), // Purple-ish Blue
-                        Color(0xFF536DFE)  // Brand Blue
+                        BrandPurple,
+                        BrandBlue
                     )
                 )
             )
@@ -58,15 +61,15 @@ fun AchievementsScreen(
                 IconButton(onClick = { onEvent(AchievementsContract.Event.OnBackClicked) }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = Color.White
+                        contentDescription = stringResource(R.string.common_back),
+                        tint = MaterialTheme.colorScheme.onPrimary
                     )
                 }
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
-                    text = "Achievements",
+                    text = stringResource(R.string.achievements_title),
                     style = MaterialTheme.typography.titleLarge,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.weight(1f))
@@ -88,14 +91,14 @@ fun AchievementsScreen(
                     Icon(
                         imageVector = Icons.Default.EmojiEvents,
                         contentDescription = null,
-                        tint = Color(0xFFFFD700), // Gold
+                        tint = AccentGold,
                         modifier = Modifier.fillMaxSize()
                     )
                     // Star inside
                     Icon(
                         imageVector = Icons.Default.Star,
                         contentDescription = null,
-                        tint = Color(0xFFE65100), // Dark Orange
+                        tint = AccentOrangeStrong,
                         modifier = Modifier.size(40.dp).offset(y = (-10).dp)
                     )
                 }
@@ -103,18 +106,18 @@ fun AchievementsScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 Text(
-                    text = "Level ${state.currentLevel}",
+                    text = stringResource(R.string.level_label, state.currentLevel),
                     style = MaterialTheme.typography.headlineMedium,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     fontWeight = FontWeight.Bold
                 )
                 
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
-                    text = "You've completed ${state.totalHabitCount} habits!",
+                    text = stringResource(R.string.achievements_completed_habits, state.totalHabitCount),
                     style = MaterialTheme.typography.bodyLarge,
-                    color = Color.White.copy(alpha = 0.9f)
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
                 )
             }
 
@@ -122,7 +125,7 @@ fun AchievementsScreen(
             Surface(
                 modifier = Modifier.fillMaxSize(),
                 shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
-                color = Color.White
+                color = MaterialTheme.colorScheme.surface
             ) {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(3),
@@ -164,9 +167,9 @@ fun LevelGridItem(
             contentAlignment = Alignment.Center
         ) {
             val badgeColor = when {
-                isCompleted -> Color(0xFFFFB74D) // Orange Light
-                isCurrent -> Color(0xFFFF6D00) // Orange Strong
-                else -> Color.LightGray
+                isCompleted -> AccentOrangeSoft
+                isCurrent -> AccentOrangeStrong
+                else -> MaterialTheme.colorScheme.outlineVariant
             }
             
             Icon(
@@ -181,7 +184,7 @@ fun LevelGridItem(
                  Icon(
                     imageVector = Icons.Default.Star,
                     contentDescription = null,
-                    tint = Color.White,
+                    tint = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(24.dp).offset(y = (-5).dp)
                 )
             }
@@ -190,27 +193,25 @@ fun LevelGridItem(
         Spacer(modifier = Modifier.height(8.dp))
         
         Text(
-            text = "Level $level",
+            text = stringResource(R.string.level_label, level),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = if (isLocked) Color.Gray else Color.Black
+            color = if (isLocked) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onSurface
         )
         
         Spacer(modifier = Modifier.height(4.dp))
         
         val subtitle = when {
-            isCompleted -> "You've passed this level"
-            isCurrent -> "Your current level"
-            else -> "Pass $requiredHabits habits!"
+            isCompleted -> stringResource(R.string.achievements_level_passed)
+            isCurrent -> stringResource(R.string.achievements_current_level)
+            else -> stringResource(R.string.achievements_pass_habits, requiredHabits)
         }
         
         Text(
             text = subtitle,
-            style = MaterialTheme.typography.bodySmall,
-            color = Color.Gray,
-            textAlign = TextAlign.Center,
-            fontSize = 10.sp,
-            lineHeight = 12.sp
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
         )
     }
 }

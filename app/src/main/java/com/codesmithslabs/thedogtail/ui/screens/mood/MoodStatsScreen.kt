@@ -21,10 +21,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.codesmithslabs.thedogtail.R
 import com.codesmithslabs.thedogtail.data.MoodEntity
 import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
 import com.codesmithslabs.thedogtail.ui.theme.TextPrimary
@@ -56,22 +57,22 @@ fun MoodStatsScreen(
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
-                            "Mood Stat",
+                            stringResource(R.string.mood_stats_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
                     },
                     actions = {
                         IconButton(onClick = { onEvent(MoodContract.Event.OnHistoryClicked) }) {
-                            Icon(Icons.Default.History, contentDescription = "History")
+                            Icon(Icons.Default.History, contentDescription = stringResource(R.string.mood_stats_history))
                         }
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = Color.White
+                        containerColor = MaterialTheme.colorScheme.background
                     )
                 )
             },
-            containerColor = Color.White
+            containerColor = MaterialTheme.colorScheme.background
         ) { padding ->
             Column(
                 modifier = Modifier
@@ -88,7 +89,7 @@ fun MoodStatsScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = { onEvent(MoodContract.Event.OnMonthChanged(state.selectedMonth.minusMonths(1))) }) {
-                    Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Previous Month")
+                    Icon(Icons.Default.KeyboardArrowLeft, contentDescription = stringResource(R.string.mood_stats_previous_month))
                 }
                 
                 Text(
@@ -98,7 +99,7 @@ fun MoodStatsScreen(
                 )
 
                 IconButton(onClick = { onEvent(MoodContract.Event.OnMonthChanged(state.selectedMonth.plusMonths(1))) }) {
-                    Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Next Month")
+                    Icon(Icons.Default.KeyboardArrowRight, contentDescription = stringResource(R.string.mood_stats_next_month))
                 }
             }
 
@@ -108,7 +109,15 @@ fun MoodStatsScreen(
 
             // Weekday Headers
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                listOf("Mo", "Tu", "We", "Th", "Fr", "Sa", "Su").forEach { day ->
+                listOf(
+                    stringResource(R.string.mood_stats_day_mo),
+                    stringResource(R.string.mood_stats_day_tu),
+                    stringResource(R.string.mood_stats_day_we),
+                    stringResource(R.string.mood_stats_day_th),
+                    stringResource(R.string.mood_stats_day_fr),
+                    stringResource(R.string.mood_stats_day_sa),
+                    stringResource(R.string.mood_stats_day_su)
+                ).forEach { day ->
                     Text(
                         text = day,
                         modifier = Modifier.weight(1f),
@@ -168,11 +177,10 @@ fun MoodDayItem(
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         if (mood != null) {
-            Text(text = mood.moodEmoji, fontSize = 32.sp)
+            Text(text = mood.moodEmoji, style = MaterialTheme.typography.headlineLarge)
             Text(
                 text = mood.feeling.ifEmpty { mood.moodType },
-                style = MaterialTheme.typography.bodySmall,
-                fontSize = 10.sp,
+                style = MaterialTheme.typography.labelSmall,
                 maxLines = 1,
                 textAlign = TextAlign.Center,
                 color = TextSecondary
@@ -191,12 +199,15 @@ fun MoodDayItem(
                     .clickable { onClick() },
                 contentAlignment = Alignment.Center
             ) {
-                Icon(Icons.Default.Add, contentDescription = "Add", tint = BrandBlue)
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = stringResource(R.string.common_add),
+                    tint = BrandBlue
+                )
             }
             Text(
-                text = "Today",
-                style = MaterialTheme.typography.bodySmall,
-                fontSize = 10.sp,
+                text = stringResource(R.string.mood_stats_today),
+                style = MaterialTheme.typography.labelSmall,
                 color = BrandBlue
             )
             Text(
@@ -210,23 +221,26 @@ fun MoodDayItem(
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .border(1.dp, Color(0xFFEEEEEE), CircleShape),
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
                 // Ghost face placeholder if desired, or just empty circle
-                Text("☺\uFE0E", color = Color(0xFFEEEEEE), fontSize = 24.sp)
+                Text(
+                    stringResource(R.string.mood_stats_placeholder_face),
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                    style = MaterialTheme.typography.headlineSmall
+                )
             }
             Text(
-                text = "Mood",
-                style = MaterialTheme.typography.bodySmall,
-                fontSize = 10.sp,
-                color = Color(0xFFEEEEEE)
+                text = stringResource(R.string.mood_stats_mood),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.outlineVariant
             )
             Text(
                 text = day.toString(),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
-                color = if (isFuture) Color(0xFFEEEEEE) else TextPrimary
+                color = if (isFuture) MaterialTheme.colorScheme.outlineVariant else TextPrimary
             )
         }
     }
@@ -240,7 +254,7 @@ fun MoodSelectionDialog(
 ) {
     ModalBottomSheet(
         onDismissRequest = { onEvent(MoodContract.Event.OnDismissDialog) },
-        containerColor = Color.White
+        containerColor = MaterialTheme.colorScheme.surface
     ) {
         Column(
             modifier = Modifier
@@ -261,15 +275,15 @@ fun MoodSelectionDialog(
 @Composable
 fun MoodStep1(state: MoodContract.State, onEvent: (MoodContract.Event) -> Unit) {
     val moods = listOf(
-        "Great" to "🤩",
-        "Good" to "😊",
-        "Okay" to "😐",
-        "Not Good" to "😢",
-        "Bad" to "😡"
+        stringResource(R.string.mood_label_great) to "🤩",
+        stringResource(R.string.mood_label_good) to "😊",
+        stringResource(R.string.mood_label_okay) to "😐",
+        stringResource(R.string.mood_label_not_good) to "😢",
+        stringResource(R.string.mood_label_bad) to "😡"
     )
 
     Text(
-        "How is your mood today?",
+        stringResource(R.string.mood_stats_how_today),
         style = MaterialTheme.typography.titleLarge,
         fontWeight = FontWeight.Bold
     )
@@ -291,7 +305,11 @@ fun MoodStep1(state: MoodContract.State, onEvent: (MoodContract.Event) -> Unit) 
             ) {
                 Text(
                     text = emoji, 
-                    fontSize = if (isSelected) 48.sp else 40.sp
+                    style = if (isSelected) {
+                        MaterialTheme.typography.displayMedium
+                    } else {
+                        MaterialTheme.typography.displaySmall
+                    }
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
@@ -312,13 +330,17 @@ fun MoodStep1(state: MoodContract.State, onEvent: (MoodContract.Event) -> Unit) 
         modifier = Modifier.fillMaxWidth().height(56.dp),
         colors = ButtonDefaults.buttonColors(
             containerColor = BrandBlue,
-            disabledContainerColor = Color.LightGray
+            disabledContainerColor = MaterialTheme.colorScheme.outlineVariant
         ),
         shape = RoundedCornerShape(28.dp)
     ) {
         Text(
-            text = if (state.selectedMoodType != null) "I Feel ${state.selectedMoodType}!" else "Select a Mood",
-            fontSize = 18.sp,
+            text = if (state.selectedMoodType != null) {
+                stringResource(R.string.mood_stats_i_feel, state.selectedMoodType.orEmpty())
+            } else {
+                stringResource(R.string.mood_stats_select_mood)
+            },
+            style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold
         )
     }
@@ -328,11 +350,55 @@ fun MoodStep1(state: MoodContract.State, onEvent: (MoodContract.Event) -> Unit) 
 @Composable
 fun MoodStep2(state: MoodContract.State, onEvent: (MoodContract.Event) -> Unit) {
     val moodFeelings = mapOf(
-        "Great" to listOf("Happy", "Brave", "Motivated", "Creative", "Confident", "Calm", "Grateful", "Peaceful", "Excited", "Loved", "Hopeful", "Inspired", "Proud", "Euphoric", "Nostalgic"),
-        "Good" to listOf("Happy", "Calm", "Relaxed", "Content", "Grateful", "Optimistic", "Productive"),
-        "Okay" to listOf("Neutral", "Tired", "Bored", "Distracted", "Busy", "Normal"),
-        "Not Good" to listOf("Anxious", "Stressed", "Lonely", "Sad", "Frustrated", "Disappointed"),
-        "Bad" to listOf("Angry", "Depressed", "Hopeless", "Heartbroken", "Exhausted")
+        stringResource(R.string.mood_label_great) to listOf(
+            stringResource(R.string.mood_feeling_happy),
+            stringResource(R.string.mood_feeling_brave),
+            stringResource(R.string.mood_feeling_motivated),
+            stringResource(R.string.mood_feeling_creative),
+            stringResource(R.string.mood_feeling_confident),
+            stringResource(R.string.mood_feeling_calm),
+            stringResource(R.string.mood_feeling_grateful),
+            stringResource(R.string.mood_feeling_peaceful),
+            stringResource(R.string.mood_feeling_excited),
+            stringResource(R.string.mood_feeling_loved),
+            stringResource(R.string.mood_feeling_hopeful),
+            stringResource(R.string.mood_feeling_inspired),
+            stringResource(R.string.mood_feeling_proud),
+            stringResource(R.string.mood_feeling_euphoric),
+            stringResource(R.string.mood_feeling_nostalgic)
+        ),
+        stringResource(R.string.mood_label_good) to listOf(
+            stringResource(R.string.mood_feeling_happy),
+            stringResource(R.string.mood_feeling_calm),
+            stringResource(R.string.mood_feeling_relaxed),
+            stringResource(R.string.mood_feeling_content),
+            stringResource(R.string.mood_feeling_grateful),
+            stringResource(R.string.mood_feeling_optimistic),
+            stringResource(R.string.mood_feeling_productive)
+        ),
+        stringResource(R.string.mood_label_okay) to listOf(
+            stringResource(R.string.mood_feeling_neutral),
+            stringResource(R.string.mood_feeling_tired),
+            stringResource(R.string.mood_feeling_bored),
+            stringResource(R.string.mood_feeling_distracted),
+            stringResource(R.string.mood_feeling_busy),
+            stringResource(R.string.mood_feeling_normal)
+        ),
+        stringResource(R.string.mood_label_not_good) to listOf(
+            stringResource(R.string.mood_feeling_anxious),
+            stringResource(R.string.mood_feeling_stressed),
+            stringResource(R.string.mood_feeling_lonely),
+            stringResource(R.string.mood_feeling_sad),
+            stringResource(R.string.mood_feeling_frustrated),
+            stringResource(R.string.mood_feeling_disappointed)
+        ),
+        stringResource(R.string.mood_label_bad) to listOf(
+            stringResource(R.string.mood_feeling_angry),
+            stringResource(R.string.mood_feeling_depressed),
+            stringResource(R.string.mood_feeling_hopeless),
+            stringResource(R.string.mood_feeling_heartbroken),
+            stringResource(R.string.mood_feeling_exhausted)
+        )
     )
     
     val currentFeelings = moodFeelings[state.selectedMoodType] ?: emptyList()
@@ -344,11 +410,14 @@ fun MoodStep2(state: MoodContract.State, onEvent: (MoodContract.Event) -> Unit) 
                 onClick = { onEvent(MoodContract.Event.OnBackStep) },
                 modifier = Modifier.align(Alignment.CenterStart)
             ) {
-                Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Back")
+                Icon(Icons.Default.KeyboardArrowLeft, contentDescription = stringResource(R.string.common_back))
             }
             
             Text(
-                text = "${state.selectedMoodType}! How would you describe your feelings?",
+                text = stringResource(
+                    R.string.mood_stats_describe_feelings,
+                    state.selectedMoodType.orEmpty()
+                ),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
@@ -372,13 +441,13 @@ fun MoodStep2(state: MoodContract.State, onEvent: (MoodContract.Event) -> Unit) 
                         .padding(horizontal = 4.dp)
                         .clip(RoundedCornerShape(20.dp))
                         .background(if (isSelected) BrandBlue else Color.Transparent)
-                        .border(1.dp, if (isSelected) BrandBlue else Color.LightGray, RoundedCornerShape(20.dp))
+                        .border(1.dp, if (isSelected) BrandBlue else MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(20.dp))
                         .clickable { onEvent(MoodContract.Event.OnFeelingOptionSelected(feeling)) }
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     Text(
                         text = feeling,
-                        color = if (isSelected) Color.White else TextPrimary,
+                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else TextPrimary,
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -393,13 +462,17 @@ fun MoodStep2(state: MoodContract.State, onEvent: (MoodContract.Event) -> Unit) 
             modifier = Modifier.fillMaxWidth().height(56.dp),
             colors = ButtonDefaults.buttonColors(
                 containerColor = BrandBlue,
-                disabledContainerColor = Color.LightGray
+                disabledContainerColor = MaterialTheme.colorScheme.outlineVariant
             ),
             shape = RoundedCornerShape(28.dp)
         ) {
             Text(
-                text = if (state.selectedFeeling != null) "I Feel ${state.selectedFeeling}!" else "Select a Feeling",
-                fontSize = 18.sp,
+                text = if (state.selectedFeeling != null) {
+                    stringResource(R.string.mood_stats_i_feel, state.selectedFeeling.orEmpty())
+                } else {
+                    stringResource(R.string.mood_stats_select_feeling)
+                },
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
         }

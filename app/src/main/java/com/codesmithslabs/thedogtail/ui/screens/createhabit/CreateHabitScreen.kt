@@ -27,11 +27,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.codesmithslabs.thedogtail.R
 import com.codesmithslabs.thedogtail.ui.components.HabitOutlinedTextField
-import com.codesmithslabs.thedogtail.ui.theme.BrandBackground
 import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
 import com.codesmithslabs.thedogtail.ui.theme.TextPrimary
 import com.codesmithslabs.thedogtail.ui.theme.TextSecondary
@@ -51,7 +51,7 @@ fun CreateHabitScreen(
                 onSave = { onEvent(CreateHabitContract.Event.OnSaveClicked) }
             )
         },
-        containerColor = BrandBackground
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -73,14 +73,22 @@ fun CreateHabitScreen(
             item {
                 CreateHabitSection {
                     Text(
-                        text = if (state.isOneTime) "Task Name" else "Habit Name",
+                        text = if (state.isOneTime) {
+                            stringResource(R.string.create_habit_task_name)
+                        } else {
+                            stringResource(R.string.create_habit_habit_name)
+                        },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     HabitOutlinedTextField(
                         value = state.habitName,
                         onValueChange = { onEvent(CreateHabitContract.Event.OnNameChange(it)) },
-                        placeholder = if (state.isOneTime) "Task Name" else "Habit Name",
+                        placeholder = if (state.isOneTime) {
+                            stringResource(R.string.create_habit_task_name)
+                        } else {
+                            stringResource(R.string.create_habit_habit_name)
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
@@ -95,12 +103,12 @@ fun CreateHabitScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Icon",
+                            text = stringResource(R.string.create_habit_icon),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                         TextButton(onClick = { onEvent(CreateHabitContract.Event.OnToggleIconPicker(true)) }) {
-                            Text("View All", color = BrandBlue)
+                            Text(stringResource(R.string.create_habit_view_all), color = BrandBlue)
                             Icon(Icons.Default.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))
                         }
                     }
@@ -114,7 +122,7 @@ fun CreateHabitScreen(
             item {
                 CreateHabitSection {
                     Text(
-                        text = "Color",
+                        text = stringResource(R.string.create_habit_color),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -129,7 +137,7 @@ fun CreateHabitScreen(
                 item {
                     CreateHabitSection {
                         Text(
-                            text = "Repeat",
+                            text = stringResource(R.string.create_habit_repeat),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -148,12 +156,16 @@ fun CreateHabitScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "On these day:",
+                                text = stringResource(R.string.create_habit_on_these_days),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text("All day", style = MaterialTheme.typography.bodyMedium, color = TextSecondary)
+                                Text(
+                                    stringResource(R.string.create_habit_all_day),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = TextSecondary
+                                )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Checkbox(
                                     checked = state.selectedDays.size == 7,
@@ -176,7 +188,7 @@ fun CreateHabitScreen(
                 item {
                     CreateHabitSection {
                         Text(
-                            text = "When",
+                            text = stringResource(R.string.create_habit_when),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -191,7 +203,7 @@ fun CreateHabitScreen(
             item {
                 CreateHabitSection {
                     Text(
-                        text = "Do it at:",
+                        text = stringResource(R.string.create_habit_do_it_at),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
@@ -211,14 +223,17 @@ fun CreateHabitScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "End Habit on",
+                                text = stringResource(R.string.create_habit_end_habit_on),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
                             Switch(
                                 checked = state.endDateEnabled,
                                 onCheckedChange = { onEvent(CreateHabitContract.Event.OnEndDateToggle(it)) },
-                                colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = BrandBlue)
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                                    checkedTrackColor = BrandBlue
+                                )
                             )
                         }
                         if (state.endDateEnabled && state.endDate != null) {
@@ -239,14 +254,17 @@ fun CreateHabitScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Set Reminder",
+                            text = stringResource(R.string.create_habit_set_reminder),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Switch(
                             checked = state.reminderEnabled,
                             onCheckedChange = { onEvent(CreateHabitContract.Event.OnReminderToggle(it)) },
-                            colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = BrandBlue)
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                                checkedTrackColor = BrandBlue
+                            )
                         )
                     }
                     if (state.reminderEnabled) {
@@ -267,7 +285,11 @@ fun CreateHabitScreen(
                     shape = RoundedCornerShape(28.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = BrandBlue)
                 ) {
-                    Text("Save", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = stringResource(R.string.common_save),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
                 }
                 Spacer(modifier = Modifier.height(32.dp))
             }
@@ -292,7 +314,7 @@ fun CreateHabitSection(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        color = Color.White,
+        color = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(16.dp),
         tonalElevation = 1.dp
     ) {
@@ -327,7 +349,7 @@ fun AllIconsSheet(
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        containerColor = Color.White
+        containerColor = MaterialTheme.colorScheme.surface
     ) {
         Column(
             modifier = Modifier
@@ -336,7 +358,7 @@ fun AllIconsSheet(
                 .padding(bottom = 32.dp)
         ) {
             Text(
-                text = "Select Icon",
+                text = stringResource(R.string.create_habit_select_icon),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 16.dp)
@@ -358,16 +380,16 @@ fun AllIconsSheet(
                                 modifier = Modifier
                                     .size(56.dp)
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(if (isSelected) BrandBlue.copy(alpha = 0.1f) else Color.White)
+                                    .background(if (isSelected) BrandBlue.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surface)
                                     .border(
                                         width = if (isSelected) 2.dp else 1.dp,
-                                        color = if (isSelected) BrandBlue else Color(0xFFEEEEEE),
+                                        color = if (isSelected) BrandBlue else MaterialTheme.colorScheme.outlineVariant,
                                         shape = RoundedCornerShape(16.dp)
                                     )
                                     .clickable { onIconSelect(icon) },
                                 contentAlignment = Alignment.Center
                             ) {
-                                Text(text = icon, fontSize = 24.sp)
+                                Text(text = icon, style = MaterialTheme.typography.headlineSmall)
                             }
                         }
                         // Fill remaining space
@@ -390,7 +412,7 @@ fun HabitTypeToggle(
         modifier = Modifier
             .fillMaxWidth()
             .height(48.dp)
-            .background(Color(0xFFF5F5F5), RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
             .padding(4.dp)
     ) {
         Box(
@@ -403,8 +425,8 @@ fun HabitTypeToggle(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "Regular Habit",
-                color = if (!isOneTime) Color.White else TextPrimary,
+                text = stringResource(R.string.create_habit_regular),
+                color = if (!isOneTime) MaterialTheme.colorScheme.onPrimary else TextPrimary,
                 fontWeight = FontWeight.SemiBold
             )
         }
@@ -418,8 +440,8 @@ fun HabitTypeToggle(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "One-Time Task",
-                color = if (isOneTime) Color.White else TextPrimary,
+                text = stringResource(R.string.create_habit_one_time),
+                color = if (isOneTime) MaterialTheme.colorScheme.onPrimary else TextPrimary,
                 fontWeight = FontWeight.SemiBold
             )
         }
@@ -444,15 +466,15 @@ fun IconPicker(
                     .size(56.dp)
                     .border(
                         width = if (isSelected) 2.dp else 1.dp,
-                        color = if (isSelected) BrandBlue else Color(0xFFEEEEEE),
+                        color = if (isSelected) BrandBlue else MaterialTheme.colorScheme.outlineVariant,
                         shape = RoundedCornerShape(16.dp)
                     )
                     .clip(RoundedCornerShape(16.dp))
                     .clickable { onIconSelect(icon) }
-                    .background(if (isSelected) BrandBlue.copy(alpha = 0.1f) else Color.White),
+                    .background(if (isSelected) BrandBlue.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surface),
                 contentAlignment = Alignment.Center
             ) {
-                Text(text = icon, fontSize = 24.sp)
+                Text(text = icon, style = MaterialTheme.typography.headlineSmall)
             }
         }
     }
@@ -491,7 +513,7 @@ fun ColorPicker(
                             Icon(
                                 imageVector = Icons.Default.Check,
                                 contentDescription = null,
-                                tint = Color.White
+                                tint = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                     }
@@ -519,15 +541,15 @@ fun FrequencySelector(
             Button(
                 onClick = { onFrequencySelect(frequency) },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isSelected) BrandBlue else Color.White,
-                    contentColor = if (isSelected) Color.White else TextPrimary
+                    containerColor = if (isSelected) BrandBlue else MaterialTheme.colorScheme.surface,
+                    contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else TextPrimary
                 ),
-                border = if (!isSelected) androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEEEEEE)) else null,
+                border = if (!isSelected) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null,
                 shape = RoundedCornerShape(20.dp),
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = frequency.name.lowercase().replaceFirstChar { it.uppercase() },
+                    text = frequencyLabel(frequency),
                     fontWeight = FontWeight.SemiBold
                 )
             }
@@ -540,7 +562,15 @@ fun DaySelector(
     selectedDays: Set<Int>,
     onDayToggle: (Int) -> Unit
 ) {
-    val days = listOf("S", "M", "T", "W", "T", "F", "S") // Starting Sunday? Or Mon?
+    val days = listOf(
+        stringResource(R.string.create_habit_day_s),
+        stringResource(R.string.create_habit_day_m),
+        stringResource(R.string.create_habit_day_t),
+        stringResource(R.string.create_habit_day_w),
+        stringResource(R.string.create_habit_day_t),
+        stringResource(R.string.create_habit_day_f),
+        stringResource(R.string.create_habit_day_s)
+    )
     // HabitEntity uses 1=Mon, 7=Sun generally, but Calendar uses 1=Sun.
     // Let's assume standard UI S M T W T F S usually means Sun -> Sat.
     // So S=7 (Sun) or 1? Let's map indices 0..6 to days.
@@ -561,13 +591,13 @@ fun DaySelector(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(if (isSelected) BrandBlue else Color(0xFFF5F5F5))
+                    .background(if (isSelected) BrandBlue else MaterialTheme.colorScheme.surfaceVariant)
                     .clickable { onDayToggle(dayValue) },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = label,
-                    color = if (isSelected) Color.White else TextSecondary,
+                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else TextSecondary,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -602,7 +632,7 @@ fun DatePickerRow(
         modifier = Modifier
             .fillMaxWidth()
             .height(56.dp)
-            .background(Color(0xFFF9F9F9), RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
             .clickable { datePickerDialog.show() }
             .padding(horizontal = 16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -632,18 +662,18 @@ fun TimeOfDaySelector(
             Button(
                 onClick = { onTimeSelect(time) },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
+                    containerColor = MaterialTheme.colorScheme.surface,
                     contentColor = TextPrimary
                 ),
                 border = androidx.compose.foundation.BorderStroke(
                     1.dp, 
-                    if (isSelected) BrandBlue else Color(0xFFEEEEEE)
+                    if (isSelected) BrandBlue else MaterialTheme.colorScheme.outlineVariant
                 ),
                 shape = RoundedCornerShape(20.dp),
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
-                    text = time.name.lowercase().replaceFirstChar { it.uppercase() },
+                    text = timeOfDayLabel(time),
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                     color = if (isSelected) BrandBlue else TextPrimary
                 )
@@ -679,7 +709,11 @@ fun ReminderTimePicker(
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text("Time: ", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+        Text(
+            stringResource(R.string.create_habit_time_label),
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold
+        )
         Text(time, style = MaterialTheme.typography.bodyMedium, color = BrandBlue)
     }
 }
@@ -698,11 +732,15 @@ fun CreateHabitTopBar(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         IconButton(onClick = onBack) {
-            Icon(Icons.Default.Close, contentDescription = "Close", tint = TextPrimary)
+            Icon(
+                Icons.Default.Close,
+                contentDescription = stringResource(R.string.common_close),
+                tint = TextPrimary
+            )
         }
         
         Text(
-            text = "Create New Habit",
+            text = stringResource(R.string.create_habit_title),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold,
             color = TextPrimary
@@ -710,5 +748,24 @@ fun CreateHabitTopBar(
         
         // Spacer to balance the close icon
         Spacer(modifier = Modifier.size(48.dp))
+    }
+}
+
+@Composable
+private fun frequencyLabel(frequency: CreateHabitContract.Frequency): String {
+    return when (frequency) {
+        CreateHabitContract.Frequency.DAILY -> stringResource(R.string.create_habit_frequency_daily)
+        CreateHabitContract.Frequency.WEEKLY -> stringResource(R.string.create_habit_frequency_weekly)
+        CreateHabitContract.Frequency.MONTHLY -> stringResource(R.string.create_habit_frequency_monthly)
+    }
+}
+
+@Composable
+private fun timeOfDayLabel(time: CreateHabitContract.TimeOfDay): String {
+    return when (time) {
+        CreateHabitContract.TimeOfDay.MORNING -> stringResource(R.string.create_habit_time_morning)
+        CreateHabitContract.TimeOfDay.AFTERNOON -> stringResource(R.string.create_habit_time_afternoon)
+        CreateHabitContract.TimeOfDay.EVENING -> stringResource(R.string.create_habit_time_evening)
+        CreateHabitContract.TimeOfDay.ANYTIME -> stringResource(R.string.create_habit_all_day)
     }
 }

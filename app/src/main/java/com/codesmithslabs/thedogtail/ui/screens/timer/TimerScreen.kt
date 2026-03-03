@@ -36,9 +36,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import com.codesmithslabs.thedogtail.R
 import com.codesmithslabs.thedogtail.ui.theme.BrandBackground
 import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
 import com.codesmithslabs.thedogtail.ui.theme.BrandSurface
@@ -57,7 +58,10 @@ fun TimerScreen(
                 title = { Text(state.habitTitle, fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = { onEvent(TimerContract.Event.OnBackClicked) }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(
+                            Icons.Default.ArrowBack,
+                            contentDescription = stringResource(R.string.common_back)
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = BrandBackground)
@@ -92,14 +96,15 @@ fun TimerScreen(
                     val seconds = state.timeLeftSeconds % 60
                     Text(
                         text = String.format("%02d:%02d", minutes, seconds),
-                        style = MaterialTheme.typography.displayLarge.copy(
-                            fontSize = 64.sp,
-                            fontWeight = FontWeight.Bold
-                        ),
+                        style = MaterialTheme.typography.displayLarge,
                         color = TextPrimary
                     )
                     Text(
-                        text = if (state.isRunning) "Focusing..." else "Ready?",
+                        text = if (state.isRunning) {
+                            stringResource(R.string.timer_focusing)
+                        } else {
+                            stringResource(R.string.timer_ready)
+                        },
                         style = MaterialTheme.typography.titleMedium,
                         color = TextSecondary
                     )
@@ -121,7 +126,11 @@ fun TimerScreen(
                         modifier = Modifier.size(64.dp),
                          contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
                     ) {
-                        Icon(Icons.Default.Stop, contentDescription = "Pause", modifier = Modifier.size(32.dp))
+                        Icon(
+                            Icons.Default.Stop,
+                            contentDescription = stringResource(R.string.timer_pause),
+                            modifier = Modifier.size(32.dp)
+                        )
                     }
                 } else {
                     Button(
@@ -131,7 +140,11 @@ fun TimerScreen(
                         modifier = Modifier.size(80.dp),
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
                     ) {
-                        Icon(Icons.Default.PlayArrow, contentDescription = "Start", modifier = Modifier.size(40.dp))
+                        Icon(
+                            Icons.Default.PlayArrow,
+                            contentDescription = stringResource(R.string.timer_start),
+                            modifier = Modifier.size(40.dp)
+                        )
                     }
                 }
                 
@@ -142,7 +155,11 @@ fun TimerScreen(
                     modifier = Modifier.size(64.dp),
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
                 ) {
-                    Icon(Icons.Default.Refresh, contentDescription = "Reset", modifier = Modifier.size(32.dp))
+                    Icon(
+                        Icons.Default.Refresh,
+                        contentDescription = stringResource(R.string.timer_reset),
+                        modifier = Modifier.size(32.dp)
+                    )
                 }
             }
             
@@ -152,7 +169,7 @@ fun TimerScreen(
             if (!state.isRunning) {
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        text = "Duration: ${state.totalTimeSeconds / 60} min",
+                        text = stringResource(R.string.timer_duration_minutes, state.totalTimeSeconds / 60),
                         style = MaterialTheme.typography.titleMedium,
                         color = TextPrimary,
                         fontWeight = FontWeight.Bold

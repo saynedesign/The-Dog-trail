@@ -14,10 +14,11 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.codesmithslabs.thedogtail.R
 import com.codesmithslabs.thedogtail.ui.theme.BrandSurface
 import com.codesmithslabs.thedogtail.ui.theme.TextPrimary
 import com.codesmithslabs.thedogtail.ui.theme.TextSecondary
@@ -64,7 +65,7 @@ fun PreferencesScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        "Preferences",
+                        stringResource(R.string.preferences_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -73,7 +74,7 @@ fun PreferencesScreen(
                     IconButton(onClick = { onEvent(PreferencesContract.Event.OnBackClicked) }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.common_back),
                             tint = TextPrimary
                         )
                     }
@@ -83,7 +84,7 @@ fun PreferencesScreen(
                 )
             )
         },
-        containerColor = BrandSurface
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         LazyColumn(
             modifier = Modifier
@@ -98,18 +99,18 @@ fun PreferencesScreen(
             item {
                 PreferenceSection {
                     PreferenceItem(
-                        title = "Morning",
-                        value = "Start at ${state.morningTime}",
+                        title = stringResource(R.string.preferences_morning),
+                        value = stringResource(R.string.preferences_start_at, state.morningTime),
                         onClick = { onEvent(PreferencesContract.Event.OnTimeClick(PreferencesContract.TimePickerType.MORNING)) }
                     )
                     PreferenceItem(
-                        title = "Afternoon",
-                        value = "Start at ${state.afternoonTime}",
+                        title = stringResource(R.string.preferences_afternoon),
+                        value = stringResource(R.string.preferences_start_at, state.afternoonTime),
                         onClick = { onEvent(PreferencesContract.Event.OnTimeClick(PreferencesContract.TimePickerType.AFTERNOON)) }
                     )
                     PreferenceItem(
-                        title = "Evening",
-                        value = "Start at ${state.eveningTime}",
+                        title = stringResource(R.string.preferences_evening),
+                        value = stringResource(R.string.preferences_start_at, state.eveningTime),
                         onClick = { onEvent(PreferencesContract.Event.OnTimeClick(PreferencesContract.TimePickerType.EVENING)) },
                         showDivider = false
                     )
@@ -120,12 +121,12 @@ fun PreferencesScreen(
             item {
                 PreferenceSection {
                     PreferenceItem(
-                        title = "First Day of Week",
+                        title = stringResource(R.string.preferences_first_day_of_week),
                         value = state.firstDayOfWeek,
                         onClick = { onEvent(PreferencesContract.Event.OnFirstDayOfWeekClick) }
                     )
                     PreferenceToggleItem(
-                        title = "Vacation Mode",
+                        title = stringResource(R.string.preferences_vacation_mode),
                         checked = state.isVacationMode,
                         onCheckedChange = { onEvent(PreferencesContract.Event.OnVacationModeToggle(it)) },
                         showDivider = false
@@ -137,12 +138,12 @@ fun PreferencesScreen(
             item {
                 PreferenceSection {
                     PreferenceToggleItem(
-                        title = "Daily Reminder",
+                        title = stringResource(R.string.preferences_daily_reminder),
                         checked = state.isDailyReminderEnabled,
                         onCheckedChange = { onEvent(PreferencesContract.Event.OnDailyReminderToggle(it)) }
                     )
                     PreferenceItem(
-                        title = "Reminder Time",
+                        title = stringResource(R.string.preferences_reminder_time),
                         value = state.reminderTime,
                         onClick = { onEvent(PreferencesContract.Event.OnTimeClick(PreferencesContract.TimePickerType.REMINDER)) },
                         showDivider = false,
@@ -155,11 +156,11 @@ fun PreferencesScreen(
             item {
                 PreferenceSection {
                     PreferenceItem(
-                        title = "Clear Cache",
+                        title = stringResource(R.string.preferences_clear_cache),
                         onClick = { onEvent(PreferencesContract.Event.OnClearCacheClicked) }
                     )
                     PreferenceItem(
-                        title = "Restart All Habits",
+                        title = stringResource(R.string.preferences_restart_habits),
                         onClick = { onEvent(PreferencesContract.Event.OnRestartHabitsClicked) },
                         showDivider = false
                     )
@@ -177,7 +178,7 @@ fun PreferenceSection(content: @Composable ColumnScope.() -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .background(Color.White)
+            .background(MaterialTheme.colorScheme.surface)
             .padding(vertical = 8.dp), // Padding inside the card
         content = content
     )
@@ -229,7 +230,7 @@ fun PreferenceItem(
             }
         }
         if (showDivider) {
-            HorizontalDivider(color = Color(0xFFF5F5F5), thickness = 1.dp)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 1.dp)
         }
     }
 }
@@ -264,15 +265,15 @@ fun PreferenceToggleItem(
                 checked = checked,
                 onCheckedChange = onCheckedChange,
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.White,
+                    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                     checkedTrackColor = BrandBlue,
-                    uncheckedThumbColor = Color.White,
-                    uncheckedTrackColor = Color(0xFFE0E0E0)
+                    uncheckedThumbColor = MaterialTheme.colorScheme.onSurface,
+                    uncheckedTrackColor = MaterialTheme.colorScheme.outlineVariant
                 )
             )
         }
         if (showDivider) {
-            HorizontalDivider(color = Color(0xFFF5F5F5), thickness = 1.dp)
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 1.dp)
         }
     }
 }

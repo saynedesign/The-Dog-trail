@@ -63,6 +63,7 @@ import androidx.core.view.WindowCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.foundation.isSystemInDarkTheme
 import coil.compose.AsyncImage
 import com.codesmithslabs.thedogtail.data.HabitEntity
 import com.codesmithslabs.thedogtail.ui.components.HabitCard
@@ -89,8 +90,10 @@ import com.codesmithslabs.thedogtail.ui.theme.BrandSurface
 import com.codesmithslabs.thedogtail.ui.theme.TextPrimary
 import com.codesmithslabs.thedogtail.ui.theme.TextSecondary
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.graphics.vector.ImageVector
 
+import com.codesmithslabs.thedogtail.R
 import com.codesmithslabs.thedogtail.ui.screens.report.ReportScreen
 import com.codesmithslabs.thedogtail.ui.screens.report.ReportViewModel
 import com.codesmithslabs.thedogtail.ui.screens.report.ReportContract
@@ -103,10 +106,11 @@ fun HomeScreen(
 ) {
     val view = LocalView.current
     val haptic = LocalHapticFeedback.current
+    val isDarkTheme = isSystemInDarkTheme()
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as android.app.Activity).window
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !isDarkTheme
         }
     }
 
@@ -114,16 +118,19 @@ fun HomeScreen(
         val habit = state.habits.find { it.id == state.selectedHabitId }
         AlertDialog(
             onDismissRequest = { onEvent(HomeContract.Event.OnDismissDialog) },
-            title = { Text("Delete Habit") },
-            text = { Text("Are you sure you want to delete '${habit?.title ?: "this habit"}'?") },
+            title = { Text(stringResource(R.string.home_delete_habit_title)) },
+            text = {
+                val habitName = habit?.title ?: stringResource(R.string.home_this_habit)
+                Text(stringResource(R.string.home_delete_habit_message, habitName))
+            },
             confirmButton = {
                 TextButton(onClick = { onEvent(HomeContract.Event.OnConfirmDelete) }) {
-                    Text("Delete", color = Color.Red)
+                    Text(stringResource(R.string.home_delete), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { onEvent(HomeContract.Event.OnDismissDialog) }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.common_cancel))
                 }
             }
         )
@@ -133,16 +140,19 @@ fun HomeScreen(
         val habit = state.habits.find { it.id == state.selectedHabitId }
         AlertDialog(
             onDismissRequest = { onEvent(HomeContract.Event.OnDismissDialog) },
-            title = { Text("Edit Habit") },
-            text = { Text("Do you want to edit '${habit?.title ?: "this habit"}'?") },
+            title = { Text(stringResource(R.string.home_edit_habit_title)) },
+            text = {
+                val habitName = habit?.title ?: stringResource(R.string.home_this_habit)
+                Text(stringResource(R.string.home_edit_habit_message, habitName))
+            },
             confirmButton = {
                 TextButton(onClick = { onEvent(HomeContract.Event.OnConfirmEdit) }) {
-                    Text("Edit")
+                    Text(stringResource(R.string.common_edit))
                 }
             },
             dismissButton = {
                 TextButton(onClick = { onEvent(HomeContract.Event.OnDismissDialog) }) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.common_cancel))
                 }
             }
         )
@@ -150,20 +160,20 @@ fun HomeScreen(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = BrandSurface,
+        containerColor = MaterialTheme.colorScheme.background,
         floatingActionButton = {
             if (state.currentTab == HomeContract.HomeTab.HABITS) {
                 FloatingActionButton(
                     onClick = { onEvent(HomeContract.Event.OnAddHabitClicked) },
                     containerColor = BrandBlue,
-                    contentColor = Color.White,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
                     shape = CircleShape,
                     elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 8.dp),
                     modifier = Modifier.size(64.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
-                        contentDescription = "Add Habit",
+                        contentDescription = stringResource(R.string.home_add_habit),
                         modifier = Modifier.size(32.dp)
                     )
                 }
@@ -282,12 +292,12 @@ fun HomeScreen(
                 item {
                     HomeHeader(
                         userName = state.userName,
-                        subtitle = "Let's make habits together!",
+                        subtitle = stringResource(R.string.home_header_subtitle),
                         profileImage = {
                             if (state.userImageUri != null) {
                                 AsyncImage(
                                     model = state.userImageUri, // Use URI string directly
-                                    contentDescription = "Profile Image",
+                                    contentDescription = stringResource(R.string.common_profile_image),
                                     modifier = Modifier.fillMaxSize(),
                                     contentScale = ContentScale.Crop
                                 )
@@ -319,7 +329,7 @@ fun HomeScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Habits",
+                            text = stringResource(R.string.home_habits),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = TextPrimary
@@ -335,7 +345,7 @@ fun HomeScreen(
                     ) {
                          Icon(
                              imageVector = Icons.Default.Add,
-                             contentDescription = "Add",
+                             contentDescription = stringResource(R.string.common_add),
                              tint = TextSecondary
                          )
                     }
@@ -377,7 +387,7 @@ fun HomeScreen(
                     backgroundContent = {
                         val color = when (dismissState.targetValue) {
                             SwipeToDismissBoxValue.StartToEnd -> BrandBlue // Edit
-                            SwipeToDismissBoxValue.EndToStart -> Color.Red // Delete
+                            SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.error
                             else -> Color.Transparent
                         }
                         val alignment = when (dismissState.targetValue) {
@@ -402,7 +412,7 @@ fun HomeScreen(
                             Icon(
                                 imageVector = icon,
                                 contentDescription = null,
-                                tint = Color.White
+                                tint = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                     },
@@ -423,9 +433,13 @@ fun HomeScreen(
                                 }
                                 "TIMER" -> {
                                      val currentMinutes = log?.value?.toInt() ?: 0
-                                     if (currentMinutes > 0) "$currentMinutes min completed" else "Timer Habit"
+                                     if (currentMinutes > 0) {
+                                         stringResource(R.string.home_timer_minutes_completed, currentMinutes)
+                                     } else {
+                                         stringResource(R.string.home_timer_habit)
+                                     }
                                 }
-                                else -> "Simple Habit"
+                                else -> stringResource(R.string.home_simple_habit)
                             },
                             icon = when (habit.type) {
                                 "NUMERIC" -> Icons.AutoMirrored.Filled.List
@@ -452,7 +466,11 @@ fun HomeScreen(
                                                 onClick = { onEvent(HomeContract.Event.OnUpdateHabitValue(habit.id, current - 1)) },
                                                 modifier = Modifier.size(32.dp)
                                             ) {
-                                                Icon(Icons.Default.Remove, contentDescription = "Decrease", tint = TextSecondary)
+                                                Icon(
+                                                    Icons.Default.Remove,
+                                                    contentDescription = stringResource(R.string.home_decrease),
+                                                    tint = TextSecondary
+                                                )
                                             }
                                             
                                             Text(
@@ -466,7 +484,11 @@ fun HomeScreen(
                                                 onClick = { onEvent(HomeContract.Event.OnUpdateHabitValue(habit.id, current + 1)) },
                                                 modifier = Modifier.size(32.dp)
                                             ) {
-                                                Icon(Icons.Default.Add, contentDescription = "Increase", tint = BrandBlue)
+                                                Icon(
+                                                    Icons.Default.Add,
+                                                    contentDescription = stringResource(R.string.home_increase),
+                                                    tint = BrandBlue
+                                                )
                                             }
                                         }
                                     }
@@ -475,7 +497,11 @@ fun HomeScreen(
                                             onClick = { onEvent(HomeContract.Event.OnTimerClicked(habit.id)) },
                                             modifier = Modifier.background(BrandBlue.copy(alpha = 0.1f), CircleShape)
                                         ) {
-                                            Icon(Icons.Default.PlayArrow, contentDescription = "Start Timer", tint = BrandBlue)
+                                            Icon(
+                                                Icons.Default.PlayArrow,
+                                                contentDescription = stringResource(R.string.home_start_timer),
+                                                tint = BrandBlue
+                                            )
                                         }
                                     }
                                     else -> {
@@ -487,7 +513,7 @@ fun HomeScreen(
                                             colors = CheckboxDefaults.colors(
                                                 checkedColor = BrandBlue,
                                                 uncheckedColor = TextSecondary,
-                                                checkmarkColor = Color.White
+                                                checkmarkColor = MaterialTheme.colorScheme.onPrimary
                                             )
                                         )
                                     }
@@ -522,7 +548,7 @@ fun HomeBottomNavigation(
             .fillMaxWidth()
             .height(70.dp),
         shape = RoundedCornerShape(32.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
     ) {
         Row(
@@ -533,28 +559,28 @@ fun HomeBottomNavigation(
             HomeBottomNavigationItem(
                 selected = currentTab == HomeContract.HomeTab.HABITS,
                 imageVector = Icons.Default.Home,
-                contentDescription = "Home",
+                contentDescription = stringResource(R.string.home_nav_home),
                 onClick = onHomeClick
             )
 
             HomeBottomNavigationItem(
                 selected = currentTab == HomeContract.HomeTab.MOOD,
                 imageVector = Icons.Default.Face,
-                contentDescription = "Mood",
+                contentDescription = stringResource(R.string.home_nav_mood),
                 onClick = onMoodClick
             )
 
             HomeBottomNavigationItem(
                 selected = currentTab == HomeContract.HomeTab.REPORT,
                 imageVector = Icons.Default.BarChart,
-                contentDescription = "Stats",
+                contentDescription = stringResource(R.string.home_nav_stats),
                 onClick = onReportClick
             )
 
             HomeBottomNavigationItem(
                 selected = currentTab == HomeContract.HomeTab.PROFILE,
                 imageVector = Icons.Default.Person,
-                contentDescription = "Profile",
+                contentDescription = stringResource(R.string.home_nav_profile),
                 onClick = onProfileClick
             )
         }

@@ -15,6 +15,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -193,10 +194,10 @@ class MainActivity : ComponentActivity() {
                             }
 
                             Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                                // Pass innerPadding if needed, or handle in screen
                                 OnboardingScreen(
                                     state = state,
-                                    onEvent = viewModel::handleEvent
+                                    onEvent = viewModel::handleEvent,
+                                    modifier = Modifier.padding(innerPadding)
                                 )
                             }
                         }

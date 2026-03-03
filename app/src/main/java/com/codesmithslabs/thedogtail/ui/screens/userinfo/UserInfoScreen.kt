@@ -1,6 +1,5 @@
 package com.codesmithslabs.thedogtail.ui.screens.userinfo
 
-import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -46,14 +45,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.platform.LocalContext
-import android.app.Activity
 import androidx.activity.result.PickVisualMediaRequest
 import coil.compose.AsyncImage
+import com.codesmithslabs.thedogtail.R
 import com.codesmithslabs.thedogtail.ui.components.HabitOutlinedTextField
 import com.codesmithslabs.thedogtail.ui.theme.BrandBackground
 import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
@@ -87,10 +87,10 @@ fun UserInfoScreen(
         MaterialTheme(
             colorScheme = lightColorScheme(
                 primary = BrandBlue,
-                onPrimary = Color.White,
-                surface = Color.White,
+                onPrimary = BrandSurface,
+                surface = BrandSurface,
                 onSurface = TextPrimary,
-                surfaceContainerHigh = Color.White, // Dialog background
+                surfaceContainerHigh = BrandSurface,
                 onSurfaceVariant = TextSecondary,
                 primaryContainer = BrandLightBlue,
                 onPrimaryContainer = BrandBlue
@@ -104,14 +104,14 @@ fun UserInfoScreen(
                             onEvent(UserInfoContract.Event.OnDateSelected(datePickerState.selectedDateMillis))
                         }
                     ) {
-                        Text("OK", color = BrandBlue)
+                        Text(stringResource(R.string.common_ok), color = BrandBlue)
                     }
                 },
                 dismissButton = {
                     TextButton(
                         onClick = { onEvent(UserInfoContract.Event.OnToggleDatePicker) }
                     ) {
-                        Text("Cancel", color = TextSecondary)
+                        Text(stringResource(R.string.common_cancel), color = TextSecondary)
                     }
                 }
             ) {
@@ -140,7 +140,7 @@ fun UserInfoScreen(
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
+                        contentDescription = stringResource(R.string.common_back),
                         tint = TextPrimary
                     )
                 }
@@ -161,14 +161,14 @@ fun UserInfoScreen(
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = BrandBlue,
-                        contentColor = Color.White,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
                         disabledContainerColor = BrandBlue.copy(alpha = 0.5f),
-                        disabledContentColor = Color.White
+                        disabledContentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = "Continue",
+                            text = stringResource(R.string.common_continue),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
@@ -183,7 +183,7 @@ fun UserInfoScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 Text(
-                    text = "By continuing, you agree to our Terms of Service",
+                    text = stringResource(R.string.user_info_terms_notice),
                     style = MaterialTheme.typography.bodySmall,
                     color = TextSecondary,
                     textAlign = TextAlign.Center,
@@ -220,7 +220,7 @@ fun UserInfoScreen(
                     if (state.profileImageUri != null) {
                         AsyncImage(
                             model = state.profileImageUri,
-                            contentDescription = "Profile Image",
+                            contentDescription = stringResource(R.string.common_profile_image),
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
                         )
@@ -251,7 +251,7 @@ fun UserInfoScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Default.Edit,
-                            contentDescription = "Edit",
+                            contentDescription = stringResource(R.string.common_edit),
                             tint = BrandBlue,
                             modifier = Modifier.size(16.dp)
                         )
@@ -262,7 +262,7 @@ fun UserInfoScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "Tell us about you",
+                text = stringResource(R.string.user_info_title),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
                 color = TextPrimary,
@@ -272,7 +272,7 @@ fun UserInfoScreen(
             Spacer(modifier = Modifier.height(8.dp))
             
             Text(
-                text = "Let's personalize your experience. This helps\nus tailor habits just for you.",
+                text = stringResource(R.string.user_info_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
                 color = TextSecondary,
                 textAlign = TextAlign.Center,
@@ -287,7 +287,7 @@ fun UserInfoScreen(
                 horizontalAlignment = Alignment.Start
             ) {
                 Text(
-                    text = "Full Name",
+                    text = stringResource(R.string.common_full_name),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary,
@@ -297,7 +297,7 @@ fun UserInfoScreen(
                 HabitOutlinedTextField(
                     value = state.name,
                     onValueChange = { onEvent(UserInfoContract.Event.OnNameChange(it)) },
-                    placeholder = "Mert Kahveci",
+                    placeholder = stringResource(R.string.user_info_name_placeholder),
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Default.Person,
@@ -310,7 +310,7 @@ fun UserInfoScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 Text(
-                    text = "Date of Birth",
+                    text = stringResource(R.string.common_date_of_birth),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary,
@@ -322,7 +322,7 @@ fun UserInfoScreen(
                      HabitOutlinedTextField(
                         value = state.dob,
                         onValueChange = { }, // Read only
-                        placeholder = "mm/dd/yyyy",
+                        placeholder = stringResource(R.string.user_info_dob_placeholder),
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Default.DateRange,
@@ -333,7 +333,7 @@ fun UserInfoScreen(
                         trailingIcon = {
                             Icon(
                                 imageVector = Icons.Default.DateRange,
-                                contentDescription = "Select Date",
+                                contentDescription = stringResource(R.string.user_info_select_date),
                                 tint = TextPrimary,
                                 modifier = Modifier.clickable { onEvent(UserInfoContract.Event.OnToggleDatePicker) }
                             )
@@ -351,7 +351,7 @@ fun UserInfoScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 Text(
-                    text = "Height",
+                    text = stringResource(R.string.common_height),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
                     color = TextPrimary,
@@ -361,7 +361,11 @@ fun UserInfoScreen(
                 HabitOutlinedTextField(
                     value = state.height,
                     onValueChange = { onEvent(UserInfoContract.Event.OnHeightChange(it)) },
-                    placeholder = if (state.isMetric) "180" else "5.9",
+                    placeholder = if (state.isMetric) {
+                        stringResource(R.string.user_info_height_metric_placeholder)
+                    } else {
+                        stringResource(R.string.common_height_imperial_placeholder)
+                    },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     leadingIcon = {
                          Icon(
@@ -382,14 +386,14 @@ fun UserInfoScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "CM",
+                                text = stringResource(R.string.common_cm),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = if (state.isMetric) BrandBlue else TextSecondary,
                                 modifier = Modifier.padding(horizontal = 8.dp)
                             )
                             Text(
-                                text = "FT",
+                                text = stringResource(R.string.common_ft),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = if (!state.isMetric) BrandBlue else TextSecondary,
