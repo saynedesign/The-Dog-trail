@@ -54,7 +54,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
@@ -64,7 +63,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.foundation.isSystemInDarkTheme
-import coil.compose.AsyncImage
 import com.codesmithslabs.thedogtail.data.HabitEntity
 import com.codesmithslabs.thedogtail.ui.components.HabitCard
 import com.codesmithslabs.thedogtail.ui.components.HomeHeader
@@ -291,24 +289,6 @@ fun HomeScreen(
                 ) {
                 item {
                     HomeHeader(
-                        userName = state.userName,
-                        subtitle = stringResource(R.string.home_header_subtitle),
-                        profileImage = {
-                            if (state.userImageUri != null) {
-                                AsyncImage(
-                                    model = state.userImageUri, // Use URI string directly
-                                    contentDescription = stringResource(R.string.common_profile_image),
-                                    modifier = Modifier.fillMaxSize(),
-                                    contentScale = ContentScale.Crop
-                                )
-                            } else {
-                                Icon(
-                                    imageVector = Icons.Default.Person,
-                                    contentDescription = null,
-                                    tint = BrandBlue
-                                )
-                            }
-                        },
                         onNotificationClick = { /* TODO */ },
                         modifier = Modifier.padding(horizontal = 0.dp)
                     )

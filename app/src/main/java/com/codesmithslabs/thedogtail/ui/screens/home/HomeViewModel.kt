@@ -3,7 +3,6 @@ package com.codesmithslabs.thedogtail.ui.screens.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.codesmithslabs.thedogtail.data.HabitDao
-import com.codesmithslabs.thedogtail.data.UserDao
 import com.codesmithslabs.thedogtail.data.HabitLogDao
 import com.codesmithslabs.thedogtail.data.HabitLogEntity
 import com.codesmithslabs.thedogtail.data.HabitEntity
@@ -22,7 +21,6 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val habitDao: HabitDao,
-    private val userDao: UserDao,
     private val habitLogDao: HabitLogDao
 ) : ViewModel() {
 
@@ -36,23 +34,8 @@ class HomeViewModel @Inject constructor(
     private var allHabitsCache: List<HabitEntity> = emptyList()
 
     init {
-        loadUserData()
         loadHabits()
         loadLogs()
-    }
-
-    private fun loadUserData() {
-        viewModelScope.launch {
-            // Get the single user (Flow<UserEntity?>)
-            userDao.getUser().collect { user ->
-                if (user != null) {
-                    _state.value = _state.value.copy(
-                        userName = user.name,
-                        userImageUri = user.profileImageUri
-                    )
-                }
-            }
-        }
     }
 
     private fun loadHabits() {

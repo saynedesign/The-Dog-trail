@@ -13,8 +13,6 @@ interface HomeContract {
 
     data class State(
         val currentTab: HomeTab = HomeTab.HABITS,
-        val userName: String = "",
-        val userImageUri: String? = null,
         val selectedDate: String = LocalDate.now().format(DateTimeFormatter.ofPattern("EEE d", Locale.getDefault())),
         val selectedEpochDay: Long = LocalDate.now().toEpochDay(),
         val habits: List<HabitEntity> = emptyList(),

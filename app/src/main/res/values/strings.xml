@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">The Dog Tail</string>
+    <string name="app_name">Habit Loop</string>
     
     <!-- Onboarding Screen -->
     <string name="onboarding_tagline">HABIT TRACKER, FOR YOU</string>
@@ -38,7 +38,6 @@
     <string name="home_edit_habit_title">Edit Habit</string>
     <string name="home_edit_habit_message">Do you want to edit \'%1$s\'?</string>
     <string name="home_add_habit">Add Habit</string>
-    <string name="home_header_subtitle">Let\'s make habits together!</string>
     <string name="home_habits">Habits</string>
     <string name="home_timer_minutes_completed">%1$d min completed</string>
     <string name="home_timer_habit">Timer Habit</string>
@@ -83,7 +82,7 @@
     <string name="profile_account">Account</string>
     <string name="profile_user_name_placeholder">User Name</string>
     <string name="profile_born">Born: %1$s</string>
-    <string name="profile_height_cm">Height: %1$d cm</string>
+    <string name="profile_height_cm">Height: %1$s cm</string>
     <string name="profile_level_subtitle">You are a rising star! Keep going!</string>
 
     <string name="achievements_title">Achievements</string>

@@ -34,9 +34,12 @@ import com.codesmithslabs.thedogtail.ui.theme.BrandSurface
 import com.codesmithslabs.thedogtail.ui.theme.TextSecondary
 import com.codesmithslabs.thedogtail.ui.theme.WarningOrange
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import coil.compose.AsyncImage
 import com.codesmithslabs.thedogtail.R
+import java.util.Locale
 
 @Composable
 fun ProfileScreen(
@@ -139,11 +142,22 @@ fun ProfileScreen(
 fun ProfileTopBar() {
     CenterAlignedTopAppBar(
         title = {
-            Text(
-                stringResource(R.string.profile_account),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Image(
+                    painter = painterResource(R.drawable.ic_icon_habit_loop),
+                    contentDescription = stringResource(R.string.app_name),
+                    modifier = Modifier
+                        .size(24.dp)
+                        .clip(CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    stringResource(R.string.profile_account),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         },
         actions = {
             IconButton(onClick = { /* Handle menu */ }) {
@@ -210,7 +224,7 @@ fun ProfileHeaderCard(state: ProfileContract.State, onClick: () -> Unit) {
                      Spacer(modifier = Modifier.height(4.dp))
                      val details = buildList {
                          if (state.userDob.isNotEmpty()) add(stringResource(R.string.profile_born, state.userDob))
-                         if (state.userHeight > 0) add(stringResource(R.string.profile_height_cm, state.userHeight))
+                        if (state.userHeight > 0) add(stringResource(R.string.profile_height_cm, formatHeightValue(state.userHeight)))
                      }.joinToString(" • ")
                      
                      Text(
@@ -321,5 +335,13 @@ fun ProfileOptionItem(
                 modifier = Modifier.size(16.dp)
             )
         }
+    }
+}
+
+private fun formatHeightValue(height: Float): String {
+    return if (height % 1f == 0f) {
+        height.toInt().toString()
+    } else {
+        String.format(Locale.US, "%.1f", height)
     }
 }
