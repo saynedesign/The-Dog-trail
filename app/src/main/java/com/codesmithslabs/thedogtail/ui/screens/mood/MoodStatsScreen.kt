@@ -1,11 +1,22 @@
 package com.codesmithslabs.thedogtail.ui.screens.mood
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.CircleShape
@@ -15,22 +26,40 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowRight
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.codesmithslabs.thedogtail.R
 import com.codesmithslabs.thedogtail.data.MoodEntity
+import com.codesmithslabs.thedogtail.ui.components.HabitButton
+import com.codesmithslabs.thedogtail.ui.components.HabitIconButton
+import com.codesmithslabs.thedogtail.ui.theme.BrandBackground
 import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
+import com.codesmithslabs.thedogtail.ui.theme.TheDogTailTheme
 import com.codesmithslabs.thedogtail.ui.theme.TextPrimary
 import com.codesmithslabs.thedogtail.ui.theme.TextSecondary
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -55,60 +84,108 @@ fun MoodStatsScreen(
             modifier = modifier,
             topBar = {
                 CenterAlignedTopAppBar(
+                    navigationIcon = {
+                        Image(
+                            painter = painterResource(R.drawable.ic_icon_habit_loop),
+                            contentDescription = stringResource(R.string.app_name),
+                            modifier = Modifier
+                                .padding(start = 8.dp)
+                                .size(32.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    },
                     title = {
                         Text(
                             stringResource(R.string.mood_stats_title),
                             style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
                         )
                     },
                     actions = {
-                        IconButton(onClick = { onEvent(MoodContract.Event.OnHistoryClicked) }) {
-                            Icon(Icons.Default.History, contentDescription = stringResource(R.string.mood_stats_history))
-                        }
+                        HabitIconButton(
+                            icon = Icons.Default.History,
+                            onClick = { onEvent(MoodContract.Event.OnHistoryClicked) },
+                            contentDescription = stringResource(R.string.mood_stats_history),
+                            tint = TextPrimary
+                        )
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.background
+                        containerColor = BrandBackground
                     )
                 )
             },
-            containerColor = MaterialTheme.colorScheme.background
+            containerColor = BrandBackground
         ) { padding ->
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
             ) {
+                MoodCalendarCard(state = state, onEvent = onEvent)
+            }
+        }
+    }
+}
+
+@Composable
+private fun MoodCalendarCard(
+    state: MoodContract.State,
+    onEvent: (MoodContract.Event) -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 16.dp)
+        ) {
             // Month Selector
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = { onEvent(MoodContract.Event.OnMonthChanged(state.selectedMonth.minusMonths(1))) }) {
-                    Icon(Icons.Default.KeyboardArrowLeft, contentDescription = stringResource(R.string.mood_stats_previous_month))
+                    Icon(
+                        Icons.Default.KeyboardArrowLeft,
+                        contentDescription = stringResource(R.string.mood_stats_previous_month),
+                        tint = TextPrimary
+                    )
                 }
-                
+
                 Text(
                     text = "${state.selectedMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault())} ${state.selectedMonth.year}",
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = TextPrimary
                 )
 
                 IconButton(onClick = { onEvent(MoodContract.Event.OnMonthChanged(state.selectedMonth.plusMonths(1))) }) {
-                    Icon(Icons.Default.KeyboardArrowRight, contentDescription = stringResource(R.string.mood_stats_next_month))
+                    Icon(
+                        Icons.Default.KeyboardArrowRight,
+                        contentDescription = stringResource(R.string.mood_stats_next_month),
+                        tint = TextPrimary
+                    )
                 }
             }
 
-            // Calendar Grid
-            val daysInMonth = state.selectedMonth.lengthOfMonth()
-            val firstDayOfWeek = state.selectedMonth.atDay(1).dayOfWeek.value // 1=Mon, 7=Sun
+            HorizontalDivider(
+                modifier = Modifier.padding(bottom = 16.dp),
+                color = MaterialTheme.colorScheme.outlineVariant
+            )
 
             // Weekday Headers
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
                 listOf(
                     stringResource(R.string.mood_stats_day_mo),
                     stringResource(R.string.mood_stats_day_tu),
@@ -122,31 +199,35 @@ fun MoodStatsScreen(
                         text = day,
                         modifier = Modifier.weight(1f),
                         textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = TextPrimary
                     )
                 }
             }
-            
-            Spacer(modifier = Modifier.height(16.dp))
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            val daysInMonth = state.selectedMonth.lengthOfMonth()
+            val firstDayOfWeek = state.selectedMonth.atDay(1).dayOfWeek.value // 1=Mon, 7=Sun
 
             LazyVerticalGrid(
                 columns = GridCells.Fixed(7),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(0.dp)
             ) {
                 // Empty slots for start of month
                 items(firstDayOfWeek - 1) {
-                    Box(modifier = Modifier.aspectRatio(0.7f))
+                    Box(modifier = Modifier.aspectRatio(0.65f))
                 }
-                
+
                 items(daysInMonth) { dayIndex ->
                     val day = dayIndex + 1
                     val date = state.selectedMonth.atDay(day)
                     val mood = state.moods[day]
                     val isToday = date == LocalDate.now()
                     val isFuture = date.isAfter(LocalDate.now())
-                    
+
                     MoodDayItem(
                         day = day,
                         mood = mood,
@@ -158,7 +239,6 @@ fun MoodStatsScreen(
             }
         }
     }
-}
 }
 
 @Composable
@@ -174,10 +254,13 @@ fun MoodDayItem(
             .aspectRatio(0.6f)
             .clickable(enabled = !isFuture, onClick = onClick),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(2.dp)
     ) {
         if (mood != null) {
-            Text(text = mood.moodEmoji, style = MaterialTheme.typography.headlineLarge)
+            Text(
+                text = mood.moodEmoji,
+                style = MaterialTheme.typography.headlineLarge
+            )
             Text(
                 text = mood.feeling.ifEmpty { mood.moodType },
                 style = MaterialTheme.typography.labelSmall,
@@ -202,7 +285,8 @@ fun MoodDayItem(
                 Icon(
                     Icons.Default.Add,
                     contentDescription = stringResource(R.string.common_add),
-                    tint = BrandBlue
+                    tint = BrandBlue,
+                    modifier = Modifier.size(20.dp)
                 )
             }
             Text(
@@ -224,7 +308,6 @@ fun MoodDayItem(
                     .border(1.dp, MaterialTheme.colorScheme.outlineVariant, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                // Ghost face placeholder if desired, or just empty circle
                 Text(
                     stringResource(R.string.mood_stats_placeholder_face),
                     color = MaterialTheme.colorScheme.outlineVariant,
@@ -252,7 +335,7 @@ fun MoodSelectionDialog(
     state: MoodContract.State,
     onEvent: (MoodContract.Event) -> Unit
 ) {
-    ModalBottomSheet(
+    androidx.compose.material3.ModalBottomSheet(
         onDismissRequest = { onEvent(MoodContract.Event.OnDismissDialog) },
         containerColor = MaterialTheme.colorScheme.surface
     ) {
@@ -285,10 +368,11 @@ fun MoodStep1(state: MoodContract.State, onEvent: (MoodContract.Event) -> Unit) 
     Text(
         stringResource(R.string.mood_stats_how_today),
         style = MaterialTheme.typography.titleLarge,
-        fontWeight = FontWeight.Bold
+        fontWeight = FontWeight.Bold,
+        color = TextPrimary
     )
     Spacer(modifier = Modifier.height(24.dp))
-    
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
@@ -304,7 +388,7 @@ fun MoodStep1(state: MoodContract.State, onEvent: (MoodContract.Event) -> Unit) 
                     .padding(8.dp)
             ) {
                 Text(
-                    text = emoji, 
+                    text = emoji,
                     style = if (isSelected) {
                         MaterialTheme.typography.displayMedium
                     } else {
@@ -313,7 +397,7 @@ fun MoodStep1(state: MoodContract.State, onEvent: (MoodContract.Event) -> Unit) 
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = label, 
+                    text = label,
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                     color = if (isSelected) BrandBlue else TextPrimary
@@ -321,29 +405,19 @@ fun MoodStep1(state: MoodContract.State, onEvent: (MoodContract.Event) -> Unit) 
             }
         }
     }
-    
+
     Spacer(modifier = Modifier.height(32.dp))
-    
-    Button(
+
+    HabitButton(
+        text = if (state.selectedMoodType != null) {
+            stringResource(R.string.mood_stats_i_feel, state.selectedMoodType.orEmpty())
+        } else {
+            stringResource(R.string.mood_stats_select_mood)
+        },
         onClick = { onEvent(MoodContract.Event.OnSubmitMood) },
         enabled = state.selectedMoodType != null,
-        modifier = Modifier.fillMaxWidth().height(56.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = BrandBlue,
-            disabledContainerColor = MaterialTheme.colorScheme.outlineVariant
-        ),
-        shape = RoundedCornerShape(28.dp)
-    ) {
-        Text(
-            text = if (state.selectedMoodType != null) {
-                stringResource(R.string.mood_stats_i_feel, state.selectedMoodType.orEmpty())
-            } else {
-                stringResource(R.string.mood_stats_select_mood)
-            },
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold
-        )
-    }
+        modifier = Modifier.fillMaxWidth()
+    )
 }
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -400,7 +474,7 @@ fun MoodStep2(state: MoodContract.State, onEvent: (MoodContract.Event) -> Unit) 
             stringResource(R.string.mood_feeling_exhausted)
         )
     )
-    
+
     val currentFeelings = moodFeelings[state.selectedMoodType] ?: emptyList()
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -410,9 +484,13 @@ fun MoodStep2(state: MoodContract.State, onEvent: (MoodContract.Event) -> Unit) 
                 onClick = { onEvent(MoodContract.Event.OnBackStep) },
                 modifier = Modifier.align(Alignment.CenterStart)
             ) {
-                Icon(Icons.Default.KeyboardArrowLeft, contentDescription = stringResource(R.string.common_back))
+                Icon(
+                    Icons.Default.KeyboardArrowLeft,
+                    contentDescription = stringResource(R.string.common_back),
+                    tint = TextPrimary
+                )
             }
-            
+
             Text(
                 text = stringResource(
                     R.string.mood_stats_describe_feelings,
@@ -421,14 +499,15 @@ fun MoodStep2(state: MoodContract.State, onEvent: (MoodContract.Event) -> Unit) 
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
+                color = TextPrimary,
                 modifier = Modifier
                     .align(Alignment.Center)
                     .padding(horizontal = 48.dp)
             )
         }
-        
+
         Spacer(modifier = Modifier.height(24.dp))
-        
+
         FlowRow(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.Center,
@@ -441,7 +520,11 @@ fun MoodStep2(state: MoodContract.State, onEvent: (MoodContract.Event) -> Unit) 
                         .padding(horizontal = 4.dp)
                         .clip(RoundedCornerShape(20.dp))
                         .background(if (isSelected) BrandBlue else Color.Transparent)
-                        .border(1.dp, if (isSelected) BrandBlue else MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(20.dp))
+                        .border(
+                            1.dp,
+                            if (isSelected) BrandBlue else MaterialTheme.colorScheme.outlineVariant,
+                            RoundedCornerShape(20.dp)
+                        )
                         .clickable { onEvent(MoodContract.Event.OnFeelingOptionSelected(feeling)) }
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
@@ -453,28 +536,60 @@ fun MoodStep2(state: MoodContract.State, onEvent: (MoodContract.Event) -> Unit) 
                 }
             }
         }
-        
+
         Spacer(modifier = Modifier.height(32.dp))
-        
-        Button(
+
+        HabitButton(
+            text = if (state.selectedFeeling != null) {
+                stringResource(R.string.mood_stats_i_feel, state.selectedFeeling.orEmpty())
+            } else {
+                stringResource(R.string.mood_stats_select_feeling)
+            },
             onClick = { onEvent(MoodContract.Event.OnSubmitFeeling) },
             enabled = state.selectedFeeling != null,
-            modifier = Modifier.fillMaxWidth().height(56.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = BrandBlue,
-                disabledContainerColor = MaterialTheme.colorScheme.outlineVariant
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+// ─── Previews ────────────────────────────────────────────────────────────────
+
+@Preview(name = "Mood Stats – Light", showBackground = true, backgroundColor = 0xFFE8EAF6)
+@Composable
+private fun MoodStatsScreenPreview() {
+    TheDogTailTheme(darkTheme = false) {
+        MoodStatsScreen(
+            state = MoodContract.State(
+                selectedMonth = YearMonth.of(2024, 12),
+                moods = mapOf(
+                    1 to MoodEntity(moodType = "Great", moodEmoji = "🤩", timestamp = 0L, feeling = "Happy"),
+                    2 to MoodEntity(moodType = "Good", moodEmoji = "😊", timestamp = 0L, feeling = "Calm"),
+                    3 to MoodEntity(moodType = "Okay", moodEmoji = "😐", timestamp = 0L, feeling = "Neutral"),
+                    4 to MoodEntity(moodType = "Bad", moodEmoji = "😡", timestamp = 0L, feeling = "Angry"),
+                )
             ),
-            shape = RoundedCornerShape(28.dp)
-        ) {
-            Text(
-                text = if (state.selectedFeeling != null) {
-                    stringResource(R.string.mood_stats_i_feel, state.selectedFeeling.orEmpty())
-                } else {
-                    stringResource(R.string.mood_stats_select_feeling)
-                },
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
+            onEvent = {}
+        )
+    }
+}
+
+@Preview(name = "Mood Stats – Dark", showBackground = true, backgroundColor = 0xFF01040E)
+@Composable
+private fun MoodStatsScreenDarkPreview() {
+    TheDogTailTheme(darkTheme = true) {
+        MoodStatsScreen(
+            state = MoodContract.State(selectedMonth = YearMonth.of(2024, 12)),
+            onEvent = {}
+        )
+    }
+}
+
+@Preview(name = "Mood Step 1 – Selected", showBackground = true)
+@Composable
+private fun MoodStep1Preview() {
+    TheDogTailTheme(darkTheme = false) {
+        Column(modifier = Modifier.padding(24.dp)) {
+            MoodStep1(state = MoodContract.State(selectedMoodType = "Great"), onEvent = {})
         }
     }
 }

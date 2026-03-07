@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
 import com.codesmithslabs.thedogtail.ui.theme.BrandSurface
+import com.codesmithslabs.thedogtail.ui.theme.TextPrimary
 import com.codesmithslabs.thedogtail.ui.theme.TextSecondary
 import com.codesmithslabs.thedogtail.ui.theme.WarningOrange
 import androidx.compose.ui.layout.ContentScale
@@ -141,27 +142,32 @@ fun ProfileScreen(
 @Composable
 fun ProfileTopBar() {
     CenterAlignedTopAppBar(
+        navigationIcon = {
+            Image(
+                painter = painterResource(R.drawable.ic_icon_habit_loop),
+                contentDescription = stringResource(R.string.app_name),
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .size(32.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
+            )
+        },
         title = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Image(
-                    painter = painterResource(R.drawable.ic_icon_habit_loop),
-                    contentDescription = stringResource(R.string.app_name),
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clip(CircleShape),
-                    contentScale = ContentScale.Crop
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    stringResource(R.string.profile_account),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-            }
+            Text(
+                stringResource(R.string.profile_account),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
+            )
         },
         actions = {
             IconButton(onClick = { /* Handle menu */ }) {
-                Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.common_more))
+                Icon(
+                    Icons.Default.MoreVert,
+                    contentDescription = stringResource(R.string.common_more),
+                    tint = TextPrimary
+                )
             }
         },
         colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
