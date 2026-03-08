@@ -55,12 +55,7 @@ import androidx.activity.result.PickVisualMediaRequest
 import coil.compose.AsyncImage
 import com.codesmithslabs.thedogtail.R
 import com.codesmithslabs.thedogtail.ui.components.HabitOutlinedTextField
-import com.codesmithslabs.thedogtail.ui.theme.BrandBackground
-import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
-import com.codesmithslabs.thedogtail.ui.theme.BrandLightBlue
-import com.codesmithslabs.thedogtail.ui.theme.BrandSurface
-import com.codesmithslabs.thedogtail.ui.theme.TextPrimary
-import com.codesmithslabs.thedogtail.ui.theme.TextSecondary
+import com.codesmithslabs.thedogtail.ui.components.HabitOutlinedTextField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,46 +78,32 @@ fun UserInfoScreen(
     if (state.isDatePickerVisible) {
         val datePickerState = rememberDatePickerState()
         
-        // Force light theme for the Date Picker
-        MaterialTheme(
-            colorScheme = lightColorScheme(
-                primary = BrandBlue,
-                onPrimary = BrandSurface,
-                surface = BrandSurface,
-                onSurface = TextPrimary,
-                surfaceContainerHigh = BrandSurface,
-                onSurfaceVariant = TextSecondary,
-                primaryContainer = BrandLightBlue,
-                onPrimaryContainer = BrandBlue
-            )
-        ) {
-            DatePickerDialog(
-                onDismissRequest = { onEvent(UserInfoContract.Event.OnToggleDatePicker) },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            onEvent(UserInfoContract.Event.OnDateSelected(datePickerState.selectedDateMillis))
-                        }
-                    ) {
-                        Text(stringResource(R.string.common_ok), color = BrandBlue)
+        DatePickerDialog(
+            onDismissRequest = { onEvent(UserInfoContract.Event.OnToggleDatePicker) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onEvent(UserInfoContract.Event.OnDateSelected(datePickerState.selectedDateMillis))
                     }
-                },
-                dismissButton = {
-                    TextButton(
-                        onClick = { onEvent(UserInfoContract.Event.OnToggleDatePicker) }
-                    ) {
-                        Text(stringResource(R.string.common_cancel), color = TextSecondary)
-                    }
+                ) {
+                    Text(stringResource(R.string.common_ok), color = MaterialTheme.colorScheme.primary)
                 }
-            ) {
-                DatePicker(state = datePickerState)
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { onEvent(UserInfoContract.Event.OnToggleDatePicker) }
+                ) {
+                    Text(stringResource(R.string.common_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
+        ) {
+            DatePicker(state = datePickerState)
         }
     }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = BrandSurface, // White background
+        containerColor = MaterialTheme.colorScheme.background, // Adaptive background
         topBar = {
             // Custom Top Bar
             Row(
@@ -135,13 +116,13 @@ fun UserInfoScreen(
                 IconButton(
                     onClick = { /* Handle back if needed */ },
                     modifier = Modifier
-                        .background(BrandBackground, CircleShape)
+                        .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
                         .size(40.dp)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = stringResource(R.string.common_back),
-                        tint = TextPrimary
+                        tint = MaterialTheme.colorScheme.onBackground
                     )
                 }
             }
@@ -160,9 +141,9 @@ fun UserInfoScreen(
                     enabled = state.name.isNotBlank() && state.dob.isNotBlank() && state.height.isNotBlank(),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = BrandBlue,
+                        containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary,
-                        disabledContainerColor = BrandBlue.copy(alpha = 0.5f),
+                        disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
                         disabledContentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
@@ -185,7 +166,7 @@ fun UserInfoScreen(
                 Text(
                     text = stringResource(R.string.user_info_terms_notice),
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -214,7 +195,7 @@ fun UserInfoScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(CircleShape)
-                        .background(BrandLightBlue),
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
                     contentAlignment = Alignment.Center
                 ) {
                     if (state.profileImageUri != null) {
@@ -228,7 +209,7 @@ fun UserInfoScreen(
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = null,
-                            tint = BrandBlue,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(48.dp)
                         )
                     }
@@ -239,20 +220,20 @@ fun UserInfoScreen(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .size(32.dp)
-                        .background(BrandSurface, CircleShape)
+                        .background(MaterialTheme.colorScheme.background, CircleShape)
                         .padding(2.dp)
                 ) {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(CircleShape)
-                            .background(BrandSurface),
+                            .background(MaterialTheme.colorScheme.background),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = stringResource(R.string.common_edit),
-                            tint = BrandBlue,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -265,7 +246,7 @@ fun UserInfoScreen(
                 text = stringResource(R.string.user_info_title),
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary,
+                color = MaterialTheme.colorScheme.onBackground,
                 textAlign = TextAlign.Center
             )
             
@@ -274,7 +255,7 @@ fun UserInfoScreen(
             Text(
                 text = stringResource(R.string.user_info_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
-                color = TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 16.dp)
             )
@@ -290,7 +271,7 @@ fun UserInfoScreen(
                     text = stringResource(R.string.common_full_name),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 
@@ -302,7 +283,7 @@ fun UserInfoScreen(
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = null,
-                            tint = TextSecondary
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 )
@@ -313,7 +294,7 @@ fun UserInfoScreen(
                     text = stringResource(R.string.common_date_of_birth),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 
@@ -327,14 +308,14 @@ fun UserInfoScreen(
                             Icon(
                                 imageVector = Icons.Default.DateRange,
                                 contentDescription = null,
-                                tint = TextSecondary
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         },
                         trailingIcon = {
                             Icon(
                                 imageVector = Icons.Default.DateRange,
                                 contentDescription = stringResource(R.string.user_info_select_date),
-                                tint = TextPrimary,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.clickable { onEvent(UserInfoContract.Event.OnToggleDatePicker) }
                             )
                         }
@@ -354,7 +335,7 @@ fun UserInfoScreen(
                     text = stringResource(R.string.common_height),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 
@@ -371,7 +352,7 @@ fun UserInfoScreen(
                          Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = null,
-                            tint = TextSecondary,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(20.dp)
                         )
                     },
@@ -380,7 +361,7 @@ fun UserInfoScreen(
                         Row(
                             modifier = Modifier
                                 .padding(end = 8.dp)
-                                .background(BrandBackground, RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
                                 .padding(4.dp)
                                 .clickable { onEvent(UserInfoContract.Event.OnToggleHeightUnit) },
                             verticalAlignment = Alignment.CenterVertically
@@ -389,14 +370,14 @@ fun UserInfoScreen(
                                 text = stringResource(R.string.common_cm),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = if (state.isMetric) BrandBlue else TextSecondary,
+                                color = if (state.isMetric) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(horizontal = 8.dp)
                             )
                             Text(
                                 text = stringResource(R.string.common_ft),
                                 style = MaterialTheme.typography.labelSmall,
                                 fontWeight = FontWeight.Bold,
-                                color = if (!state.isMetric) BrandBlue else TextSecondary,
+                                color = if (!state.isMetric) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(horizontal = 8.dp)
                             )
                         }

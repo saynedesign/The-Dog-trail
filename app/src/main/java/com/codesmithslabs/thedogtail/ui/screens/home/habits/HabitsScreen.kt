@@ -57,11 +57,6 @@ import com.codesmithslabs.thedogtail.R
 import com.codesmithslabs.thedogtail.ui.components.HabitCard
 import com.codesmithslabs.thedogtail.ui.components.HomeHeader
 import com.codesmithslabs.thedogtail.ui.screens.home.CalendarStrip
-import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
-import com.codesmithslabs.thedogtail.ui.theme.BrandSurface
-import com.codesmithslabs.thedogtail.ui.theme.SuccessGreen
-import com.codesmithslabs.thedogtail.ui.theme.TextPrimary
-import com.codesmithslabs.thedogtail.ui.theme.TextSecondary
 import com.codesmithslabs.thedogtail.util.LevelSystem
 import kotlinx.coroutines.delay
 
@@ -129,7 +124,7 @@ fun HabitsScreen(
             },
             confirmButton = {
                 TextButton(onClick = { onEvent(HabitsContract.Event.OnConfirmRestDay) }) {
-                    Text("Take Rest Day", color = SuccessGreen)
+                    Text("Take Rest Day", color = MaterialTheme.colorScheme.primary)
                 }
             },
             dismissButton = {
@@ -175,21 +170,21 @@ fun HabitsScreen(
                         text = stringResource(R.string.home_habits),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = TextPrimary
+                        color = MaterialTheme.colorScheme.onBackground
                     )
 
                     // Simple + button
                     Box(
                         modifier = Modifier
                             .size(32.dp)
-                            .background(BrandSurface, CircleShape)
+                            .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
                             .clickable { onEvent(HabitsContract.Event.OnAddHabitClicked) },
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = stringResource(R.string.common_add),
-                            tint = TextSecondary
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -224,7 +219,7 @@ fun HabitsScreen(
                     state = dismissState,
                     backgroundContent = {
                         val color = when (dismissState.targetValue) {
-                            SwipeToDismissBoxValue.StartToEnd -> BrandBlue
+                            SwipeToDismissBoxValue.StartToEnd -> MaterialTheme.colorScheme.primary
                             SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.error
                             else -> Color.Transparent
                         }
@@ -310,7 +305,7 @@ fun HabitsScreen(
                                                 Icon(
                                                     Icons.Default.Remove,
                                                     contentDescription = stringResource(R.string.home_decrease),
-                                                    tint = TextSecondary
+                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                                                 )
                                             }
 
@@ -318,7 +313,7 @@ fun HabitsScreen(
                                                 text = if (current % 1.0 == 0.0) current.toInt().toString() else current.toString(),
                                                 style = MaterialTheme.typography.bodyLarge,
                                                 fontWeight = FontWeight.Bold,
-                                                color = TextPrimary
+                                                color = MaterialTheme.colorScheme.onBackground
                                             )
 
                                             IconButton(
@@ -328,7 +323,7 @@ fun HabitsScreen(
                                                 Icon(
                                                     Icons.Default.Add,
                                                     contentDescription = stringResource(R.string.home_increase),
-                                                    tint = BrandBlue
+                                                    tint = MaterialTheme.colorScheme.primary
                                                 )
                                             }
                                         }
@@ -336,12 +331,12 @@ fun HabitsScreen(
                                     "TIMER" -> {
                                         IconButton(
                                             onClick = { onEvent(HabitsContract.Event.OnTimerClicked(habit.id)) },
-                                            modifier = Modifier.background(BrandBlue.copy(alpha = 0.1f), CircleShape)
+                                            modifier = Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape)
                                         ) {
                                             Icon(
                                                 Icons.Default.PlayArrow,
                                                 contentDescription = stringResource(R.string.home_start_timer),
-                                                tint = BrandBlue
+                                                tint = MaterialTheme.colorScheme.primary
                                             )
                                         }
                                     }
@@ -352,8 +347,8 @@ fun HabitsScreen(
                                                 onEvent(HabitsContract.Event.OnToggleHabit(habit.id, isChecked))
                                             },
                                             colors = CheckboxDefaults.colors(
-                                                checkedColor = BrandBlue,
-                                                uncheckedColor = TextSecondary,
+                                                checkedColor = MaterialTheme.colorScheme.primary,
+                                                uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant,
                                                 checkmarkColor = MaterialTheme.colorScheme.onPrimary
                                             )
                                         )
@@ -390,7 +385,7 @@ fun HabitsScreen(
                 }
                 Box(
                     modifier = Modifier
-                        .background(BrandBlue, RoundedCornerShape(16.dp))
+                        .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(16.dp))
                         .padding(horizontal = 24.dp, vertical = 12.dp)
                 ) {
                     Text(

@@ -34,8 +34,6 @@ import com.codesmithslabs.thedogtail.ui.components.HabitButton
 import com.codesmithslabs.thedogtail.ui.theme.AccentGold
 import com.codesmithslabs.thedogtail.ui.theme.AccentPeach
 import com.codesmithslabs.thedogtail.ui.theme.AccentPeachLight
-import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
-import com.codesmithslabs.thedogtail.ui.theme.BrandPurple
 import com.codesmithslabs.thedogtail.ui.theme.TheDogTailTheme
 
 @Composable
@@ -50,8 +48,8 @@ fun OnboardingScreen(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        BrandBlue,
-                        BrandPurple
+                        MaterialTheme.colorScheme.primary,
+                        MaterialTheme.colorScheme.secondary
                     )
                 )
             )
@@ -137,7 +135,7 @@ fun OnboardingScreen(
                 text = stringResource(R.string.onboarding_button_start),
                 onClick = { onEvent(OnboardingContract.Event.OnStartClicked) },
                 containerColor = MaterialTheme.colorScheme.onPrimary,
-                contentColor = BrandBlue
+                contentColor = MaterialTheme.colorScheme.primary
             )
 
             Spacer(modifier = Modifier.height(24.dp))

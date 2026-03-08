@@ -33,10 +33,7 @@ import androidx.compose.ui.unit.dp
 import com.codesmithslabs.thedogtail.R
 import com.codesmithslabs.thedogtail.data.HabitEntity
 import com.codesmithslabs.thedogtail.data.HabitLogEntity
-import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
 import com.codesmithslabs.thedogtail.ui.theme.SuccessGreen
-import com.codesmithslabs.thedogtail.ui.theme.TextPrimary
-import com.codesmithslabs.thedogtail.ui.theme.TextSecondary
 import com.codesmithslabs.thedogtail.ui.theme.WarningOrange
 import java.time.Instant
 import java.time.LocalDate
@@ -73,7 +70,7 @@ fun HabitDetailScreen(
                 },
                 actions = {
                     IconButton(onClick = { onEvent(HabitDetailContract.Event.OnEditClicked) }) {
-                        Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.common_edit), tint = BrandBlue)
+                        Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.common_edit), tint = MaterialTheme.colorScheme.primary)
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.background)
@@ -179,12 +176,12 @@ fun HabitHeader(habit: HabitEntity, consistency: Int) {
                     text = habit.title,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary
+                    color = MaterialTheme.colorScheme.onBackground
                 )
                 Text(
                     text = stringResource(R.string.habit_detail_keep_going),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -199,7 +196,7 @@ fun HabitHeader(habit: HabitEntity, consistency: Int) {
             Text(
                 text = stringResource(R.string.habit_detail_consistency),
                 style = MaterialTheme.typography.labelSmall,
-                color = TextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -232,7 +229,7 @@ fun ScoringBreakdownCard(
             Text(
                 text = "Optimistic tracking focuses on momentum and effort over perfection.",
                 style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -277,11 +274,11 @@ fun MetricChip(
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(BrandBlue.copy(alpha = 0.08f))
+            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f))
             .padding(horizontal = 12.dp, vertical = 10.dp)
     ) {
-        Text(text = title, style = MaterialTheme.typography.labelSmall, color = TextSecondary)
-        Text(text = value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = TextPrimary)
+        Text(text = title, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(text = value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
     }
 }
 
@@ -323,7 +320,7 @@ fun SavedDetailsCard(habit: HabitEntity) {
                 Text(
                     text = stringResource(R.string.habit_detail_description_empty),
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontStyle = FontStyle.Italic
                 )
             }
@@ -341,13 +338,13 @@ fun DetailRow(label: String, value: String) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodySmall,
-            color = TextSecondary,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.weight(0.38f)
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
-            color = TextPrimary,
+            color = MaterialTheme.colorScheme.onSurface,
             textAlign = TextAlign.End,
             modifier = Modifier.weight(0.62f)
         )
@@ -373,7 +370,7 @@ fun YearlyGridCard(
             Text(
                 text = LocalDate.now().year.toString(),
                 style = MaterialTheme.typography.bodyMedium,
-                color = BrandBlue,
+                color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -424,13 +421,13 @@ fun YearlyGridCard(
                                             when {
                                                 beforeHabitCreation -> Color.Transparent
                                                 isFuture -> Color.Transparent
-                                                isCompleted -> BrandBlue
-                                                else -> BrandBlue.copy(alpha = 0.1f)
+                                                isCompleted -> MaterialTheme.colorScheme.primary
+                                                else -> MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
                                             }
                                         )
                                         .border(
                                             width = if (beforeHabitCreation) 0.8.dp else 0.dp,
-                                            color = if (beforeHabitCreation) BrandBlue.copy(alpha = 0.2f) else Color.Transparent,
+                                            color = if (beforeHabitCreation) MaterialTheme.colorScheme.primary.copy(alpha = 0.2f) else Color.Transparent,
                                             shape = RoundedCornerShape(2.dp)
                                         )
                                 )
@@ -449,21 +446,21 @@ fun YearlyGridCard(
                     Text(
                         stringResource(R.string.habit_detail_less),
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Spacer(modifier = Modifier.width(8.dp))
-                    Box(modifier = Modifier.size(12.dp).background(BrandBlue.copy(alpha = 0.1f), RoundedCornerShape(2.dp)))
+                    Box(modifier = Modifier.size(12.dp).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), RoundedCornerShape(2.dp)))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Box(modifier = Modifier.size(12.dp).background(BrandBlue.copy(alpha = 0.4f), RoundedCornerShape(2.dp)))
+                    Box(modifier = Modifier.size(12.dp).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.4f), RoundedCornerShape(2.dp)))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Box(modifier = Modifier.size(12.dp).background(BrandBlue, RoundedCornerShape(2.dp)))
+                    Box(modifier = Modifier.size(12.dp).background(MaterialTheme.colorScheme.primary, RoundedCornerShape(2.dp)))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Box(modifier = Modifier.size(12.dp).border(0.8.dp, BrandBlue.copy(alpha = 0.2f), RoundedCornerShape(2.dp)))
+                    Box(modifier = Modifier.size(12.dp).border(0.8.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), RoundedCornerShape(2.dp)))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         stringResource(R.string.habit_detail_more),
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -496,7 +493,7 @@ fun MilestonesSection(
             Text(
                 text = stringResource(R.string.common_view_all),
                 style = MaterialTheme.typography.labelSmall,
-                color = BrandBlue,
+                color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -519,7 +516,7 @@ fun MilestonesSection(
                 icon = Icons.Default.Star,
                 value = formatValue(totalValue),
                 label = stringResource(R.string.habit_detail_total_unit, unit),
-                color = BrandBlue,
+                color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.weight(1f)
             )
 
@@ -573,7 +570,7 @@ fun StatCard(
             Text(
                 text = label,
                 style = MaterialTheme.typography.labelSmall,
-                color = TextSecondary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center
             )
         }
@@ -595,7 +592,7 @@ fun MyWhyJournalCard(
         
         Card(
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = BrandBlue),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
             modifier = Modifier.fillMaxWidth()
         ) {
             Box(modifier = Modifier.padding(24.dp)) {

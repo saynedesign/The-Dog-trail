@@ -57,8 +57,6 @@ import com.codesmithslabs.thedogtail.ui.screens.profile.ProfileScreen
 import com.codesmithslabs.thedogtail.ui.screens.profile.ProfileViewModel
 import com.codesmithslabs.thedogtail.ui.screens.report.ReportScreen
 import com.codesmithslabs.thedogtail.ui.screens.report.ReportViewModel
-import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
-import com.codesmithslabs.thedogtail.ui.theme.TextSecondary
 
 @Composable
 fun HomeScreen(
@@ -269,7 +267,7 @@ private fun HomeBottomNavigationItem(
     onClick: () -> Unit
 ) {
     val tint by animateColorAsState(
-        targetValue = if (selected) BrandBlue else TextSecondary,
+        targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
         animationSpec = tween(220),
         label = "bottom_nav_tint"
     )

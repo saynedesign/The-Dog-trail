@@ -35,9 +35,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.codesmithslabs.thedogtail.R
 import com.codesmithslabs.thedogtail.ui.components.HabitOutlinedTextField
-import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
-import com.codesmithslabs.thedogtail.ui.theme.TextPrimary
-import com.codesmithslabs.thedogtail.ui.theme.TextSecondary
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -111,7 +108,7 @@ fun CreateHabitScreen(
                             fontWeight = FontWeight.Bold
                         )
                         TextButton(onClick = { onEvent(CreateHabitContract.Event.OnToggleIconPicker(true)) }) {
-                            Text(stringResource(R.string.create_habit_view_all), color = BrandBlue)
+                            Text(stringResource(R.string.create_habit_view_all), color = MaterialTheme.colorScheme.primary)
                             Icon(Icons.Default.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))
                         }
                     }
@@ -167,7 +164,7 @@ fun CreateHabitScreen(
                                 Text(
                                     stringResource(R.string.create_habit_all_day),
                                     style = MaterialTheme.typography.bodyMedium,
-                                    color = TextSecondary
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Checkbox(
@@ -177,7 +174,10 @@ fun CreateHabitScreen(
                                             (1..7).forEach { onEvent(CreateHabitContract.Event.OnDayToggle(it)) }
                                         }
                                     },
-                                    colors = CheckboxDefaults.colors(checkedColor = BrandBlue)
+                                    colors = CheckboxDefaults.colors(
+                                        checkedColor = MaterialTheme.colorScheme.primary,
+                                        uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
                                 )
                             }
                         }
@@ -235,7 +235,7 @@ fun CreateHabitScreen(
                                 onCheckedChange = { onEvent(CreateHabitContract.Event.OnEndDateToggle(it)) },
                                 colors = SwitchDefaults.colors(
                                     checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                                    checkedTrackColor = BrandBlue
+                                    checkedTrackColor = MaterialTheme.colorScheme.primary
                                 )
                             )
                         }
@@ -266,7 +266,7 @@ fun CreateHabitScreen(
                             onCheckedChange = { onEvent(CreateHabitContract.Event.OnReminderToggle(it)) },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                                checkedTrackColor = BrandBlue
+                                checkedTrackColor = MaterialTheme.colorScheme.primary
                             )
                         )
                     }
@@ -286,7 +286,7 @@ fun CreateHabitScreen(
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = RoundedCornerShape(28.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = BrandBlue)
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                 ) {
                     Text(
                         text = stringResource(R.string.common_save),
@@ -383,10 +383,10 @@ fun AllIconsSheet(
                                 modifier = Modifier
                                     .size(56.dp)
                                     .clip(RoundedCornerShape(16.dp))
-                                    .background(if (isSelected) BrandBlue.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surface)
+                                    .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surface)
                                     .border(
                                         width = if (isSelected) 2.dp else 1.dp,
-                                        color = if (isSelected) BrandBlue else MaterialTheme.colorScheme.outlineVariant,
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
                                         shape = RoundedCornerShape(16.dp)
                                     )
                                     .clickable { onIconSelect(icon) },
@@ -423,13 +423,13 @@ fun HabitTypeToggle(
                 .weight(1f)
                 .fillMaxHeight()
                 .clip(RoundedCornerShape(8.dp))
-                .background(if (!isOneTime) BrandBlue else Color.Transparent)
+                .background(if (!isOneTime) MaterialTheme.colorScheme.primary else Color.Transparent)
                 .clickable { onToggle(false) },
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = stringResource(R.string.create_habit_regular),
-                color = if (!isOneTime) MaterialTheme.colorScheme.onPrimary else TextPrimary,
+                color = if (!isOneTime) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.SemiBold
             )
         }
@@ -438,13 +438,13 @@ fun HabitTypeToggle(
                 .weight(1f)
                 .fillMaxHeight()
                 .clip(RoundedCornerShape(8.dp))
-                .background(if (isOneTime) BrandBlue else Color.Transparent)
+                .background(if (isOneTime) MaterialTheme.colorScheme.primary else Color.Transparent)
                 .clickable { onToggle(true) },
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = stringResource(R.string.create_habit_one_time),
-                color = if (isOneTime) MaterialTheme.colorScheme.onPrimary else TextPrimary,
+                color = if (isOneTime) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.SemiBold
             )
         }
@@ -469,12 +469,12 @@ fun IconPicker(
                     .size(56.dp)
                     .border(
                         width = if (isSelected) 2.dp else 1.dp,
-                        color = if (isSelected) BrandBlue else MaterialTheme.colorScheme.outlineVariant,
+                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
                         shape = RoundedCornerShape(16.dp)
                     )
                     .clip(RoundedCornerShape(16.dp))
                     .clickable { onIconSelect(icon) }
-                    .background(if (isSelected) BrandBlue.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surface),
+                    .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else MaterialTheme.colorScheme.surface),
                 contentAlignment = Alignment.Center
             ) {
                 Text(text = icon, style = MaterialTheme.typography.headlineSmall)
@@ -544,8 +544,8 @@ fun FrequencySelector(
             Button(
                 onClick = { onFrequencySelect(frequency) },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isSelected) BrandBlue else MaterialTheme.colorScheme.surface,
-                    contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else TextPrimary
+                    containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+                    contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
                 ),
                 border = if (!isSelected) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null,
                 shape = RoundedCornerShape(20.dp),
@@ -594,13 +594,13 @@ fun DaySelector(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(if (isSelected) BrandBlue else MaterialTheme.colorScheme.surfaceVariant)
+                    .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
                     .clickable { onDayToggle(dayValue) },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = label,
-                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else TextSecondary,
+                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -642,11 +642,11 @@ fun DatePickerRow(
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Default.CalendarToday, contentDescription = null, tint = BrandBlue, modifier = Modifier.size(20.dp))
+            Icon(Icons.Default.CalendarToday, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
             Spacer(modifier = Modifier.width(12.dp))
-            Text(text = dateString, color = TextPrimary)
+            Text(text = dateString, color = MaterialTheme.colorScheme.onBackground)
         }
-        Icon(Icons.Default.Edit, contentDescription = null, tint = TextSecondary, modifier = Modifier.size(16.dp))
+        Icon(Icons.Default.Edit, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
     }
 }
 
@@ -666,11 +666,11 @@ fun TimeOfDaySelector(
                 onClick = { onTimeSelect(time) },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = TextPrimary
+                    contentColor = MaterialTheme.colorScheme.onSurface
                 ),
                 border = androidx.compose.foundation.BorderStroke(
                     1.dp, 
-                    if (isSelected) BrandBlue else MaterialTheme.colorScheme.outlineVariant
+                    if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
                 ),
                 shape = RoundedCornerShape(20.dp),
                 modifier = Modifier.weight(1f)
@@ -678,7 +678,7 @@ fun TimeOfDaySelector(
                 Text(
                     text = timeOfDayLabel(time),
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                    color = if (isSelected) BrandBlue else TextPrimary
+                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -717,7 +717,7 @@ fun ReminderTimePicker(
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold
         )
-        Text(time, style = MaterialTheme.typography.bodyMedium, color = BrandBlue)
+        Text(time, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
     }
 }
 
@@ -738,7 +738,7 @@ fun CreateHabitTopBar(
             Icon(
                 Icons.Default.Close,
                 contentDescription = stringResource(R.string.common_close),
-                tint = TextPrimary
+                tint = MaterialTheme.colorScheme.onBackground
             )
         }
         
@@ -756,7 +756,7 @@ fun CreateHabitTopBar(
                 text = stringResource(R.string.create_habit_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary
+                color = MaterialTheme.colorScheme.onBackground
             )
         }
         

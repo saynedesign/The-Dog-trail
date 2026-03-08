@@ -22,9 +22,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.codesmithslabs.thedogtail.R
 import com.codesmithslabs.thedogtail.data.MoodEntity
-import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
-import com.codesmithslabs.thedogtail.ui.theme.TextPrimary
-import com.codesmithslabs.thedogtail.ui.theme.TextSecondary
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -124,7 +121,7 @@ fun MoodHistoryItem(mood: MoodEntity) {
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
-                    .background(BrandBlue.copy(alpha = 0.1f)),
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -141,7 +138,7 @@ fun MoodHistoryItem(mood: MoodEntity) {
                         text = mood.moodType,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = TextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     
                     if (mood.feeling.isNotEmpty()) {
@@ -149,7 +146,7 @@ fun MoodHistoryItem(mood: MoodEntity) {
                             text = stringResource(R.string.mood_history_feeling_separator, mood.feeling),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = TextPrimary
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
@@ -159,7 +156,7 @@ fun MoodHistoryItem(mood: MoodEntity) {
                 Text(
                     text = displayDate,
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }

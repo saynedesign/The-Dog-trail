@@ -30,9 +30,9 @@ import androidx.compose.ui.res.stringResource
 import com.codesmithslabs.thedogtail.R
 import com.codesmithslabs.thedogtail.ui.theme.AccentGold
 import com.codesmithslabs.thedogtail.ui.theme.AccentOrangeSoft
+import com.codesmithslabs.thedogtail.ui.theme.AccentGold
+import com.codesmithslabs.thedogtail.ui.theme.AccentOrangeSoft
 import com.codesmithslabs.thedogtail.ui.theme.AccentOrangeStrong
-import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
-import com.codesmithslabs.thedogtail.ui.theme.BrandPurple
 
 @Composable
 fun AchievementsScreen(
@@ -45,8 +45,8 @@ fun AchievementsScreen(
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(
-                        BrandPurple,
-                        BrandBlue
+                        MaterialTheme.colorScheme.secondary,
+                        MaterialTheme.colorScheme.primary
                     )
                 )
             )

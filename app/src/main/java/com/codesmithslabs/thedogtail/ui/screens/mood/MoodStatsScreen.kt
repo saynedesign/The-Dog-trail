@@ -53,11 +53,7 @@ import com.codesmithslabs.thedogtail.R
 import com.codesmithslabs.thedogtail.data.MoodEntity
 import com.codesmithslabs.thedogtail.ui.components.HabitButton
 import com.codesmithslabs.thedogtail.ui.components.HabitIconButton
-import com.codesmithslabs.thedogtail.ui.theme.BrandBackground
-import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
 import com.codesmithslabs.thedogtail.ui.theme.TheDogTailTheme
-import com.codesmithslabs.thedogtail.ui.theme.TextPrimary
-import com.codesmithslabs.thedogtail.ui.theme.TextSecondary
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
@@ -101,7 +97,7 @@ fun MoodStatsScreen(
                             stringResource(R.string.mood_stats_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = TextPrimary
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                     },
                     actions = {
@@ -109,11 +105,11 @@ fun MoodStatsScreen(
                             icon = Icons.Default.History,
                             onClick = { onEvent(MoodContract.Event.OnHistoryClicked) },
                             contentDescription = stringResource(R.string.mood_stats_history),
-                            tint = TextPrimary
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     },
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                        containerColor = BrandBackground
+                        containerColor = MaterialTheme.colorScheme.background
                     )
                 )
             },
@@ -156,7 +152,7 @@ private fun MoodCalendarCard(
                     Icon(
                         Icons.Default.KeyboardArrowLeft,
                         contentDescription = stringResource(R.string.mood_stats_previous_month),
-                        tint = TextPrimary
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
@@ -164,14 +160,14 @@ private fun MoodCalendarCard(
                     text = "${state.selectedMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault())} ${state.selectedMonth.year}",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
                 IconButton(onClick = { onEvent(MoodContract.Event.OnMonthChanged(state.selectedMonth.plusMonths(1))) }) {
                     Icon(
                         Icons.Default.KeyboardArrowRight,
                         contentDescription = stringResource(R.string.mood_stats_next_month),
-                        tint = TextPrimary
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -201,7 +197,7 @@ private fun MoodCalendarCard(
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
-                        color = TextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -266,39 +262,39 @@ fun MoodDayItem(
                 style = MaterialTheme.typography.labelSmall,
                 maxLines = 1,
                 textAlign = TextAlign.Center,
-                color = TextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = day.toString(),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
         } else if (isToday) {
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .border(1.dp, BrandBlue.copy(alpha = 0.5f), CircleShape)
+                    .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), CircleShape)
                     .clickable { onClick() },
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     Icons.Default.Add,
                     contentDescription = stringResource(R.string.common_add),
-                    tint = BrandBlue,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(20.dp)
                 )
             }
             Text(
                 text = stringResource(R.string.mood_stats_today),
                 style = MaterialTheme.typography.labelSmall,
-                color = BrandBlue
+                color = MaterialTheme.colorScheme.primary
             )
             Text(
                 text = day.toString(),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
         } else {
             // Placeholder or Empty
@@ -323,7 +319,7 @@ fun MoodDayItem(
                 text = day.toString(),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Bold,
-                color = if (isFuture) MaterialTheme.colorScheme.outlineVariant else TextPrimary
+                color = if (isFuture) MaterialTheme.colorScheme.outlineVariant else MaterialTheme.colorScheme.onSurface
             )
         }
     }
@@ -369,7 +365,7 @@ fun MoodStep1(state: MoodContract.State, onEvent: (MoodContract.Event) -> Unit) 
         stringResource(R.string.mood_stats_how_today),
         style = MaterialTheme.typography.titleLarge,
         fontWeight = FontWeight.Bold,
-        color = TextPrimary
+        color = MaterialTheme.colorScheme.onSurface
     )
     Spacer(modifier = Modifier.height(24.dp))
 
@@ -384,7 +380,7 @@ fun MoodStep1(state: MoodContract.State, onEvent: (MoodContract.Event) -> Unit) 
                 modifier = Modifier
                     .clip(RoundedCornerShape(12.dp))
                     .clickable { onEvent(MoodContract.Event.OnMoodOptionSelected(label, emoji)) }
-                    .background(if (isSelected) BrandBlue.copy(alpha = 0.1f) else Color.Transparent)
+                    .background(if (isSelected) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f) else Color.Transparent)
                     .padding(8.dp)
             ) {
                 Text(
@@ -400,7 +396,7 @@ fun MoodStep1(state: MoodContract.State, onEvent: (MoodContract.Event) -> Unit) 
                     text = label,
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                    color = if (isSelected) BrandBlue else TextPrimary
+                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                 )
             }
         }
@@ -487,7 +483,7 @@ fun MoodStep2(state: MoodContract.State, onEvent: (MoodContract.Event) -> Unit) 
                 Icon(
                     Icons.Default.KeyboardArrowLeft,
                     contentDescription = stringResource(R.string.common_back),
-                    tint = TextPrimary
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
             }
 
@@ -499,7 +495,7 @@ fun MoodStep2(state: MoodContract.State, onEvent: (MoodContract.Event) -> Unit) 
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center,
-                color = TextPrimary,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier
                     .align(Alignment.Center)
                     .padding(horizontal = 48.dp)
@@ -519,10 +515,10 @@ fun MoodStep2(state: MoodContract.State, onEvent: (MoodContract.Event) -> Unit) 
                     modifier = Modifier
                         .padding(horizontal = 4.dp)
                         .clip(RoundedCornerShape(20.dp))
-                        .background(if (isSelected) BrandBlue else Color.Transparent)
+                        .background(if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent)
                         .border(
                             1.dp,
-                            if (isSelected) BrandBlue else MaterialTheme.colorScheme.outlineVariant,
+                            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
                             RoundedCornerShape(20.dp)
                         )
                         .clickable { onEvent(MoodContract.Event.OnFeelingOptionSelected(feeling)) }
@@ -530,7 +526,7 @@ fun MoodStep2(state: MoodContract.State, onEvent: (MoodContract.Event) -> Unit) 
                 ) {
                     Text(
                         text = feeling,
-                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else TextPrimary,
+                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }

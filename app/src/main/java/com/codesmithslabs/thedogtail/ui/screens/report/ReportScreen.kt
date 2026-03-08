@@ -37,9 +37,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.codesmithslabs.thedogtail.R
-import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
-import com.codesmithslabs.thedogtail.ui.theme.TextPrimary
-import com.codesmithslabs.thedogtail.ui.theme.TextSecondary
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -71,7 +68,7 @@ fun ReportScreen(
                         text = stringResource(R.string.report_title),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = TextPrimary
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 },
                 actions = {
@@ -79,7 +76,7 @@ fun ReportScreen(
                         Icon(
                             imageVector = Icons.Default.MoreVert,
                             contentDescription = stringResource(R.string.common_menu),
-                            tint = TextPrimary
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 },
@@ -104,14 +101,14 @@ fun ReportScreen(
                 ) {
                     Box(
                         modifier = Modifier
-                            .background(BrandBlue.copy(alpha = 0.1f), CircleShape)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape)
                             .padding(horizontal = 16.dp, vertical = 8.dp)
                     ) {
                         Text(
                             text = "earned ${state.weeklyXp} XP this week",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
-                            color = BrandBlue
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -203,12 +200,12 @@ fun StatCard(
                 text = value,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary
+                color = MaterialTheme.colorScheme.onSurface
             )
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodySmall,
-                color = TextSecondary
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -232,12 +229,12 @@ fun HabitsCompletedCard(data: List<ReportContract.DailyHabitCount>) {
                     text = stringResource(R.string.report_habits_completed_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = stringResource(R.string.report_this_week),
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             
@@ -261,12 +258,12 @@ fun HabitsCompletedCard(data: List<ReportContract.DailyHabitCount>) {
                     val steps = 5
                     if (maxCount <= steps) {
                         (maxCount downTo 1).forEach { 
-                            Text(text = it.toString(), style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                            Text(text = it.toString(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     } else {
                         (steps downTo 1).forEach { step ->
                             val value = (maxCount * step / steps)
-                            Text(text = value.toString(), style = MaterialTheme.typography.labelSmall, color = TextSecondary)
+                            Text(text = value.toString(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -285,7 +282,7 @@ fun HabitsCompletedCard(data: List<ReportContract.DailyHabitCount>) {
                                 .width(24.dp)
                                 .fillMaxHeight(heightFraction)
                                 .background(
-                                    color = if (item.isToday) BrandBlue else BrandBlue.copy(alpha = 0.3f),
+                                    color = if (item.isToday) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
                                     shape = RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)
                                 )
                         )
@@ -295,7 +292,7 @@ fun HabitsCompletedCard(data: List<ReportContract.DailyHabitCount>) {
                         Text(
                             text = item.dayLabel,
                             style = MaterialTheme.typography.labelSmall,
-                            color = TextSecondary
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -313,7 +310,7 @@ fun CompletionRateCard(data: List<ReportContract.MonthlyRate>) {
         modifier = Modifier.fillMaxWidth()
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            val axisLabelColor = TextSecondary.toArgb()
+            val axisLabelColor = MaterialTheme.colorScheme.onSurfaceVariant.toArgb()
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -323,18 +320,19 @@ fun CompletionRateCard(data: List<ReportContract.MonthlyRate>) {
                     text = stringResource(R.string.report_habit_completion_rate_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = stringResource(R.string.report_last_six_months),
                     style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             Spacer(modifier = Modifier.height(16.dp))
             
             // Line Chart
+            val primaryColor = MaterialTheme.colorScheme.primary
             Canvas(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -358,7 +356,7 @@ fun CompletionRateCard(data: List<ReportContract.MonthlyRate>) {
                     
                     // Draw point
                     drawCircle(
-                        color = BrandBlue,
+                        color = primaryColor,
                         radius = 8f,
                         center = Offset(x, y)
                     )
@@ -380,7 +378,7 @@ fun CompletionRateCard(data: List<ReportContract.MonthlyRate>) {
                 
                 drawPath(
                     path = path,
-                    color = BrandBlue,
+                    color = primaryColor,
                     style = Stroke(width = 4f, cap = StrokeCap.Round)
                 )
                 
@@ -392,7 +390,7 @@ fun CompletionRateCard(data: List<ReportContract.MonthlyRate>) {
                 drawPath(
                     path = path,
                     brush = Brush.verticalGradient(
-                        colors = listOf(BrandBlue.copy(alpha = 0.2f), Color.Transparent),
+                        colors = listOf(primaryColor.copy(alpha = 0.2f), Color.Transparent),
                         startY = 0f,
                         endY = height
                     )
@@ -425,7 +423,7 @@ fun CalendarStatsCard(
                     text = stringResource(R.string.report_calendar_stats),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -460,7 +458,7 @@ fun CalendarStatsCard(
                     Text(
                         text = it,
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.weight(1f),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )
@@ -515,7 +513,7 @@ fun CalendarStatsCard(
                                         Text(
                                             text = dayOfMonth.toString(),
                                             style = MaterialTheme.typography.bodySmall,
-                                            color = if (rate >= 0.75f) MaterialTheme.colorScheme.onPrimary else TextPrimary
+                                            color = if (rate >= 0.75f) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
                                         )
                                     }
                                 }
@@ -549,7 +547,7 @@ fun MoodChartCard(data: List<ReportContract.DailyMood>) {
                     text = stringResource(R.string.report_mood_chart),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 
                 // Dropdown/Chip style for "This Week"
@@ -563,7 +561,7 @@ fun MoodChartCard(data: List<ReportContract.DailyMood>) {
                     Text(
                         text = stringResource(R.string.report_this_week),
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextPrimary,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Medium
                     )
                     Spacer(modifier = Modifier.width(4.dp))
@@ -571,7 +569,7 @@ fun MoodChartCard(data: List<ReportContract.DailyMood>) {
                         imageVector = Icons.Default.ChevronRight, // Or ArrowDown
                         contentDescription = null,
                         modifier = Modifier.size(16.dp).rotate(90f),
-                        tint = TextSecondary
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -604,6 +602,7 @@ fun MoodChartCard(data: List<ReportContract.DailyMood>) {
                 val secondaryBandColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)
                 val errorBandColor = MaterialTheme.colorScheme.error.copy(alpha = 0.1f)
                 val pointFillColor = MaterialTheme.colorScheme.surface
+                val primaryColor = MaterialTheme.colorScheme.primary
                 
                 Canvas(
                     modifier = Modifier
@@ -681,7 +680,7 @@ fun MoodChartCard(data: List<ReportContract.DailyMood>) {
                     drawPath(
                         path = fillPath,
                         brush = Brush.verticalGradient(
-                            colors = listOf(BrandBlue.copy(alpha = 0.3f), BrandBlue.copy(alpha = 0.05f)),
+                            colors = listOf(primaryColor.copy(alpha = 0.3f), primaryColor.copy(alpha = 0.05f)),
                             startY = 0f,
                             endY = height
                         )
@@ -690,7 +689,7 @@ fun MoodChartCard(data: List<ReportContract.DailyMood>) {
                     // Draw Line
                     drawPath(
                         path = path,
-                        color = BrandBlue,
+                        color = primaryColor,
                         style = Stroke(width = 6f, cap = StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round)
                     )
                     
@@ -703,7 +702,7 @@ fun MoodChartCard(data: List<ReportContract.DailyMood>) {
                             center = point
                         )
                         drawCircle(
-                            color = BrandBlue,
+                            color = primaryColor,
                             radius = 10f,
                             center = point,
                             style = Stroke(width = 4f)
@@ -725,7 +724,7 @@ fun MoodChartCard(data: List<ReportContract.DailyMood>) {
                     Text(
                         text = it.dayLabel,
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.width(20.dp),
                         textAlign = androidx.compose.ui.text.style.TextAlign.Center
                     )

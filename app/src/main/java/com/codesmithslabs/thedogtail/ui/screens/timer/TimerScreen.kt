@@ -45,11 +45,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.codesmithslabs.thedogtail.R
-import com.codesmithslabs.thedogtail.ui.theme.BrandBackground
-import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
-import com.codesmithslabs.thedogtail.ui.theme.BrandSurface
-import com.codesmithslabs.thedogtail.ui.theme.TextPrimary
-import com.codesmithslabs.thedogtail.ui.theme.TextSecondary
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,10 +77,10 @@ fun TimerScreen(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = BrandBackground)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
             )
         },
-        containerColor = BrandBackground
+        containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         Column(
             modifier = Modifier
@@ -103,8 +98,8 @@ fun TimerScreen(
                 CircularProgressIndicator(
                     progress = { state.timeLeftSeconds.toFloat() / state.totalTimeSeconds.toFloat() },
                     modifier = Modifier.fillMaxSize(),
-                    color = BrandBlue,
-                    trackColor = BrandSurface,
+                    color = MaterialTheme.colorScheme.primary,
+                    trackColor = MaterialTheme.colorScheme.surfaceVariant,
                     strokeWidth = 12.dp,
                     strokeCap = StrokeCap.Round
                 )
@@ -115,7 +110,7 @@ fun TimerScreen(
                     Text(
                         text = String.format("%02d:%02d", minutes, seconds),
                         style = MaterialTheme.typography.displayLarge,
-                        color = TextPrimary
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                     Text(
                         text = if (state.isRunning) {
@@ -124,7 +119,7 @@ fun TimerScreen(
                             stringResource(R.string.timer_ready)
                         },
                         style = MaterialTheme.typography.titleMedium,
-                        color = TextSecondary
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -139,7 +134,7 @@ fun TimerScreen(
                 if (state.isRunning) {
                     Button(
                         onClick = { onEvent(TimerContract.Event.OnPause) },
-                        colors = ButtonDefaults.buttonColors(containerColor = BrandSurface, contentColor = TextPrimary),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
                         shape = CircleShape,
                         modifier = Modifier.size(64.dp),
                          contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
@@ -153,7 +148,7 @@ fun TimerScreen(
                 } else {
                     Button(
                         onClick = { onEvent(TimerContract.Event.OnStart) },
-                        colors = ButtonDefaults.buttonColors(containerColor = BrandBlue),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         shape = CircleShape,
                         modifier = Modifier.size(80.dp),
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
@@ -168,7 +163,7 @@ fun TimerScreen(
                 
                 Button(
                     onClick = { onEvent(TimerContract.Event.OnReset) },
-                    colors = ButtonDefaults.buttonColors(containerColor = BrandSurface, contentColor = TextPrimary),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant, contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
                     shape = CircleShape,
                     modifier = Modifier.size(64.dp),
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)
@@ -189,7 +184,7 @@ fun TimerScreen(
                     Text(
                         text = stringResource(R.string.timer_duration_minutes, state.totalTimeSeconds / 60),
                         style = MaterialTheme.typography.titleMedium,
-                        color = TextPrimary,
+                        color = MaterialTheme.colorScheme.onBackground,
                         fontWeight = FontWeight.Bold
                     )
                     Slider(
@@ -198,9 +193,9 @@ fun TimerScreen(
                         valueRange = 5f..120f,
                         steps = 23, // 5, 10, ... 120 (steps = (range/step) - 1) -> (115/5) - 1 = 22
                         colors = SliderDefaults.colors(
-                            thumbColor = BrandBlue,
-                            activeTrackColor = BrandBlue,
-                            inactiveTrackColor = BrandSurface
+                            thumbColor = MaterialTheme.colorScheme.primary,
+                            activeTrackColor = MaterialTheme.colorScheme.primary,
+                            inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant
                         )
                     )
                 }

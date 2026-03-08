@@ -54,12 +54,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.codesmithslabs.thedogtail.R
 import com.codesmithslabs.thedogtail.ui.components.HabitOutlinedTextField
-import com.codesmithslabs.thedogtail.ui.theme.BrandBackground
-import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
-import com.codesmithslabs.thedogtail.ui.theme.BrandLightBlue
-import com.codesmithslabs.thedogtail.ui.theme.BrandSurface
-import com.codesmithslabs.thedogtail.ui.theme.TextPrimary
-import com.codesmithslabs.thedogtail.ui.theme.TextSecondary
+import com.codesmithslabs.thedogtail.ui.components.HabitOutlinedTextField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,46 +75,32 @@ fun EditProfileScreen(
     if (state.isDatePickerVisible) {
         val datePickerState = rememberDatePickerState()
         
-        // Force light theme for the Date Picker
-        MaterialTheme(
-            colorScheme = lightColorScheme(
-                primary = BrandBlue,
-                onPrimary = BrandSurface,
-                surface = BrandSurface,
-                onSurface = TextPrimary,
-                surfaceContainerHigh = BrandSurface,
-                onSurfaceVariant = TextSecondary,
-                primaryContainer = BrandLightBlue,
-                onPrimaryContainer = BrandBlue
-            )
-        ) {
-            DatePickerDialog(
-                onDismissRequest = { onEvent(EditProfileContract.Event.OnToggleDatePicker) },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            onEvent(EditProfileContract.Event.OnDateSelected(datePickerState.selectedDateMillis))
-                        }
-                    ) {
-                        Text(stringResource(R.string.common_ok), color = BrandBlue)
+        DatePickerDialog(
+            onDismissRequest = { onEvent(EditProfileContract.Event.OnToggleDatePicker) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onEvent(EditProfileContract.Event.OnDateSelected(datePickerState.selectedDateMillis))
                     }
-                },
-                dismissButton = {
-                    TextButton(
-                        onClick = { onEvent(EditProfileContract.Event.OnToggleDatePicker) }
-                    ) {
-                        Text(stringResource(R.string.common_cancel), color = TextSecondary)
-                    }
+                ) {
+                    Text(stringResource(R.string.common_ok), color = MaterialTheme.colorScheme.primary)
                 }
-            ) {
-                DatePicker(state = datePickerState)
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { onEvent(EditProfileContract.Event.OnToggleDatePicker) }
+                ) {
+                    Text(stringResource(R.string.common_cancel), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
+        ) {
+            DatePicker(state = datePickerState)
         }
     }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = BrandSurface,
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -145,12 +126,12 @@ fun EditProfileScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.common_back),
-                            tint = TextPrimary
+                            tint = MaterialTheme.colorScheme.onBackground
                         )
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = BrandSurface
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },
@@ -168,9 +149,9 @@ fun EditProfileScreen(
                     enabled = state.name.isNotBlank() && state.dob.isNotBlank() && state.height.isNotBlank() && !state.isLoading,
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = BrandBlue,
+                        containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.onPrimary,
-                        disabledContainerColor = BrandBlue.copy(alpha = 0.5f),
+                        disabledContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
                         disabledContentColor = MaterialTheme.colorScheme.onPrimary
                     )
                 ) {
@@ -211,7 +192,7 @@ fun EditProfileScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(CircleShape)
-                        .background(BrandLightBlue),
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
                     contentAlignment = Alignment.Center
                 ) {
                     if (state.profileImageUri != null) {
@@ -225,7 +206,7 @@ fun EditProfileScreen(
                         Icon(
                             imageVector = Icons.Default.Person,
                             contentDescription = null,
-                            tint = BrandBlue,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(48.dp)
                         )
                     }
@@ -236,20 +217,20 @@ fun EditProfileScreen(
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .size(32.dp)
-                        .background(BrandSurface, CircleShape)
+                        .background(MaterialTheme.colorScheme.background, CircleShape)
                         .padding(2.dp)
                 ) {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(CircleShape)
-                            .background(BrandSurface),
+                            .background(MaterialTheme.colorScheme.background),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Edit,
                             contentDescription = stringResource(R.string.common_edit),
-                            tint = BrandBlue,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -267,7 +248,7 @@ fun EditProfileScreen(
                     text = stringResource(R.string.common_full_name),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 
@@ -284,7 +265,7 @@ fun EditProfileScreen(
                     text = stringResource(R.string.common_date_of_birth),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 
@@ -294,7 +275,7 @@ fun EditProfileScreen(
                         onValueChange = {}, // Read only, set by date picker
                         placeholder = stringResource(R.string.edit_profile_dob_placeholder),
                         trailingIcon = {
-                            Icon(Icons.Default.DateRange, contentDescription = null, tint = TextSecondary)
+                            Icon(Icons.Default.DateRange, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         },
                         enabled = false, // Disable typing
                         modifier = Modifier.fillMaxWidth()
@@ -307,7 +288,7 @@ fun EditProfileScreen(
                     text = stringResource(R.string.common_height),
                     style = MaterialTheme.typography.bodyMedium,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary,
+                    color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 
@@ -327,7 +308,7 @@ fun EditProfileScreen(
                     
                     Row(
                         modifier = Modifier
-                            .background(BrandBackground, RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
                             .clickable { onEvent(EditProfileContract.Event.OnToggleHeightUnit) }
                             .padding(4.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -335,28 +316,28 @@ fun EditProfileScreen(
                         Box(
                             modifier = Modifier
                                 .background(
-                                    if (!state.isMetric) BrandBlue else Color.Transparent,
+                                    if (!state.isMetric) MaterialTheme.colorScheme.primary else Color.Transparent,
                                     RoundedCornerShape(6.dp)
                                 )
                                 .padding(horizontal = 12.dp, vertical = 8.dp)
                         ) {
                             Text(
                                 stringResource(R.string.common_ft),
-                                color = if (!state.isMetric) MaterialTheme.colorScheme.onPrimary else TextSecondary,
+                                color = if (!state.isMetric) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontWeight = FontWeight.Bold
                             )
                         }
                         Box(
                             modifier = Modifier
                                 .background(
-                                    if (state.isMetric) BrandBlue else Color.Transparent,
+                                    if (state.isMetric) MaterialTheme.colorScheme.primary else Color.Transparent,
                                     RoundedCornerShape(6.dp)
                                 )
                                 .padding(horizontal = 12.dp, vertical = 8.dp)
                         ) {
                             Text(
                                 stringResource(R.string.common_cm),
-                                color = if (state.isMetric) MaterialTheme.colorScheme.onPrimary else TextSecondary,
+                                color = if (state.isMetric) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontWeight = FontWeight.Bold
                             )
                         }
