@@ -8,9 +8,7 @@ plugins {
 
 android {
     namespace = "com.codesmithslabs.thedogtail"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.codesmithslabs.thedogtail"

@@ -1,5 +1,7 @@
 package com.codesmithslabs.thedogtail.ui.screens.profile
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -7,58 +9,54 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.Analytics
-import androidx.compose.material.icons.filled.CreditCard
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.MilitaryTech
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.SwapHoriz
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.WorkspacePremium
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import com.codesmithslabs.thedogtail.ui.theme.BrandBlue
-import com.codesmithslabs.thedogtail.ui.theme.BrandSurface
-import com.codesmithslabs.thedogtail.ui.theme.TextPrimary
-import com.codesmithslabs.thedogtail.ui.theme.TextSecondary
-import com.codesmithslabs.thedogtail.ui.theme.WarningOrange
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.foundation.Image
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.codesmithslabs.thedogtail.R
-import java.util.Locale
+import com.codesmithslabs.thedogtail.ui.theme.BrandBlueLight
+import com.codesmithslabs.thedogtail.ui.theme.BrandBlueDark
+import com.codesmithslabs.thedogtail.ui.theme.SparkleGold
 
 @Composable
 fun ProfileScreen(
     state: ProfileContract.State,
     onEvent: (ProfileContract.Event) -> Unit,
     modifier: Modifier = Modifier,
-    showBackButton: Boolean = false // Parameter kept but unused in new design as per image
+    showBackButton: Boolean = false
 ) {
     Scaffold(
-        modifier = modifier,
+        modifier = modifier.fillMaxSize(),
         topBar = {
-            ProfileTopBar()
+            ProfileTopBar(onEvent = onEvent)
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { padding ->
         if (state.isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = BrandBlue)
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else {
             LazyColumn(
@@ -66,22 +64,31 @@ fun ProfileScreen(
                     .fillMaxSize()
                     .padding(padding)
                     .padding(horizontal = 20.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
                 item {
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(4.dp))
                     ProfileHeaderCard(state = state, onClick = { onEvent(ProfileContract.Event.OnPersonalInfoClicked) })
                 }
 
                 item {
                     LevelBanner(
-                        level = state.level,
+                        state = state,
                         onClick = { onEvent(ProfileContract.Event.OnLevelBannerClicked) }
                     )
                 }
 
                 item {
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "GENERAL SETTINGS",
+                        style = MaterialTheme.typography.labelMedium.copy(
+                            letterSpacing = 1.2.sp,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+                    )
+                    
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -89,49 +96,65 @@ fun ProfileScreen(
                             .background(MaterialTheme.colorScheme.surface)
                     ) {
                         ProfileOptionItem(
-                            icon = Icons.Default.Settings,
-                            title = stringResource(R.string.profile_preferences),
-                            onClick = { onEvent(ProfileContract.Event.OnPreferencesClicked) }
-                        )
-                        ProfileOptionItem(
                             icon = Icons.Default.Person,
-                            title = stringResource(R.string.profile_personal_info),
-                            onClick = { onEvent(ProfileContract.Event.OnPersonalInfoClicked) }
+                            title = "Account Details",
+                            onClick = { onEvent(ProfileContract.Event.OnPersonalInfoClicked) },
+                            showDivider = true
                         )
                         ProfileOptionItem(
-                            icon = Icons.Default.Security,
-                            title = stringResource(R.string.profile_account_security),
-                            onClick = { onEvent(ProfileContract.Event.OnAccountSecurityClicked) }
+                            icon = Icons.Default.Notifications,
+                            title = "Notifications",
+                            onClick = { onEvent(ProfileContract.Event.OnPreferencesClicked) },
+                            showDivider = true
                         )
                         ProfileOptionItem(
-                            icon = Icons.Default.SwapHoriz,
-                            title = stringResource(R.string.profile_linked_accounts),
-                            onClick = { onEvent(ProfileContract.Event.OnLinkedAccountsClicked) }
+                            icon = Icons.Default.Lock,
+                            title = "Privacy & Security",
+                            onClick = { onEvent(ProfileContract.Event.OnAccountSecurityClicked) },
+                            showDivider = true
                         )
                         ProfileOptionItem(
-                            icon = Icons.Default.Visibility,
-                            title = stringResource(R.string.profile_app_appearance),
-                            onClick = { onEvent(ProfileContract.Event.OnAppAppearanceClicked) }
-                        )
-                        ProfileOptionItem(
-                            icon = Icons.Default.Analytics,
-                            title = stringResource(R.string.profile_data_analytics),
-                            onClick = { onEvent(ProfileContract.Event.OnDataAnalyticsClicked) }
-                        )
-                        ProfileOptionItem(
-                            icon = Icons.Default.Description,
-                            title = stringResource(R.string.profile_help_support),
-                            onClick = { onEvent(ProfileContract.Event.OnHelpSupportClicked) }
-                        )
-                        ProfileOptionItem(
-                            icon = Icons.AutoMirrored.Filled.Logout,
-                            title = stringResource(R.string.profile_logout),
-                            onClick = { onEvent(ProfileContract.Event.OnLogoutClicked) },
-                            isDestructive = true,
+                            icon = Icons.AutoMirrored.Filled.HelpOutline,
+                            title = "Help Center",
+                            onClick = { onEvent(ProfileContract.Event.OnHelpSupportClicked) },
                             showDivider = false
                         )
                     }
-                    Spacer(modifier = Modifier.height(32.dp))
+                }
+
+                item {
+                    // Logout 
+                    Card(
+                        shape = RoundedCornerShape(16.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { onEvent(ProfileContract.Event.OnLogoutClicked) },
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 16.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.Logout,
+                                contentDescription = "Logout",
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Logout",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(48.dp))
                 }
             }
         }
@@ -140,33 +163,31 @@ fun ProfileScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileTopBar() {
+fun ProfileTopBar(onEvent: (ProfileContract.Event) -> Unit) {
     CenterAlignedTopAppBar(
         navigationIcon = {
-            Image(
-                painter = painterResource(R.drawable.ic_icon_habit_loop),
-                contentDescription = stringResource(R.string.app_name),
-                modifier = Modifier
-                    .padding(start = 8.dp)
-                    .size(32.dp)
-                    .clip(CircleShape),
-                contentScale = ContentScale.Crop
-            )
+            IconButton(onClick = { onEvent(ProfileContract.Event.OnBackClicked) }) {
+                Icon(
+                    Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = MaterialTheme.colorScheme.onBackground
+                )
+            }
         },
         title = {
             Text(
-                stringResource(R.string.profile_account),
+                text = "Account",
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold,
-                color = TextPrimary
+                color = MaterialTheme.colorScheme.onBackground
             )
         },
         actions = {
-            IconButton(onClick = { /* Handle menu */ }) {
+            IconButton(onClick = { onEvent(ProfileContract.Event.OnPreferencesClicked) }) {
                 Icon(
-                    Icons.Default.MoreVert,
-                    contentDescription = stringResource(R.string.common_more),
-                    tint = TextPrimary
+                    Icons.Default.Settings,
+                    contentDescription = "Settings",
+                    tint = MaterialTheme.colorScheme.onBackground
                 )
             }
         },
@@ -179,124 +200,260 @@ fun ProfileTopBar() {
 @Composable
 fun ProfileHeaderCard(state: ProfileContract.State, onClick: () -> Unit) {
     Card(
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
     ) {
-        Row(
+        Box(
             modifier = Modifier
-                .padding(20.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxWidth()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(BrandBlueLight, BrandBlueDark)
+                    )
+                )
         ) {
-            // Avatar
-            Box(
+            Column(
                 modifier = Modifier
-                    .size(64.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                if (state.profileImageUri != null) {
-                    AsyncImage(
-                        model = state.profileImageUri,
-                        contentDescription = stringResource(R.string.common_profile_image),
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    Text(
-                        text = state.userName.take(2).uppercase(),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = BrandBlue
-                    )
+                // Avatar with overlay
+                Box(contentAlignment = Alignment.BottomEnd) {
+                    val avatarSize = 96.dp
+                    Box(
+                        modifier = Modifier
+                            .size(avatarSize)
+                            .clip(CircleShape)
+                            .background(Color.White.copy(alpha = 0.2f))
+                            .padding(4.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .clip(CircleShape)
+                                .background(Color.LightGray),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (state.profileImageUri != null) {
+                                AsyncImage(
+                                    model = state.profileImageUri,
+                                    contentDescription = "Profile Image",
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentScale = ContentScale.Crop
+                                )
+                            } else {
+                                Text(
+                                    text = state.userName.take(2).uppercase(),
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = BrandBlueLight
+                                )
+                            }
+                        }
+                    }
+
+                    // Verified Check
+                    Box(
+                        modifier = Modifier
+                            .size(24.dp)
+                            .offset(x = (-4).dp, y = (-4).dp)
+                            .background(Color.White, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = "Verified",
+                            tint = BrandBlueLight,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
-            }
 
-            Spacer(modifier = Modifier.width(16.dp))
+                Spacer(modifier = Modifier.height(16.dp))
 
-            Column(modifier = Modifier.weight(1f)) {
+                val name = state.userName.ifEmpty { "Aman Kumar" }
                 Text(
-                    text = state.userName.ifEmpty { stringResource(R.string.profile_user_name_placeholder) },
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
+                    text = name,
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color.White
                 )
                 
-                if (state.userDob.isNotEmpty() || state.userHeight > 0) {
-                     Spacer(modifier = Modifier.height(4.dp))
-                     val details = buildList {
-                         if (state.userDob.isNotEmpty()) add(stringResource(R.string.profile_born, state.userDob))
-                        if (state.userHeight > 0) add(stringResource(R.string.profile_height_cm, formatHeightValue(state.userHeight)))
-                     }.joinToString(" • ")
-                     
-                     Text(
-                        text = details,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = TextSecondary
+                val usernameHandle = "@${name.lowercase().replace(" ", "")}"
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "$usernameHandle • Premium Gold Member",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = Color.White.copy(alpha = 0.8f)
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    StatColumn(value = state.totalHabitCount.toString(), label = "HABITS")
+                    StatColumn(value = "${(state.totalXp / 1000.0).coerceAtLeast(0.1).toString().take(3)}k", label = "STREAKS")
+                    StatColumn(value = state.level.toString(), label = "BADGES")
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Button(
+                    onClick = { /* Could launch create habit */ },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color.White,
+                        contentColor = BrandBlueDark
+                    ),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Track New Habit",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(vertical = 4.dp)
                     )
                 }
             }
-
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-                contentDescription = null,
-                tint = TextSecondary,
-                modifier = Modifier.size(16.dp)
-            )
         }
     }
 }
 
 @Composable
-fun LevelBanner(level: Int, onClick: () -> Unit) {
+fun StatColumn(value: String, label: String) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(
+            text = value,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            color = Color.White
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.sp),
+            color = Color.White.copy(alpha = 0.8f)
+        )
+    }
+}
+
+@Composable
+fun LevelBanner(state: ProfileContract.State, onClick: () -> Unit) {
     Card(
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
     ) {
-        Row(
-            modifier = Modifier
-                .padding(20.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // Level Badge
-            Icon(
-                imageVector = Icons.Default.EmojiEvents,
-                contentDescription = null,
-                tint = WarningOrange,
-                modifier = Modifier.size(40.dp)
-            )
-            
-            Spacer(modifier = Modifier.width(16.dp))
-            
-            Column(modifier = Modifier.weight(1f)) {
+        Column(modifier = Modifier.padding(20.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Shield / Military Tech Icon Box
+                Box(
+                    modifier = Modifier
+                        .size(48.dp)
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), RoundedCornerShape(12.dp)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MilitaryTech,
+                        contentDescription = "Current Level",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+                
+                Spacer(modifier = Modifier.width(16.dp))
+                
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = "Current Level",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = state.levelName.ifEmpty { "Master of Consistency" },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // Top 5% Badge
+                Box(
+                    modifier = Modifier
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = "TOP 5%",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text(
-                    text = stringResource(R.string.level_label, level),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    text = "XP Progress",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-                Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = stringResource(R.string.profile_level_subtitle),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextSecondary
+                    text = "${state.totalXp} / ${state.nextLevelXp} XP",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
             }
             
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-                contentDescription = null,
-                tint = TextSecondary,
-                modifier = Modifier.size(16.dp)
+            Spacer(modifier = Modifier.height(12.dp))
+            
+            // Progress Bar
+            val safeProgress = if (state.xpProgress.isNaN()) 0f else state.xpProgress
+            LinearProgressIndicator(
+                progress = { safeProgress },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(8.dp)
+                    .clip(RoundedCornerShape(4.dp)),
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.outlineVariant
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.AutoAwesome,
+                    contentDescription = null,
+                    tint = SparkleGold,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "You are a rising star! Keep going!",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
+                )
+            }
         }
     }
 }
@@ -306,48 +463,50 @@ fun ProfileOptionItem(
     icon: ImageVector,
     title: String,
     onClick: () -> Unit,
-    isDestructive: Boolean = false,
-    showDivider: Boolean = false // In the image, items are in a list, likely no dividers or subtle ones. But usually lists have dividers. The image looks like clean white background. I'll omit dividers for now to match the clean look.
+    showDivider: Boolean = false
 ) {
-    Row(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(horizontal = 20.dp, vertical = 16.dp),
-        verticalAlignment = Alignment.CenterVertically
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = if (isDestructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-            modifier = Modifier.size(24.dp)
-        )
-        
-        Spacer(modifier = Modifier.width(20.dp))
-        
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.SemiBold,
-            color = if (isDestructive) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-            modifier = Modifier.weight(1f)
-        )
-        
-        if (!isDestructive) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 18.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(24.dp)
+            )
+            
+            Spacer(modifier = Modifier.width(16.dp))
+            
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f)
+            )
+            
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                 contentDescription = null,
-                tint = TextSecondary.copy(alpha = 0.5f),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(16.dp)
             )
         }
-    }
-}
-
-private fun formatHeightValue(height: Float): String {
-    return if (height % 1f == 0f) {
-        height.toInt().toString()
-    } else {
-        String.format(Locale.US, "%.1f", height)
+        
+        if (showDivider) {
+            HorizontalDivider(
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f),
+                thickness = 1.dp,
+                modifier = Modifier.padding(horizontal = 20.dp)
+            )
+        }
     }
 }

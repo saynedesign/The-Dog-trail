@@ -120,7 +120,7 @@ fun AchievementsScreen(
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 Text(
-                    text = stringResource(R.string.level_label, state.currentLevel),
+                    text = "Level ${state.currentLevel}: ${state.levelName}",
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onPrimary,
                     fontWeight = FontWeight.Bold
@@ -129,7 +129,7 @@ fun AchievementsScreen(
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
-                    text = stringResource(R.string.achievements_completed_habits, state.totalHabitCount),
+                    text = "${state.totalXp} XP Earned",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f)
                 )
@@ -147,10 +147,10 @@ fun AchievementsScreen(
                     verticalArrangement = Arrangement.spacedBy(24.dp),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    items(state.levels) { (level, requiredHabits) ->
+                    items(state.levels) { (level, requiredXp) ->
                         LevelGridItem(
                             level = level,
-                            requiredHabits = requiredHabits,
+                            requiredXp = requiredXp,
                             currentLevel = state.currentLevel,
                             isCompleted = level < state.currentLevel,
                             isCurrent = level == state.currentLevel,
@@ -166,7 +166,7 @@ fun AchievementsScreen(
 @Composable
 fun LevelGridItem(
     level: Int,
-    requiredHabits: Int,
+    requiredXp: Int,
     currentLevel: Int,
     isCompleted: Boolean,
     isCurrent: Boolean,
@@ -218,7 +218,7 @@ fun LevelGridItem(
         val subtitle = when {
             isCompleted -> stringResource(R.string.achievements_level_passed)
             isCurrent -> stringResource(R.string.achievements_current_level)
-            else -> stringResource(R.string.achievements_pass_habits, requiredHabits)
+            else -> "$requiredXp XP"
         }
         
         Text(

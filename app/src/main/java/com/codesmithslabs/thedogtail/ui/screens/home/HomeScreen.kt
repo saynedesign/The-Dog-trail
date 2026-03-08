@@ -95,6 +95,13 @@ import com.codesmithslabs.thedogtail.R
 import com.codesmithslabs.thedogtail.ui.screens.report.ReportScreen
 import com.codesmithslabs.thedogtail.ui.screens.report.ReportViewModel
 import com.codesmithslabs.thedogtail.ui.screens.report.ReportContract
+import com.codesmithslabs.thedogtail.util.LevelSystem
+import kotlinx.coroutines.delay
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.layout.offset
+import com.codesmithslabs.thedogtail.ui.theme.SuccessGreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -150,6 +157,26 @@ fun HomeScreen(
             },
             dismissButton = {
                 TextButton(onClick = { onEvent(HomeContract.Event.OnDismissDialog) }) {
+                    Text(stringResource(R.string.common_cancel))
+                }
+            }
+        )
+    }
+
+    if (state.showRestDaySheet) {
+        AlertDialog(
+            onDismissRequest = { onEvent(HomeContract.Event.OnDismissRestDaySheet) },
+            title = { Text(stringResource(R.string.report_day_sun) + " Rest Day?") }, // using a generic translation if specific doesn't exist
+            text = {
+                Text("Take a break! You have ${1 - state.restDaysUsedThisWeek} rest day left this week for this habit. It won't break your momentum.")
+            },
+            confirmButton = {
+                TextButton(onClick = { onEvent(HomeContract.Event.OnConfirmRestDay) }) {
+                    Text("Take Rest Day", color = SuccessGreen)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { onEvent(HomeContract.Event.OnDismissRestDaySheet) }) {
                     Text(stringResource(R.string.common_cancel))
                 }
             }
@@ -212,8 +239,9 @@ fun HomeScreen(
             },
             label = "home_tab_transition"
         ) { currentTab ->
-            when (currentTab) {
-                HomeContract.HomeTab.MOOD -> {
+            Box(modifier = Modifier.fillMaxSize()) {
+                when (currentTab) {
+                    HomeContract.HomeTab.MOOD -> {
                     val moodViewModel = hiltViewModel<MoodViewModel>()
                     val moodState by moodViewModel.state.collectAsState()
 
@@ -288,7 +316,10 @@ fun HomeScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                 item {
+                    val levelInfo = LevelSystem.getLevelInfo(state.currentLevel)
                     HomeHeader(
+                        totalXp = state.totalXp,
+                        levelEmoji = levelInfo.emoji,
                         onNotificationClick = { /* TODO */ },
                         modifier = Modifier.padding(horizontal = 0.dp)
                     )
@@ -427,12 +458,16 @@ fun HomeScreen(
                                 else -> Icons.Default.Check
                             },
                             iconTint = Color(habit.color),
+                            isResting = state.restingHabitIds.contains(habit.id),
                             onClick = { 
                                 if (habit.type == "TIMER") {
                                     onEvent(HomeContract.Event.OnTimerClicked(habit.id))
                                 } else {
                                     onEvent(HomeContract.Event.OnHabitClicked(habit.id)) 
                                 }
+                            },
+                            onLongClick = {
+                                onEvent(HomeContract.Event.OnRestDayRequested(habit.id))
                             },
                             rightContent = {
                                 when (habit.type) {
@@ -509,7 +544,39 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(120.dp))
             }
         }
-            }
+                } // End Box wrapping the navigation sections
+                
+                // Overlay for +XP floating animation
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(top = innerPadding.calculateTopPadding() + 64.dp),
+                    contentAlignment = Alignment.TopCenter
+                ) {
+                    AnimatedVisibility(
+                        visible = state.xpPopAmount != null,
+                        enter = scaleIn() + slideInVertically(initialOffsetY = { 100 }) + fadeIn(),
+                        exit = fadeOut(animationSpec = tween(500))
+                    ) {
+                        LaunchedEffect(state.xpPopAmount) {
+                            if (state.xpPopAmount != null) {
+                                delay(1500)
+                                onEvent(HomeContract.Event.OnXpPopDismissed)
+                            }
+                        }
+                        Box(
+                            modifier = Modifier
+                                .background(BrandBlue, RoundedCornerShape(16.dp))
+                                .padding(horizontal = 24.dp, vertical = 12.dp)
+                        ) {
+                            Text(
+                                "+${state.xpPopAmount} XP",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            } // End Box wrapping AnimatedContent child
         }
     }
 }

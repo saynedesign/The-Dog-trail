@@ -13,5 +13,7 @@ data class UserEntity(
     val profileImageUri: String? = null,
     val createdTimestamp: Long = System.currentTimeMillis(),
     val journal: String? = null,
-    val journalLastUpdated: Long? = null
+    val journalLastUpdated: Long? = null,
+    val totalXp: Int = 0,
+    val currentLevel: Int = 1
 )

@@ -1,51 +1,91 @@
 package com.codesmithslabs.thedogtail.util
 
 object LevelSystem {
-    // Defines levels and their required total habit completions.
-    // List of Pair(Level, RequiredHabits)
-    // Level 1 starts at 0.
-    val levels = listOf(
-        1 to 0,
-        2 to 50,
-        3 to 150,
-        4 to 300,
-        5 to 500,
-        6 to 800,
-        7 to 1200,
-        8 to 1700,
-        9 to 2300,
-        10 to 3000,
-        11 to 3500,
-        12 to 4000,
-        13 to 4500,
-        14 to 5000,
-        15 to 5500,
-        16 to 6000,
-        17 to 6500,
-        18 to 7000,
-        19 to 7500,
-        20 to 8000
+    // XP-based level system with dog-themed names
+    data class LevelInfo(
+        val level: Int,
+        val name: String,
+        val emoji: String,
+        val requiredXp: Int
     )
 
-    fun getLevelForHabitCount(count: Int): Int {
-        // Find the highest level where requiredHabits <= count
-        return levels.lastOrNull { it.second <= count }?.first ?: 1
+    val levelInfos = listOf(
+        LevelInfo(1, "Pup", "🐾", 0),
+        LevelInfo(2, "Good Boy", "🐕", 100),
+        LevelInfo(3, "Bone Collector", "🦴", 500),
+        LevelInfo(4, "Pack Leader", "🏅", 2000),
+        LevelInfo(5, "Alpha", "🌟", 5000),
+        LevelInfo(6, "Sir Barks-a-Lot", "🎩", 10000),
+        LevelInfo(7, "Golden Retriever", "✨", 50000),
+        LevelInfo(8, "Cerberus", "🔥", 100000),
+        LevelInfo(9, "Legend", "🏆", 500000),
+        LevelInfo(10, "Mythic Doge", "🐕‍🦺", 1000000)
+    )
+
+    // Backward-compatible: maps level->requiredXp (replaces habit count)
+    val levels = levelInfos.map { it.level to it.requiredXp }
+
+    fun getLevelForXp(xp: Int): Int {
+        return levelInfos.lastOrNull { it.requiredXp <= xp }?.level ?: 1
     }
 
-    fun getProgressToNextLevel(count: Int): Float {
-        val currentLevel = getLevelForHabitCount(count)
+    /** Backward-compat: old callers still pass habit count, now they should pass XP */
+    fun getLevelForHabitCount(count: Int): Int = getLevelForXp(count)
+
+    fun getLevelInfo(level: Int): LevelInfo {
+        return levelInfos.find { it.level == level } ?: levelInfos.first()
+    }
+
+    fun getLevelInfoForXp(xp: Int): LevelInfo {
+        return getLevelInfo(getLevelForXp(xp))
+    }
+
+    fun getProgressToNextLevel(xp: Int): Float {
+        val currentLevel = getLevelForXp(xp)
         val nextLevel = currentLevel + 1
-        
-        val currentRequirement = levels.find { it.first == currentLevel }?.second ?: 0
-        val nextRequirement = levels.find { it.first == nextLevel }?.second ?: return 1.0f // Max level reached
+
+        val currentRequirement = levelInfos.find { it.level == currentLevel }?.requiredXp ?: 0
+        val nextRequirement = levelInfos.find { it.level == nextLevel }?.requiredXp ?: return 1.0f
 
         val needed = nextRequirement - currentRequirement
-        val achieved = count - currentRequirement
-        
+        val achieved = xp - currentRequirement
+
         return (achieved.toFloat() / needed.toFloat()).coerceIn(0f, 1f)
     }
 
     fun getRequirementForLevel(level: Int): Int {
-        return levels.find { it.first == level }?.second ?: Int.MAX_VALUE
+        return levelInfos.find { it.level == level }?.requiredXp ?: Int.MAX_VALUE
+    }
+
+    fun getNextLevelRequirement(xp: Int): Int {
+        val currentLevel = getLevelForXp(xp)
+        return levelInfos.find { it.level == currentLevel + 1 }?.requiredXp ?: Int.MAX_VALUE
+    }
+
+    // XP award constants
+    object XpRewards {
+        const val HABIT_COMPLETE = 10
+        const val PERFECT_DAY = 50
+        const val FIRST_OF_DAY = 5
+        const val STREAK_3 = 25
+        const val STREAK_7 = 75
+        const val REST_DAY = 5
+        const val MOOD_LOG = 5
+        const val HABIT_CREATED = 15
+        const val MONTHLY_CONSISTENCY = 200
+    }
+
+    // XP reason strings (for the XpEventEntity.reason column)
+    object XpReasons {
+        const val HABIT_COMPLETE = "HABIT_COMPLETE"
+        const val PERFECT_DAY = "PERFECT_DAY"
+        const val FIRST_OF_DAY = "FIRST_OF_DAY"
+        const val STREAK_3 = "STREAK_3"
+        const val STREAK_7 = "STREAK_7"
+        const val REST_DAY = "REST_DAY"
+        const val MOOD_LOG = "MOOD_LOG"
+        const val HABIT_CREATED = "HABIT_CREATED"
+        const val MONTHLY_CONSISTENCY = "MONTHLY_CONSISTENCY"
     }
 }
+

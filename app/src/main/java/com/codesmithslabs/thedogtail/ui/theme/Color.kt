@@ -25,3 +25,16 @@ val AccentOrangeStrong = Color(0xFFFF6D00)
 val AccentOrangeSoft = Color(0xFFFFB74D)
 val AccentPeach = Color(0xFFFFE0B2)
 val AccentPeachLight = Color(0xFFFFCC80)
+
+// Premium Dark Theme Colors
+val PremiumDarkBackground = Color(0xFF131720)
+val PremiumDarkSurface = Color(0xFF1C202B)
+val PremiumDarkBorder = Color(0xFF292E3B)
+val PremiumDarkTextMuted = Color(0xFF8B93A6)
+val PremiumDarkDivider = Color(0xFF232836)
+val PremiumLogoutBgDark = Color(0xFF2C1E26)
+
+// Specific Brand Enhancements
+val BrandBlueLight = Color(0xFF3366FF)
+val BrandBlueDark = Color(0xFF1B4CC5)
+val SparkleGold = Color(0xFFFFB347)

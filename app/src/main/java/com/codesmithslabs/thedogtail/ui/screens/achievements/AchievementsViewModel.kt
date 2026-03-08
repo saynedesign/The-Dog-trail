@@ -2,7 +2,7 @@ package com.codesmithslabs.thedogtail.ui.screens.achievements
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.codesmithslabs.thedogtail.data.HabitLogDao
+import com.codesmithslabs.thedogtail.data.UserDao
 import com.codesmithslabs.thedogtail.util.LevelSystem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -14,7 +14,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AchievementsViewModel @Inject constructor(
-    private val habitLogDao: HabitLogDao
+    private val userDao: UserDao
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(AchievementsContract.State())
@@ -29,13 +29,17 @@ class AchievementsViewModel @Inject constructor(
 
     private fun loadData() {
         viewModelScope.launch {
-            habitLogDao.countAllLogs().collect { count ->
-                val currentLevel = LevelSystem.getLevelForHabitCount(count)
-                val progress = LevelSystem.getProgressToNextLevel(count)
+            userDao.getUser().collect { user ->
+                val xp = user?.totalXp ?: 0
+                val levelInfo = LevelSystem.getLevelInfoForXp(xp)
+                val currentLevel = levelInfo.level
+                val progress = LevelSystem.getProgressToNextLevel(xp)
                 
                 _state.value = _state.value.copy(
-                    totalHabitCount = count,
+                    totalXp = xp,
                     currentLevel = currentLevel,
+                    levelName = levelInfo.name,
+                    levelEmoji = levelInfo.emoji,
                     nextLevel = currentLevel + 1,
                     progressToNextLevel = progress
                 )

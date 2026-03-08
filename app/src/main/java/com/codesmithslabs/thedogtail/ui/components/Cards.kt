@@ -1,7 +1,10 @@
+@file:OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 package com.codesmithslabs.thedogtail.ui.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,14 +46,19 @@ fun HabitCard(
     subtitle: String,
     icon: ImageVector,
     iconTint: Color = BrandBlue,
+    isResting: Boolean = false,
     onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null,
     modifier: Modifier = Modifier,
     rightContent: @Composable () -> Unit = {}
 ) {
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onLongClick
+            )
             .padding(vertical = 4.dp),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -84,7 +92,7 @@ fun HabitCard(
                     text = title,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = TextPrimary
+                    color = if (isResting) TextSecondary else TextPrimary
                 )
                 Text(
                     text = subtitle,
@@ -93,7 +101,23 @@ fun HabitCard(
                 )
             }
             
-            rightContent()
+            if (isResting) {
+                // Rest indicator
+                Box(
+                    modifier = Modifier
+                        .background(SuccessGreen.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Text(
+                        text = "🌿 Rest",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = SuccessGreen,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            } else {
+                rightContent()
+            }
         }
     }
 }

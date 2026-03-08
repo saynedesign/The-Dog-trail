@@ -7,6 +7,8 @@ import com.codesmithslabs.thedogtail.data.HabitDatabase
 import com.codesmithslabs.thedogtail.data.UserDao
 import com.codesmithslabs.thedogtail.data.HabitLogDao
 import com.codesmithslabs.thedogtail.data.MoodDao
+import com.codesmithslabs.thedogtail.data.HabitRestDayDao
+import com.codesmithslabs.thedogtail.data.XpEventDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -54,4 +56,17 @@ object AppModule {
     fun provideMoodDao(database: HabitDatabase): MoodDao {
         return database.moodDao()
     }
+
+    @Provides
+    @Singleton
+    fun provideHabitRestDayDao(database: HabitDatabase): HabitRestDayDao {
+        return database.habitRestDayDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideXpEventDao(database: HabitDatabase): XpEventDao {
+        return database.xpEventDao()
+    }
 }
+

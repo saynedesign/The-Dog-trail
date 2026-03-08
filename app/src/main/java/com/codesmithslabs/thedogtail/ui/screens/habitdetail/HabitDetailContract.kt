@@ -11,7 +11,15 @@ interface HabitDetailContract {
         val totalCompletions: Int = 0,
         val totalValue: Float = 0f,
         val isLoading: Boolean = false,
-        val isError: Boolean = false
+        val isError: Boolean = false,
+        // Optimistic Metrics
+        val activeMomentum: Int = 0,
+        val weeklyConsistency: Int = 0,
+        val strongDays: Int = 0,
+        // XP
+        val habitXp: Int = 0,
+        // Rest Days
+        val restDayEpochs: Set<Long> = emptySet()
     )
 
     sealed class Event {

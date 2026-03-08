@@ -14,7 +14,17 @@ interface ReportContract {
         val monthlyCompletionRates: List<MonthlyRate> = emptyList(),
         val weeklyMoods: List<DailyMood> = emptyList(),
         val calendarStats: List<CalendarDayStat> = emptyList(),
-        val selectedMonth: LocalDate = LocalDate.now()
+        val selectedMonth: LocalDate = LocalDate.now(),
+        // Optimistic Metrics
+        val weeklyConsistencyScore: Int = 0,
+        val activeMomentum: Int = 0,
+        val strongDays: Int = 0,
+        val totalEffortPoints: Int = 0,
+        val restDayEpochs: Set<Long> = emptySet(),
+        // XP
+        val totalXp: Int = 0,
+        val currentLevel: Int = 1,
+        val weeklyXp: Int = 0
     )
 
     sealed class Event {

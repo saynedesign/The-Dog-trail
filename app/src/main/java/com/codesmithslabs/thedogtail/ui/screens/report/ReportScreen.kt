@@ -96,6 +96,27 @@ fun ReportScreen(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // 0. Weekly XP Chip
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .background(BrandBlue.copy(alpha = 0.1f), CircleShape)
+                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                    ) {
+                        Text(
+                            text = "earned ${state.weeklyXp} XP this week",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = BrandBlue
+                        )
+                    }
+                }
+            }
+
             // 1. Top Stats Cards
             item {
                 StatsGrid(state)
@@ -114,8 +135,7 @@ fun ReportScreen(
             // 4. Calendar Stats
             item {
                 CalendarStatsCard(
-                    state.selectedMonth,
-                    state.calendarStats,
+                    state = state,
                     onMonthChange = { onEvent(ReportContract.Event.OnMonthChange(it)) }
                 )
             }
@@ -139,25 +159,25 @@ fun StatsGrid(state: ReportContract.State) {
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             StatCard(
                 modifier = Modifier.weight(1f),
-                value = stringResource(R.string.habit_detail_days_plural, state.currentStreak),
-                label = stringResource(R.string.report_current_streak)
+                value = stringResource(R.string.habit_detail_days_plural, state.activeMomentum),
+                label = "Active Momentum"
             )
             StatCard(
                 modifier = Modifier.weight(1f),
-                value = "${state.completionRate}%",
-                label = stringResource(R.string.report_completion_rate)
+                value = "${state.weeklyConsistencyScore}%",
+                label = "Weekly Consistency"
             )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             StatCard(
                 modifier = Modifier.weight(1f),
-                value = "${state.totalHabitsCompleted}",
-                label = stringResource(R.string.report_habits_completed)
+                value = "${state.totalEffortPoints}",
+                label = "Effort Points"
             )
             StatCard(
                 modifier = Modifier.weight(1f),
-                value = "${state.totalPerfectDays}",
-                label = stringResource(R.string.report_total_perfect_days)
+                value = "${state.strongDays}",
+                label = "Strong Days"
             )
         }
     }
@@ -384,10 +404,11 @@ fun CompletionRateCard(data: List<ReportContract.MonthlyRate>) {
 
 @Composable
 fun CalendarStatsCard(
-    selectedMonth: LocalDate,
-    calendarStats: List<ReportContract.CalendarDayStat>,
+    state: ReportContract.State,
     onMonthChange: (LocalDate) -> Unit
 ) {
+    val selectedMonth = state.selectedMonth
+    val calendarStats = state.calendarStats
     Card(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(16.dp),
@@ -470,6 +491,7 @@ fun CalendarStatsCard(
                                 val date = selectedMonth.withDayOfMonth(dayOfMonth)
                                 val stat = calendarStats.find { it.date == date }
                                 val rate = stat?.completionRate ?: 0f
+                                val isRestDay = state.restDayEpochs.contains(date.toEpochDay())
                                 
                                 Box(
                                     modifier = Modifier
@@ -477,16 +499,25 @@ fun CalendarStatsCard(
                                         .aspectRatio(1f)
                                         .padding(2.dp)
                                         .background(
-                                            color = if (rate > 0) BrandBlue.copy(alpha = rate.coerceAtLeast(0.1f)) else Color.Transparent,
+                                            color = when {
+                                                rate >= 0.75f -> com.codesmithslabs.thedogtail.ui.theme.SuccessGreen // Strong day
+                                                rate > 0f -> com.codesmithslabs.thedogtail.ui.theme.SuccessGreen.copy(alpha = rate.coerceAtLeast(0.3f))
+                                                isRestDay -> com.codesmithslabs.thedogtail.ui.theme.BrandBackground
+                                                else -> Color.Transparent
+                                            },
                                             shape = CircleShape
                                         ),
                                     contentAlignment = Alignment.Center
                                 ) {
-                                    Text(
-                                        text = dayOfMonth.toString(),
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = if (rate > 0.5f) MaterialTheme.colorScheme.onPrimary else TextPrimary
-                                    )
+                                    if (isRestDay && rate == 0f) {
+                                        Text("🌿", style = MaterialTheme.typography.bodySmall)
+                                    } else {
+                                        Text(
+                                            text = dayOfMonth.toString(),
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = if (rate >= 0.75f) MaterialTheme.colorScheme.onPrimary else TextPrimary
+                                        )
+                                    }
                                 }
                             } else {
                                 Spacer(modifier = Modifier.weight(1f))

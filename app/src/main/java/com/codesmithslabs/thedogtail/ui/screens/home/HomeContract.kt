@@ -16,11 +16,20 @@ interface HomeContract {
         val selectedDate: String = LocalDate.now().format(DateTimeFormatter.ofPattern("EEE d", Locale.getDefault())),
         val selectedEpochDay: Long = LocalDate.now().toEpochDay(),
         val habits: List<HabitEntity> = emptyList(),
-        val habitLogs: Map<Long, HabitLogEntity> = emptyMap(), // Map of HabitID to Log for selected date
+        val habitLogs: Map<Long, HabitLogEntity> = emptyMap(),
         val isLoading: Boolean = false,
         val showDeleteDialog: Boolean = false,
         val showEditDialog: Boolean = false,
-        val selectedHabitId: Long? = null
+        val selectedHabitId: Long? = null,
+        // Rest Day
+        val restingHabitIds: Set<Long> = emptySet(),
+        val showRestDaySheet: Boolean = false,
+        val restDayTargetHabitId: Long? = null,
+        val restDaysUsedThisWeek: Int = 0,
+        // XP
+        val totalXp: Int = 0,
+        val currentLevel: Int = 1,
+        val xpPopAmount: Int? = null
     )
 
     sealed class Event {
@@ -42,6 +51,12 @@ interface HomeContract {
         data object OnEditProfileRequested : Event()
         data object OnPreferencesRequested : Event()
         data object OnAchievementsRequested : Event()
+        // Rest Day
+        data class OnRestDayRequested(val habitId: Long) : Event()
+        data object OnConfirmRestDay : Event()
+        data object OnDismissRestDaySheet : Event()
+        // XP
+        data object OnXpPopDismissed : Event()
     }
 
     sealed class Effect {

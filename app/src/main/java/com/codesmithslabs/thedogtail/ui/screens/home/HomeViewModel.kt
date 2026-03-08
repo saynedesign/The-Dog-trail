@@ -6,6 +6,12 @@ import com.codesmithslabs.thedogtail.data.HabitDao
 import com.codesmithslabs.thedogtail.data.HabitLogDao
 import com.codesmithslabs.thedogtail.data.HabitLogEntity
 import com.codesmithslabs.thedogtail.data.HabitEntity
+import com.codesmithslabs.thedogtail.data.HabitRestDayDao
+import com.codesmithslabs.thedogtail.data.HabitRestDayEntity
+import com.codesmithslabs.thedogtail.data.UserDao
+import com.codesmithslabs.thedogtail.util.AwardXpUseCase
+import com.codesmithslabs.thedogtail.util.LevelSystem
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -21,7 +27,10 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val habitDao: HabitDao,
-    private val habitLogDao: HabitLogDao
+    private val habitLogDao: HabitLogDao,
+    private val habitRestDayDao: HabitRestDayDao,
+    private val userDao: UserDao,
+    private val awardXpUseCase: AwardXpUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HomeContract.State())
@@ -36,6 +45,7 @@ class HomeViewModel @Inject constructor(
     init {
         loadHabits()
         loadLogs()
+        loadXp()
     }
 
     private fun loadHabits() {
@@ -56,18 +66,28 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    private fun loadXp() {
+        viewModelScope.launch {
+            userDao.getUser().collect { user ->
+                _state.value = _state.value.copy(
+                    totalXp = user?.totalXp ?: 0,
+                    currentLevel = user?.currentLevel ?: 1
+                )
+            }
+        }
+    }
+
     private fun updateHabitsForSelectedDate() {
         val selectedDate = LocalDate.ofEpochDay(_state.value.selectedEpochDay)
-        // LocalDate.dayOfWeek.value returns 1 (Mon) to 7 (Sun)
-        val dayOfWeek = selectedDate.dayOfWeek.value 
-        
+        val dayOfWeek = selectedDate.dayOfWeek.value
+
         val filteredHabits = allHabitsCache.filter { habit ->
-             // Parse "1,2,3" string. If empty or null, assume everyday or handle gracefully.
-             // Based on HabitEntity default "1,2,3,4,5,6,7", it should be fine.
-             val scheduledDays = habit.selectedDays.split(",").mapNotNull { it.trim().toIntOrNull() }.toSet()
-             scheduledDays.contains(dayOfWeek)
+            val scheduledDays = habit.selectedDays.split(",").mapNotNull { it.trim().toIntOrNull() }.toSet()
+            scheduledDays.contains(dayOfWeek)
         }
         _state.value = _state.value.copy(habits = filteredHabits)
+        // Also load rest day state for the selected date
+        loadRestDayStateForSelectedDate()
     }
 
     private fun updateHabitLogsForSelectedDate() {
@@ -76,6 +96,14 @@ class HomeViewModel @Inject constructor(
             .filter { it.dateEpochDay == day }
             .associateBy { it.habitId }
         _state.value = _state.value.copy(habitLogs = logsForDay)
+    }
+
+    private fun loadRestDayStateForSelectedDate() {
+        viewModelScope.launch {
+            val epoch = _state.value.selectedEpochDay
+            val restingIds = habitRestDayDao.getRestingHabitIdsForDay(epoch).toSet()
+            _state.value = _state.value.copy(restingHabitIds = restingIds)
+        }
     }
 
     private fun epochDayFor(fullDateString: String): Long {
@@ -178,6 +206,59 @@ class HomeViewModel @Inject constructor(
             is HomeContract.Event.OnAchievementsRequested -> {
                 sendEffect(HomeContract.Effect.NavigateToAchievements)
             }
+            // Rest Day
+            is HomeContract.Event.OnRestDayRequested -> {
+                viewModelScope.launch {
+                    val today = LocalDate.now()
+                    val weekStart = today.with(DayOfWeek.MONDAY).toEpochDay()
+                    val weekEnd = today.with(DayOfWeek.SUNDAY).toEpochDay()
+                    val usedThisWeek = habitRestDayDao.countRestDaysInWeek(event.habitId, weekStart, weekEnd)
+                    _state.value = _state.value.copy(
+                        showRestDaySheet = true,
+                        restDayTargetHabitId = event.habitId,
+                        restDaysUsedThisWeek = usedThisWeek
+                    )
+                }
+            }
+            is HomeContract.Event.OnConfirmRestDay -> {
+                val habitId = _state.value.restDayTargetHabitId ?: return
+                viewModelScope.launch {
+                    val today = LocalDate.now()
+                    val weekStart = today.with(DayOfWeek.MONDAY).toEpochDay()
+                    val weekEnd = today.with(DayOfWeek.SUNDAY).toEpochDay()
+                    val usedThisWeek = habitRestDayDao.countRestDaysInWeek(habitId, weekStart, weekEnd)
+                    if (usedThisWeek < 1) {
+                        habitRestDayDao.declareRestDay(
+                            HabitRestDayEntity(
+                                habitId = habitId,
+                                dateEpochDay = _state.value.selectedEpochDay
+                            )
+                        )
+                        // Award XP for taking a rest day
+                        awardXpUseCase.award(
+                            LevelSystem.XpRewards.REST_DAY,
+                            LevelSystem.XpReasons.REST_DAY,
+                            habitId
+                        )
+                        _state.value = _state.value.copy(xpPopAmount = LevelSystem.XpRewards.REST_DAY)
+                        loadRestDayStateForSelectedDate()
+                    }
+                    _state.value = _state.value.copy(
+                        showRestDaySheet = false,
+                        restDayTargetHabitId = null
+                    )
+                }
+            }
+            is HomeContract.Event.OnDismissRestDaySheet -> {
+                _state.value = _state.value.copy(
+                    showRestDaySheet = false,
+                    restDayTargetHabitId = null
+                )
+            }
+            // XP
+            is HomeContract.Event.OnXpPopDismissed -> {
+                _state.value = _state.value.copy(xpPopAmount = null)
+            }
         }
     }
 
@@ -187,8 +268,47 @@ class HomeViewModel @Inject constructor(
             val existing = habitLogDao.getLogForDay(habitId, day)
             if (isDone && existing == null) {
                 habitLogDao.insertLog(HabitLogEntity(habitId = habitId, dateEpochDay = day, value = 1f))
+
+                // Check if this is the first completion of the day
+                val logsToday = logsCache.count { it.dateEpochDay == day }
+                var xpAwarded = LevelSystem.XpRewards.HABIT_COMPLETE
+                awardXpUseCase.award(LevelSystem.XpRewards.HABIT_COMPLETE, LevelSystem.XpReasons.HABIT_COMPLETE, habitId)
+
+                if (logsToday == 0) {
+                    // First of the day bonus
+                    awardXpUseCase.award(LevelSystem.XpRewards.FIRST_OF_DAY, LevelSystem.XpReasons.FIRST_OF_DAY, habitId)
+                    xpAwarded += LevelSystem.XpRewards.FIRST_OF_DAY
+                }
+
+                // Check for perfect day (all habits completed)
+                val scheduledHabits = _state.value.habits
+                val restingIds = _state.value.restingHabitIds
+                val nonRestingHabits = scheduledHabits.filter { it.id !in restingIds }
+                val logsForDay = logsCache.filter { it.dateEpochDay == day }.map { it.habitId }.toSet() + habitId
+                val allDone = nonRestingHabits.all { it.id in logsForDay }
+                if (allDone && nonRestingHabits.isNotEmpty()) {
+                    awardXpUseCase.award(LevelSystem.XpRewards.PERFECT_DAY, LevelSystem.XpReasons.PERFECT_DAY)
+                    xpAwarded += LevelSystem.XpRewards.PERFECT_DAY
+                }
+
+                _state.value = _state.value.copy(xpPopAmount = xpAwarded)
             } else if (!isDone && existing != null) {
                 habitLogDao.deleteLog(existing)
+
+                val logsToday = logsCache.count { it.dateEpochDay == day }
+                awardXpUseCase.award(-LevelSystem.XpRewards.HABIT_COMPLETE, LevelSystem.XpReasons.HABIT_COMPLETE + "_REVOKE", habitId)
+                if (logsToday == 1) {
+                    awardXpUseCase.award(-LevelSystem.XpRewards.FIRST_OF_DAY, LevelSystem.XpReasons.FIRST_OF_DAY + "_REVOKE", habitId)
+                }
+
+                val scheduledHabits = _state.value.habits
+                val restingIds = _state.value.restingHabitIds
+                val nonRestingHabits = scheduledHabits.filter { it.id !in restingIds }
+                val logsForDayBeforeUncheck = logsCache.filter { it.dateEpochDay == day }.map { it.habitId }.toSet()
+                val allDoneBefore = nonRestingHabits.all { it.id in logsForDayBeforeUncheck }
+                if (allDoneBefore && nonRestingHabits.isNotEmpty()) {
+                    awardXpUseCase.award(-LevelSystem.XpRewards.PERFECT_DAY, LevelSystem.XpReasons.PERFECT_DAY + "_REVOKE")
+                }
             }
         }
     }
@@ -198,14 +318,31 @@ class HomeViewModel @Inject constructor(
             val day = _state.value.selectedEpochDay
             val existing = habitLogDao.getLogForDay(habitId, day)
             if (existing != null) {
-                if (newValue <= 0 && existing.value != null && existing.value <= 0) {
-                     // Maybe delete if 0? For now just update
-                     habitLogDao.insertLog(existing.copy(value = newValue))
-                } else {
-                    habitLogDao.insertLog(existing.copy(value = newValue))
-                }
+                habitLogDao.insertLog(existing.copy(value = newValue))
             } else {
                 habitLogDao.insertLog(HabitLogEntity(habitId = habitId, dateEpochDay = day, value = newValue))
+                
+                // Track XP similarly to simple habits
+                val logsToday = logsCache.count { it.dateEpochDay == day }
+                var xpAwarded = LevelSystem.XpRewards.HABIT_COMPLETE
+                awardXpUseCase.award(LevelSystem.XpRewards.HABIT_COMPLETE, LevelSystem.XpReasons.HABIT_COMPLETE, habitId)
+
+                if (logsToday == 0) {
+                    awardXpUseCase.award(LevelSystem.XpRewards.FIRST_OF_DAY, LevelSystem.XpReasons.FIRST_OF_DAY, habitId)
+                    xpAwarded += LevelSystem.XpRewards.FIRST_OF_DAY
+                }
+
+                val scheduledHabits = _state.value.habits
+                val restingIds = _state.value.restingHabitIds
+                val nonRestingHabits = scheduledHabits.filter { it.id !in restingIds }
+                val logsForDay = logsCache.filter { it.dateEpochDay == day }.map { it.habitId }.toSet() + habitId
+                val allDone = nonRestingHabits.all { it.id in logsForDay }
+                if (allDone && nonRestingHabits.isNotEmpty()) {
+                    awardXpUseCase.award(LevelSystem.XpRewards.PERFECT_DAY, LevelSystem.XpReasons.PERFECT_DAY)
+                    xpAwarded += LevelSystem.XpRewards.PERFECT_DAY
+                }
+
+                _state.value = _state.value.copy(xpPopAmount = xpAwarded)
             }
         }
     }

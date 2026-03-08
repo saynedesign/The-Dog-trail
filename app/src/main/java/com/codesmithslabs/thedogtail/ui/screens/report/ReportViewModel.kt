@@ -4,7 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.codesmithslabs.thedogtail.data.HabitDao
 import com.codesmithslabs.thedogtail.data.HabitLogDao
+import com.codesmithslabs.thedogtail.data.HabitRestDayDao
 import com.codesmithslabs.thedogtail.data.MoodDao
+import com.codesmithslabs.thedogtail.data.UserDao
+import com.codesmithslabs.thedogtail.data.XpEventDao
+import com.codesmithslabs.thedogtail.util.LevelSystem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -12,15 +16,18 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 import javax.inject.Inject
 
 @HiltViewModel
 class ReportViewModel @Inject constructor(
     private val habitDao: HabitDao,
     private val habitLogDao: HabitLogDao,
-    private val moodDao: MoodDao
+    private val moodDao: MoodDao,
+    private val habitRestDayDao: HabitRestDayDao,
+    private val userDao: UserDao,
+    private val xpEventDao: XpEventDao
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ReportContract.State())
@@ -28,6 +35,26 @@ class ReportViewModel @Inject constructor(
 
     init {
         loadData()
+        loadXpData()
+    }
+
+    private fun loadXpData() {
+        viewModelScope.launch {
+            userDao.getUser().collect { user ->
+                _state.value = _state.value.copy(
+                    totalXp = user?.totalXp ?: 0,
+                    currentLevel = user?.currentLevel ?: 1
+                )
+            }
+        }
+        viewModelScope.launch {
+            val today = LocalDate.now()
+            val weekStart = today.minusDays(6).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val weekEnd = today.plusDays(1).atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+            xpEventDao.getXpInRange(weekStart, weekEnd).collect { weeklyXp ->
+                _state.value = _state.value.copy(weeklyXp = weeklyXp)
+            }
+        }
     }
 
     private fun loadData() {
@@ -37,101 +64,127 @@ class ReportViewModel @Inject constructor(
             combine(
                 habitDao.getAllHabits(),
                 habitLogDao.getAllLogs(),
-                moodDao.getAllMoods()
-            ) { habits, logs, moods ->
-                Triple(habits, logs, moods)
-            }.collect { (habits, logs, moods) ->
+                moodDao.getAllMoods(),
+                habitRestDayDao.getAllRestDays()
+            ) { habits, logs, moods, restDays ->
+                data class CombinedData(
+                    val habits: List<com.codesmithslabs.thedogtail.data.HabitEntity>,
+                    val logs: List<com.codesmithslabs.thedogtail.data.HabitLogEntity>,
+                    val moods: List<com.codesmithslabs.thedogtail.data.MoodEntity>,
+                    val restDays: List<com.codesmithslabs.thedogtail.data.HabitRestDayEntity>
+                )
+                CombinedData(habits, logs, moods, restDays)
+            }.collect { (habits, logs, moods, restDays) ->
                 val today = LocalDate.now()
-                
-                // 1. Calculate Total Habits Completed
-                val totalCompleted = logs.size
 
-                // 2. Calculate Daily Stats (Completion Rate, Perfect Days)
+                // Build rest day sets
+                // Per-habit rest days grouped by epoch
+                val restDaysByEpoch = restDays.groupBy { it.dateEpochDay }
+                val restDayEpochsAll = restDays.map { it.dateEpochDay }.toSet()
+                // For a given day+habit: check if rest
+                fun isRestDay(epoch: Long, habitId: Long): Boolean {
+                    return restDaysByEpoch[epoch]?.any { it.habitId == habitId } == true
+                }
+
+                // Total Effort Points (was totalCompleted)
+                val totalEffortPoints = logs.size
+
                 // Group logs by day
                 val logsByDay = logs.groupBy { it.dateEpochDay }
-                
-                var perfectDays = 0
-                var currentStreak = 0
-                var streakActive = true
-                
-                // Calculate streak backwards from today
-                // Limit to last 365 days for performance if needed, but here we iterate backwards
+
+                // --- Active Momentum (rest-neutral streak) ---
+                var activeMomentum = 0
                 var checkDate = today
+                // Grace: if nothing today, start from yesterday
+                val todayEpoch = today.toEpochDay()
+                val todayLogs = logsByDay[todayEpoch] ?: emptyList()
+                val todayHasRest = restDaysByEpoch.containsKey(todayEpoch)
+                if (todayLogs.isEmpty() && !todayHasRest) {
+                    checkDate = checkDate.minusDays(1)
+                }
                 while (true) {
                     val epoch = checkDate.toEpochDay()
                     val dayLogs = logsByDay[epoch] ?: emptyList()
-                    
-                    if (dayLogs.isNotEmpty()) {
-                        currentStreak++
-                        checkDate = checkDate.minusDays(1)
-                    } else {
-                        // If it's today and no logs yet, don't break streak, just ignore
-                        if (checkDate == today) {
+                    val dayHasRest = restDaysByEpoch.containsKey(epoch)
+                    when {
+                        dayHasRest && dayLogs.isEmpty() -> {
+                            // All habits resting — skip neutral
                             checkDate = checkDate.minusDays(1)
-                            continue
                         }
-                        break
+                        dayLogs.isNotEmpty() -> {
+                            activeMomentum++
+                            checkDate = checkDate.minusDays(1)
+                        }
+                        else -> break
                     }
-                    if (currentStreak > 3650) break // Safety break
+                    if (activeMomentum > 3650) break
                 }
 
-                // Calculate Perfect Days and Total Scheduled
-                // This is complex because habits change over time (creation date, deletion).
-                // For MVP, we'll estimate based on currently active habits and their creation date.
-                // A more robust solution would require a separate table for daily schedules or checking creation timestamps.
-                
-                // Simplified "Perfect Day": If (logs count >= active habits count) for that day
-                // We will just count days where completion > 80% as "Perfect" for now to be lenient, 
-                // or strict 100%. Let's go with strict but only for habits that existed then.
-                // Since we don't have historical habit snapshots, we'll use "createdTimestamp".
-                
+                // --- Calculate per-day stats ---
                 val minDate = logs.minOfOrNull { it.dateEpochDay } ?: today.toEpochDay()
                 val maxDate = today.toEpochDay()
-                
+
                 var totalScheduledSum = 0
                 var totalCompletedSum = 0
+                var strongDays = 0
+                var perfectDays = 0
 
-                // Calendar Stats for selected month
+                // Weekly consistency (7-day window)
+                val weekStart7 = today.minusDays(6).toEpochDay()
+                var weekScheduled = 0
+                var weekCompleted = 0
+
                 val calendarStats = mutableListOf<ReportContract.CalendarDayStat>()
                 val selectedMonthStart = _state.value.selectedMonth.withDayOfMonth(1)
                 val selectedMonthEnd = _state.value.selectedMonth.plusMonths(1).withDayOfMonth(1).minusDays(1)
 
                 for (dayEpoch in minDate..maxDate) {
                     val date = LocalDate.ofEpochDay(dayEpoch)
-                    val dayOfWeek = date.dayOfWeek.value // 1=Mon, 7=Sun
-                    
-                    // Filter habits active on this day
-                    val activeHabits = habits.filter { 
-                        // created before or on this day
-                        val createdDate = java.time.Instant.ofEpochMilli(it.createdTimestamp).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+                    val dayOfWeek = date.dayOfWeek.value
+
+                    val activeHabits = habits.filter {
+                        val createdDate = java.time.Instant.ofEpochMilli(it.createdTimestamp).atZone(ZoneId.systemDefault()).toLocalDate()
                         !createdDate.isAfter(date) &&
-                        // scheduled for this day of week
                         it.selectedDays.split(",").mapNotNull { d -> d.trim().toIntOrNull() }.contains(dayOfWeek)
                     }
-                    
-                    val scheduledCount = activeHabits.size
-                    val completedCount = logsByDay[dayEpoch]?.size ?: 0
-                    
+
+                    // Exclude habits that have a rest day on this date
+                    val nonRestingHabits = activeHabits.filter { !isRestDay(dayEpoch, it.id) }
+                    val scheduledCount = nonRestingHabits.size
+                    val completedCount = logsByDay[dayEpoch]?.count { log ->
+                        nonRestingHabits.any { it.id == log.habitId }
+                    } ?: 0
+
                     if (scheduledCount > 0) {
                         totalScheduledSum += scheduledCount
                         totalCompletedSum += completedCount
-                        
+
                         if (completedCount >= scheduledCount) {
                             perfectDays++
                         }
+                        // Strong Day: >= 75% completion
+                        if (completedCount.toFloat() / scheduledCount >= 0.75f) {
+                            strongDays++
+                        }
+
+                        // Weekly window
+                        if (dayEpoch >= weekStart7) {
+                            weekScheduled += scheduledCount
+                            weekCompleted += completedCount
+                        }
                     }
 
-                    // Populate Calendar Stats if in selected month
+                    // Calendar stats for selected month
                     if (!date.isBefore(selectedMonthStart) && !date.isAfter(selectedMonthEnd)) {
                         val rate = if (scheduledCount > 0) completedCount.toFloat() / scheduledCount else 0f
                         calendarStats.add(ReportContract.CalendarDayStat(date, rate.coerceIn(0f, 1f)))
                     }
                 }
-                
-                val completionRate = if (totalScheduledSum > 0) (totalCompletedSum * 100 / totalScheduledSum) else 0
 
-                // 3. Weekly Habit Counts (Bar Chart)
-                // Last 7 days including today
+                val completionRate = if (totalScheduledSum > 0) (totalCompletedSum * 100 / totalScheduledSum) else 0
+                val weeklyConsistencyScore = if (weekScheduled > 0) (weekCompleted * 100 / weekScheduled) else 0
+
+                // Weekly Habit Counts (Bar Chart) — last 7 days
                 val weeklyHabitCounts = (0..6).map { i ->
                     val date = today.minusDays((6 - i).toLong())
                     val epoch = date.toEpochDay()
@@ -143,28 +196,30 @@ class ReportViewModel @Inject constructor(
                     )
                 }
 
-                // 4. Monthly Completion Rates (Line Chart)
-                // Last 6 months
+                // Monthly Completion Rates (Line Chart) — last 6 months
                 val monthlyRates = (0..5).map { i ->
                     val monthDate = today.minusMonths((5 - i).toLong())
                     val startOfMonth = monthDate.withDayOfMonth(1)
                     val endOfMonth = monthDate.plusMonths(1).withDayOfMonth(1).minusDays(1)
-                    
+
                     var mScheduled = 0
                     var mCompleted = 0
-                    
+
                     for (dayEpoch in startOfMonth.toEpochDay()..endOfMonth.toEpochDay()) {
                         val date = LocalDate.ofEpochDay(dayEpoch)
                         val dayOfWeek = date.dayOfWeek.value
-                         val activeHabits = habits.filter { 
-                            val createdDate = java.time.Instant.ofEpochMilli(it.createdTimestamp).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+                        val activeHabits = habits.filter {
+                            val createdDate = java.time.Instant.ofEpochMilli(it.createdTimestamp).atZone(ZoneId.systemDefault()).toLocalDate()
                             !createdDate.isAfter(date) &&
                             it.selectedDays.split(",").mapNotNull { d -> d.trim().toIntOrNull() }.contains(dayOfWeek)
                         }
-                        mScheduled += activeHabits.size
-                        mCompleted += logsByDay[dayEpoch]?.size ?: 0
+                        val nonResting = activeHabits.filter { !isRestDay(dayEpoch, it.id) }
+                        mScheduled += nonResting.size
+                        mCompleted += logsByDay[dayEpoch]?.count { log ->
+                            nonResting.any { it.id == log.habitId }
+                        } ?: 0
                     }
-                    
+
                     val rate = if (mScheduled > 0) (mCompleted * 100 / mScheduled) else 0
                     ReportContract.MonthlyRate(
                         monthLabel = monthDate.format(DateTimeFormatter.ofPattern("MMM")),
@@ -172,16 +227,16 @@ class ReportViewModel @Inject constructor(
                     )
                 }
 
-                // 5. Weekly Moods (Mood Chart)
-                val moodMap = moods.associateBy { 
-                     java.time.Instant.ofEpochMilli(it.timestamp).atZone(java.time.ZoneId.systemDefault()).toLocalDate().toEpochDay()
+                // Weekly Moods
+                val moodMap = moods.associateBy {
+                    java.time.Instant.ofEpochMilli(it.timestamp).atZone(ZoneId.systemDefault()).toLocalDate().toEpochDay()
                 }
-                
+
                 val weeklyMoods = (0..6).map { i ->
                     val date = today.minusDays((6 - i).toLong())
                     val epoch = date.toEpochDay()
                     val mood = moodMap[epoch]
-                    
+
                     val moodValue = when(mood?.moodType) {
                         "Great" -> 5
                         "Good" -> 4
@@ -190,7 +245,7 @@ class ReportViewModel @Inject constructor(
                         "Bad" -> 1
                         else -> 0
                     }
-                    
+
                     ReportContract.DailyMood(
                         dayLabel = date.dayOfMonth.toString(),
                         moodValue = moodValue,
@@ -200,14 +255,20 @@ class ReportViewModel @Inject constructor(
 
                 _state.value = _state.value.copy(
                     isLoading = false,
-                    currentStreak = currentStreak,
+                    currentStreak = activeMomentum,
                     completionRate = completionRate,
-                    totalHabitsCompleted = totalCompleted,
+                    totalHabitsCompleted = totalEffortPoints,
                     totalPerfectDays = perfectDays,
                     weeklyHabitCounts = weeklyHabitCounts,
                     monthlyCompletionRates = monthlyRates,
                     weeklyMoods = weeklyMoods,
-                    calendarStats = calendarStats
+                    calendarStats = calendarStats,
+                    // Optimistic
+                    weeklyConsistencyScore = weeklyConsistencyScore,
+                    activeMomentum = activeMomentum,
+                    strongDays = strongDays,
+                    totalEffortPoints = totalEffortPoints,
+                    restDayEpochs = restDayEpochsAll
                 )
             }
         }
@@ -220,7 +281,7 @@ class ReportViewModel @Inject constructor(
             }
             is ReportContract.Event.OnMonthChange -> {
                 _state.value = _state.value.copy(selectedMonth = event.newMonth)
-                loadData() // Reload to update calendar stats
+                loadData()
             }
         }
     }

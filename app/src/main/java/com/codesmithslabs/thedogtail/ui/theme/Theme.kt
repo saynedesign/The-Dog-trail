@@ -17,19 +17,20 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = BrandBlue,
+    primary = BrandBlueLight,
     secondary = BrandPurple,
-    tertiary = BrandLightBlue,
-    background = DarkBackground, // Dark mode background
-    surface = Color(0xFF1E1E1E),
+    tertiary = BrandBlueDark,
+    background = PremiumDarkBackground, // Global Premium Dark Background
+    surface = PremiumDarkSurface, // Global Premium Dark Surface
     onPrimary = Color(0xFFFFFFFF),
     onSecondary = Color(0xFFFFFFFF),
     onTertiary = TextPrimary,
-    onBackground = Color(0xFFE6E1E5),
-    onSurface = Color(0xFFE6E1E5),
-    onSurfaceVariant = Color(0xFFBDB7C3),
-    outlineVariant = Color(0xFF3A3A3A),
+    onBackground = Color(0xFFFFFFFF),
+    onSurface = Color(0xFFFFFFFF),
+    onSurfaceVariant = PremiumDarkTextMuted,
+    outlineVariant = PremiumDarkBorder,
     error = ErrorRed,
+    errorContainer = PremiumLogoutBgDark,
     onError = Color(0xFFFFFFFF)
 )
 
@@ -46,6 +47,7 @@ private val LightColorScheme = lightColorScheme(
     onSurface = TextPrimary,
     onSurfaceVariant = TextSecondary,
     outlineVariant = BrandLightBlue,
+    errorContainer = Color(0xFFFFEBEE), // Subtle light red for light mode logout
     error = ErrorRed,
     onError = Color(0xFFFFFFFF)
 )

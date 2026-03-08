@@ -8,7 +8,13 @@ interface ProfileContract {
         val profileImageUri: String? = null,
         val isLoading: Boolean = true,
         val level: Int = 1,
-        val totalHabitCount: Int = 0
+        val totalHabitCount: Int = 0,
+        // XP
+        val totalXp: Int = 0,
+        val xpProgress: Float = 0f,
+        val levelName: String = "Pup",
+        val levelEmoji: String = "🐾",
+        val nextLevelXp: Int = 200
     )
 
     sealed class Event {

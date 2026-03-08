@@ -41,7 +41,11 @@ class ProfileViewModel @Inject constructor(
                 userDao.getUser(),
                 habitLogDao.countAllLogs()
             ) { user, count ->
-                val level = LevelSystem.getLevelForHabitCount(count)
+                val xp = user?.totalXp ?: 0
+                val level = LevelSystem.getLevelForXp(xp)
+                val levelInfo = LevelSystem.getLevelInfo(level)
+                val progress = LevelSystem.getProgressToNextLevel(xp)
+                val nextXp = LevelSystem.getNextLevelRequirement(xp)
                 ProfileContract.State(
                     userName = user?.name ?: "",
                     userDob = user?.dob ?: "",
@@ -49,7 +53,12 @@ class ProfileViewModel @Inject constructor(
                     profileImageUri = user?.profileImageUri,
                     isLoading = false,
                     level = level,
-                    totalHabitCount = count
+                    totalHabitCount = count,
+                    totalXp = xp,
+                    xpProgress = progress,
+                    levelName = levelInfo.name,
+                    levelEmoji = levelInfo.emoji,
+                    nextLevelXp = nextXp
                 )
             }.collectLatest { newState ->
                 _state.value = newState

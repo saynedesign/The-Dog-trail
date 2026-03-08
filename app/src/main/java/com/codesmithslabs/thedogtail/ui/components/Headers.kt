@@ -76,6 +76,8 @@ fun ScreenHeader(
 
 @Composable
 fun HomeHeader(
+    levelEmoji: String = "🐾",
+    totalXp: Int = 0,
     onNotificationClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -105,12 +107,31 @@ fun HomeHeader(
             modifier = Modifier.weight(1f),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(R.string.app_name),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                // XP Pill
+                Row(
+                    modifier = Modifier
+                        .background(BrandBackground, CircleShape)
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = levelEmoji, style = MaterialTheme.typography.labelSmall)
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "${totalXp} XP",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = BrandBlue
+                    )
+                }
+            }
         }
         
         IconButton(

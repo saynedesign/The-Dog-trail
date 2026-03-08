@@ -100,10 +100,10 @@ fun HabitDetailScreen(
 
                     item {
                         ScoringBreakdownCard(
-                            logs = state.logs,
-                            completionRate = state.completionRate,
-                            currentStreak = state.currentStreak,
-                            totalCompletions = state.totalCompletions
+                            activeMomentum = state.activeMomentum,
+                            weeklyConsistency = state.weeklyConsistency,
+                            strongDays = state.strongDays,
+                            habitXp = state.habitXp
                         )
                     }
 
@@ -207,20 +207,11 @@ fun HabitHeader(habit: HabitEntity, consistency: Int) {
 
 @Composable
 fun ScoringBreakdownCard(
-    logs: List<HabitLogEntity>,
-    completionRate: Int,
-    currentStreak: Int,
-    totalCompletions: Int
+    activeMomentum: Int,
+    weeklyConsistency: Int,
+    strongDays: Int,
+    habitXp: Int
 ) {
-    val today = LocalDate.now().toEpochDay()
-    val thirtyDaysAgo = today - 29
-    val logsInLast30Days = remember(logs, today) {
-        logs.count { it.dateEpochDay in thirtyDaysAgo..today }
-    }
-    val uniqueDaysInLast30Days = remember(logs, today) {
-        logs.map { it.dateEpochDay }.toSet().count { it in thirtyDaysAgo..today }
-    }
-
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -239,7 +230,7 @@ fun ScoringBreakdownCard(
                 fontWeight = FontWeight.Bold
             )
             Text(
-                text = stringResource(R.string.habit_detail_scoring_formula),
+                text = "Optimistic tracking focuses on momentum and effort over perfection.",
                 style = MaterialTheme.typography.bodySmall,
                 color = TextSecondary
             )
@@ -248,18 +239,13 @@ fun ScoringBreakdownCard(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 MetricChip(
-                    title = stringResource(R.string.habit_detail_consistency),
-                    value = "$completionRate%",
+                    title = "Active Momentum",
+                    value = "$activeMomentum Days",
                     modifier = Modifier.weight(1f)
                 )
                 MetricChip(
-                    title = stringResource(R.string.habit_detail_30d_logs),
-                    value = "$logsInLast30Days / 30",
-                    modifier = Modifier.weight(1f)
-                )
-                MetricChip(
-                    title = stringResource(R.string.habit_detail_unique_days),
-                    value = uniqueDaysInLast30Days.toString(),
+                    title = "Weekly Consistency",
+                    value = "$weeklyConsistency%",
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -268,13 +254,13 @@ fun ScoringBreakdownCard(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 MetricChip(
-                    title = stringResource(R.string.habit_detail_current_streak),
-                    value = stringResource(R.string.habit_detail_days_plural, currentStreak),
+                    title = "Strong Days",
+                    value = strongDays.toString(),
                     modifier = Modifier.weight(1f)
                 )
                 MetricChip(
-                    title = stringResource(R.string.habit_detail_total_checkins),
-                    value = totalCompletions.toString(),
+                    title = "XP Earned",
+                    value = "$habitXp XP",
                     modifier = Modifier.weight(1f)
                 )
             }

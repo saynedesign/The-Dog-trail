@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.codesmithslabs.thedogtail.data.MoodDao
 import com.codesmithslabs.thedogtail.data.MoodEntity
+import com.codesmithslabs.thedogtail.util.AwardXpUseCase
+import com.codesmithslabs.thedogtail.util.LevelSystem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +20,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class MoodViewModel @Inject constructor(
-    private val moodDao: MoodDao
+    private val moodDao: MoodDao,
+    private val awardXpUseCase: AwardXpUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MoodContract.State())
@@ -151,6 +154,8 @@ class MoodViewModel @Inject constructor(
                 feeling = feeling
             )
             moodDao.insertMood(mood)
+            // Award XP for mood logging
+            awardXpUseCase.award(LevelSystem.XpRewards.MOOD_LOG, LevelSystem.XpReasons.MOOD_LOG)
             _state.value = _state.value.copy(showAddMoodDialog = false, selectedDateForMood = null)
         }
     }

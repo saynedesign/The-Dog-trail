@@ -19,4 +19,7 @@ interface UserDao {
 
     @Query("UPDATE user_info SET journal = :journal, journalLastUpdated = :updatedAt WHERE id = :id")
     suspend fun updateJournal(id: Long, journal: String, updatedAt: Long)
+
+    @Query("UPDATE user_info SET totalXp = :totalXp, currentLevel = :level WHERE id = (SELECT id FROM user_info LIMIT 1)")
+    suspend fun updateXp(totalXp: Int, level: Int)
 }

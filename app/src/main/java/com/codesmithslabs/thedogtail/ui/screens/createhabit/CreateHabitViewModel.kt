@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.codesmithslabs.thedogtail.data.HabitDao
 import com.codesmithslabs.thedogtail.data.HabitEntity
+import com.codesmithslabs.thedogtail.util.AwardXpUseCase
+import com.codesmithslabs.thedogtail.util.LevelSystem
 import com.codesmithslabs.thedogtail.util.NotificationScheduler
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -19,6 +21,7 @@ import javax.inject.Inject
 class CreateHabitViewModel @Inject constructor(
     private val habitDao: HabitDao,
     private val notificationScheduler: NotificationScheduler,
+    private val awardXpUseCase: AwardXpUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -213,6 +216,8 @@ class CreateHabitViewModel @Inject constructor(
                     // Insert new
                     val habitId = habitDao.insertHabit(habit)
                     scheduleNotification(currentState, habitId)
+                    // Award XP for creating a new habit
+                    awardXpUseCase.award(LevelSystem.XpRewards.HABIT_CREATED, LevelSystem.XpReasons.HABIT_CREATED, habitId)
                 }
                 
                 _effect.send(CreateHabitContract.Effect.NavigateBack)
