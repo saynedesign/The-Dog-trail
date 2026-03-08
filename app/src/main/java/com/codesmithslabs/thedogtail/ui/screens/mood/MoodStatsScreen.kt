@@ -82,6 +82,7 @@ fun MoodStatsScreen(
     } else {
         Scaffold(
             modifier = modifier,
+            containerColor = MaterialTheme.colorScheme.background,
             topBar = {
                 CenterAlignedTopAppBar(
                     navigationIcon = {
@@ -116,7 +117,6 @@ fun MoodStatsScreen(
                     )
                 )
             },
-            containerColor = BrandBackground
         ) { padding ->
             Column(
                 modifier = Modifier

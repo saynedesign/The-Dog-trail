@@ -52,21 +52,20 @@ import java.util.Locale
 
 @Composable
 fun CalendarStrip(
-    selectedDate: String,
-    onDateSelected: (String) -> Unit,
+    selectedDate: LocalDate,
+    onDateSelected: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val dates = remember {
         val today = LocalDate.now()
         val dateFormatter = DateTimeFormatter.ofPattern("d", Locale.getDefault())
         val dayFormatter = DateTimeFormatter.ofPattern("EEE", Locale.getDefault())
-        val fullDateFormatter = DateTimeFormatter.ofPattern("EEE d", Locale.getDefault()) // Format to match selectedDate string
         (-30..0).map { offset ->
             val date = today.plusDays(offset.toLong())
             Triple(
                 date.format(dayFormatter),
                 date.format(dateFormatter),
-                date.format(fullDateFormatter) // Key for comparison
+                date
             )
         }
     }
@@ -74,13 +73,13 @@ fun CalendarStrip(
     val listState = rememberLazyListState()
 
     // Scroll to today (or selected date) on first launch
-    LaunchedEffect(Unit) {
+    LaunchedEffect(selectedDate) {
         // Find index of today or selected date
-        val todayIndex = dates.indexOfFirst { it.third == selectedDate }.takeIf { it != -1 } 
-            ?: dates.indexOfFirst { it.third == LocalDate.now().format(DateTimeFormatter.ofPattern("EEE d", Locale.getDefault())) }
+        val targetIndex = dates.indexOfFirst { it.third == selectedDate }.takeIf { it != -1 }
+            ?: dates.indexOfFirst { it.third == LocalDate.now() }
         
-        if (todayIndex != -1) {
-            listState.scrollToItem(todayIndex)
+        if (targetIndex != -1) {
+            listState.animateScrollToItem(targetIndex)
         }
     }
 
@@ -91,8 +90,8 @@ fun CalendarStrip(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         contentPadding = PaddingValues(horizontal = 16.dp)
     ) {
-        items(dates) { (day, date, fullDate) ->
-            val isSelected = fullDate == selectedDate
+        items(dates) { (dayStr, dateStr, localDate) ->
+            val isSelected = localDate == selectedDate
             
             Card(
                 shape = RoundedCornerShape(16.dp),
@@ -104,7 +103,7 @@ fun CalendarStrip(
                 ),
                 modifier = Modifier
                     .width(60.dp) // Fixed width for consistency
-                    .clickable { onDateSelected(fullDate) }
+                    .clickable { onDateSelected(localDate) }
             ) {
                 Column(
                     modifier = Modifier
@@ -113,14 +112,14 @@ fun CalendarStrip(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        text = date,
+                        text = dateStr,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                         color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = day.uppercase(),
+                        text = dayStr.uppercase(),
                         style = MaterialTheme.typography.labelSmall,
                         color = if (isSelected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )

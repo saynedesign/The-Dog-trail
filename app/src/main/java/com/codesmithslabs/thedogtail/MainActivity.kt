@@ -44,6 +44,8 @@ import com.codesmithslabs.thedogtail.ui.screens.habitdetail.HabitDetailViewModel
 import com.codesmithslabs.thedogtail.ui.screens.home.HomeContract
 import com.codesmithslabs.thedogtail.ui.screens.home.HomeScreen
 import com.codesmithslabs.thedogtail.ui.screens.home.HomeViewModel
+import com.codesmithslabs.thedogtail.ui.screens.home.habits.HabitsContract
+import com.codesmithslabs.thedogtail.ui.screens.home.habits.HabitsViewModel
 import com.codesmithslabs.thedogtail.ui.screens.mood.MoodContract
 import com.codesmithslabs.thedogtail.ui.screens.mood.MoodStatsScreen
 import com.codesmithslabs.thedogtail.ui.screens.mood.MoodViewModel
@@ -225,30 +227,19 @@ class MainActivity : ComponentActivity() {
                         }
 
                         composable("home") {
-                            val viewModel = hiltViewModel<HomeViewModel>()
-                            val state by viewModel.state.collectAsState()
+                            val homeViewModel = hiltViewModel<HomeViewModel>()
+                            val homeState by homeViewModel.state.collectAsState()
+                            
+                            val habitsViewModel = hiltViewModel<HabitsViewModel>()
 
                             LaunchedEffect(Unit) {
-                                viewModel.effect.collect { effect ->
+                                homeViewModel.effect.collect { effect ->
                                     when (effect) {
-                                        is HomeContract.Effect.NavigateToAddHabit -> {
-                                            navController.navigate("create_habit")
-                                        }
-
-                                        is HomeContract.Effect.NavigateToHabitDetails -> {
-                                            navController.navigate("habit_details/${effect.habitId}")
-                                        }
                                         is HomeContract.Effect.NavigateToProfile -> {
                                             navController.navigate("profile")
                                         }
                                         is HomeContract.Effect.NavigateToMoodStats -> {
                                             navController.navigate("mood_stats")
-                                        }
-                                        is HomeContract.Effect.NavigateToTimer -> {
-                                            navController.navigate("timer/${effect.habitId}")
-                                        }
-                                        is HomeContract.Effect.NavigateToEditHabit -> {
-                                            navController.navigate("create_habit?habitId=${effect.habitId}")
                                         }
                                         is HomeContract.Effect.NavigateToEditProfile -> {
                                             navController.navigate("edit_profile")
@@ -263,9 +254,28 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
 
+                            LaunchedEffect(Unit) {
+                                habitsViewModel.effect.collect { effect ->
+                                    when (effect) {
+                                        is HabitsContract.Effect.NavigateToAddHabit -> {
+                                            navController.navigate("create_habit")
+                                        }
+                                        is HabitsContract.Effect.NavigateToHabitDetails -> {
+                                            navController.navigate("habit_details/${effect.habitId}")
+                                        }
+                                        is HabitsContract.Effect.NavigateToTimer -> {
+                                            navController.navigate("timer/${effect.habitId}")
+                                        }
+                                        is HabitsContract.Effect.NavigateToEditHabit -> {
+                                            navController.navigate("create_habit?habitId=${effect.habitId}")
+                                        }
+                                    }
+                                }
+                            }
+
                             HomeScreen(
-                                state = state,
-                                onEvent = viewModel::handleEvent
+                                state = homeState,
+                                onEvent = homeViewModel::handleEvent
                             )
                         }
                         
