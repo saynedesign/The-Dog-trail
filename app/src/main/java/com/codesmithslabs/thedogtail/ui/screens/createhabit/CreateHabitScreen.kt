@@ -21,6 +21,14 @@ import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.Manifest
+import android.app.AlarmManager
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import android.provider.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -44,6 +52,31 @@ fun CreateHabitScreen(
     state: CreateHabitContract.State,
     onEvent: (CreateHabitContract.Event) -> Unit
 ) {
+    val context = LocalContext.current
+    
+    // Launcher for Android 13+ Notification Permission
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            onEvent(CreateHabitContract.Event.OnReminderToggle(true))
+        } else {
+            // Permission denied, handle accordingly (e.g. show a snackbar)
+            onEvent(CreateHabitContract.Event.OnReminderToggle(false))
+        }
+    }
+
+    // Function to check and request exact alarm permission (Android 12+)
+    fun checkExactAlarmPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            if (!alarmManager.canScheduleExactAlarms()) {
+                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                context.startActivity(intent)
+            }
+        }
+    }
+
     Scaffold(
         topBar = {
             CreateHabitTopBar(
@@ -263,7 +296,18 @@ fun CreateHabitScreen(
                         )
                         Switch(
                             checked = state.reminderEnabled,
-                            onCheckedChange = { onEvent(CreateHabitContract.Event.OnReminderToggle(it)) },
+                            onCheckedChange = { enabled -> 
+                                if (enabled) {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                    } else {
+                                        onEvent(CreateHabitContract.Event.OnReminderToggle(true))
+                                    }
+                                    checkExactAlarmPermission()
+                                } else {
+                                    onEvent(CreateHabitContract.Event.OnReminderToggle(false))
+                                }
+                            },
                             colors = SwitchDefaults.colors(
                                 checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                                 checkedTrackColor = MaterialTheme.colorScheme.primary

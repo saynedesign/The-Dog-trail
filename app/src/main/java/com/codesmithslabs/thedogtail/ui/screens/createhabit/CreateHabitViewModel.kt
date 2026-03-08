@@ -14,14 +14,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import com.codesmithslabs.thedogtail.data.UserPreferencesRepository
 
 @HiltViewModel
 class CreateHabitViewModel @Inject constructor(
     private val habitDao: HabitDao,
     private val notificationScheduler: NotificationScheduler,
     private val awardXpUseCase: AwardXpUseCase,
+    private val preferencesRepository: UserPreferencesRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -30,11 +33,30 @@ class CreateHabitViewModel @Inject constructor(
 
     private val _effect = Channel<CreateHabitContract.Effect>()
     val effect = _effect.receiveAsFlow()
+    
+    // Store latest global times
+    private var morningTimePref = "08:00"
+    private var afternoonTimePref = "13:00"
+    private var eveningTimePref = "18:00"
 
     init {
+        // Collect global time preferences
+        viewModelScope.launch {
+            preferencesRepository.morningTime.collect { time -> morningTimePref = time }
+        }
+        viewModelScope.launch {
+            preferencesRepository.afternoonTime.collect { time -> afternoonTimePref = time }
+        }
+        viewModelScope.launch {
+            preferencesRepository.eveningTime.collect { time -> eveningTimePref = time }
+        }
+
         val habitId = savedStateHandle.get<Long>("habitId")
         if (habitId != null && habitId != -1L) {
             loadHabit(habitId)
+        } else {
+            // Apply default reminder time if it's a new habit (e.g., Morning)
+            _state.update { it.copy(reminderTime = morningTimePref) }
         }
     }
 
@@ -117,7 +139,17 @@ class CreateHabitViewModel @Inject constructor(
                 }
             }
             is CreateHabitContract.Event.OnTimeOfDayChange -> {
-                _state.value = _state.value.copy(timeOfDay = event.timeOfDay)
+                val newReminderTime = when (event.timeOfDay) {
+                    CreateHabitContract.TimeOfDay.MORNING -> morningTimePref
+                    CreateHabitContract.TimeOfDay.AFTERNOON -> afternoonTimePref
+                    CreateHabitContract.TimeOfDay.EVENING -> eveningTimePref
+                    CreateHabitContract.TimeOfDay.ANYTIME -> _state.value.reminderTime
+                }
+                
+                _state.value = _state.value.copy(
+                    timeOfDay = event.timeOfDay,
+                    reminderTime = newReminderTime
+                )
             }
             is CreateHabitContract.Event.OnDateChange -> {
                 _state.value = _state.value.copy(scheduledDate = event.date)

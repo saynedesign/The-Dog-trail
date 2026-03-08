@@ -57,8 +57,12 @@ class NotificationScheduler @Inject constructor(
                     pendingIntent
                 )
             } catch (e: SecurityException) {
-                // Handle missing exact alarm permission
-                e.printStackTrace()
+                // Fallback to inexact alarm if exact alarm permission (Android 12+) is missing
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    pendingIntent
+                )
             }
         }
     }
@@ -101,7 +105,12 @@ class NotificationScheduler @Inject constructor(
                 pendingIntent
             )
         } catch (e: SecurityException) {
-            e.printStackTrace()
+            // Fallback to inexact alarm if exact alarm permission (Android 12+) is missing
+            alarmManager.setAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                calendar.timeInMillis,
+                pendingIntent
+            )
         }
     }
     
