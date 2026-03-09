@@ -71,15 +71,6 @@ fun ReportScreen(
                         color = MaterialTheme.colorScheme.onBackground
                     )
                 },
-                actions = {
-                    IconButton(onClick = { /* TODO */ }) {
-                        Icon(
-                            imageVector = Icons.Default.MoreVert,
-                            contentDescription = stringResource(R.string.common_menu),
-                            tint = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-                },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 )
@@ -549,29 +540,6 @@ fun MoodChartCard(data: List<ReportContract.DailyMood>) {
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                
-                // Dropdown/Chip style for "This Week"
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(8.dp))
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
-                        .clickable { /* TODO: Filter */ }
-                ) {
-                    Text(
-                        text = stringResource(R.string.report_this_week),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Icon(
-                        imageVector = Icons.Default.ChevronRight, // Or ArrowDown
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp).rotate(90f),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))

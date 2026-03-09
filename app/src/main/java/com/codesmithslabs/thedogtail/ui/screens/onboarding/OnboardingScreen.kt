@@ -139,25 +139,6 @@ fun OnboardingScreen(
             )
 
             Spacer(modifier = Modifier.height(24.dp))
-
-            // Footer
-            val loginPrompt = stringResource(R.string.onboarding_login_prompt)
-            val loginAction = stringResource(R.string.onboarding_login_action)
-            
-            Text(
-                text = buildAnnotatedString {
-                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f))) {
-                        append(loginPrompt)
-                    }
-                    withStyle(style = SpanStyle(color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)) {
-                        append(loginAction)
-                    }
-                },
-                modifier = Modifier.clickable { onEvent(OnboardingContract.Event.OnLoginClicked) },
-                style = MaterialTheme.typography.bodyMedium
-            )
-            
-            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }

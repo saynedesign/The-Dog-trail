@@ -134,17 +134,8 @@ fun HomeHeader(
             }
         }
         
-        IconButton(
-            onClick = onNotificationClick,
-            modifier = Modifier
-                .size(circleSize)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Notifications,
-                contentDescription = stringResource(R.string.common_menu),
-                tint = MaterialTheme.colorScheme.primary
-            )
-        }
+        // Replaced notification icon with a spacer to maintain center alignment
+        Spacer(modifier = Modifier.size(circleSize))
     }
 }
 

@@ -32,6 +32,7 @@ interface ProfileContract {
         data object OnDataAnalyticsClicked : Event()
         data object OnHelpSupportClicked : Event()
         data object OnLevelBannerClicked : Event()
+        data object OnTrackNewHabitClicked : Event()
     }
 
     sealed class Effect {
@@ -39,6 +40,7 @@ interface ProfileContract {
         data object NavigateToEditProfile : Effect()
         data object NavigateToPreferences : Effect()
         data object NavigateToAchievements : Effect()
+        data object NavigateToCreateHabit : Effect()
         data class ShowToast(val message: String) : Effect()
     }
 }

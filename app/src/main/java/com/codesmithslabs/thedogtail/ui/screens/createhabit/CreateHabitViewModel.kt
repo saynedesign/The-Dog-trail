@@ -200,7 +200,10 @@ class CreateHabitViewModel @Inject constructor(
     private fun saveHabit() {
         val currentState = _state.value
         if (currentState.habitName.isBlank()) {
-            // TODO: Show error via Effect
+            // Show error via Effect
+            viewModelScope.launch {
+                _effect.send(CreateHabitContract.Effect.ShowToast("Habit name cannot be blank"))
+            }
             return
         }
 

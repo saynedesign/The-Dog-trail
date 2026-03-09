@@ -25,9 +25,6 @@ class OnboardingViewModel @Inject constructor() : ViewModel() {
             is OnboardingContract.Event.OnStartClicked -> {
                 sendEffect(OnboardingContract.Effect.NavigateToUserInfo)
             }
-            is OnboardingContract.Event.OnLoginClicked -> {
-                sendEffect(OnboardingContract.Effect.NavigateToLogin)
-            }
         }
     }
 

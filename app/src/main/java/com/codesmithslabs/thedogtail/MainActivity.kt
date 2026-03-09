@@ -187,10 +187,6 @@ class MainActivity : ComponentActivity() {
                                                 popUpTo("onboarding") { inclusive = true }
                                             }
                                         }
-
-                                        is OnboardingContract.Effect.NavigateToLogin -> {
-                                            // TODO: Navigate to Login
-                                        }
                                     }
                                 }
                             }
@@ -296,7 +292,7 @@ class MainActivity : ComponentActivity() {
                                             navController.popBackStack()
                                         }
                                         is CreateHabitContract.Effect.ShowToast -> {
-                                            // TODO: Show toast
+                                            Toast.makeText(this@MainActivity, effect.message, Toast.LENGTH_SHORT).show()
                                         }
                                     }
                                 }
@@ -330,6 +326,9 @@ class MainActivity : ComponentActivity() {
                                         }
                                         is ProfileContract.Effect.NavigateToAchievements -> {
                                             navController.navigate("achievements")
+                                        }
+                                        is ProfileContract.Effect.NavigateToCreateHabit -> {
+                                            navController.navigate("create_habit")
                                         }
                                     }
                                 }

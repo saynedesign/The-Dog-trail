@@ -11,11 +11,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
-import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.automirrored.filled.HelpOutline
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MilitaryTech
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
@@ -68,7 +65,7 @@ fun ProfileScreen(
             ) {
                 item {
                     Spacer(modifier = Modifier.height(4.dp))
-                    ProfileHeaderCard(state = state, onClick = { onEvent(ProfileContract.Event.OnPersonalInfoClicked) })
+                    ProfileHeaderCard(state = state, onClick = { onEvent(ProfileContract.Event.OnPersonalInfoClicked) }, onTrackNewHabit = { onEvent(ProfileContract.Event.OnTrackNewHabitClicked) })
                 }
 
                 item {
@@ -105,55 +102,12 @@ fun ProfileScreen(
                             icon = Icons.Default.Notifications,
                             title = "Notifications",
                             onClick = { onEvent(ProfileContract.Event.OnPreferencesClicked) },
-                            showDivider = true
-                        )
-                        ProfileOptionItem(
-                            icon = Icons.Default.Lock,
-                            title = "Privacy & Security",
-                            onClick = { onEvent(ProfileContract.Event.OnAccountSecurityClicked) },
-                            showDivider = true
-                        )
-                        ProfileOptionItem(
-                            icon = Icons.AutoMirrored.Filled.HelpOutline,
-                            title = "Help Center",
-                            onClick = { onEvent(ProfileContract.Event.OnHelpSupportClicked) },
                             showDivider = false
                         )
                     }
                 }
 
                 item {
-                    // Logout 
-                    Card(
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onEvent(ProfileContract.Event.OnLogoutClicked) },
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 16.dp),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.Logout,
-                                contentDescription = "Logout",
-                                tint = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Logout",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.error
-                            )
-                        }
-                    }
                     Spacer(modifier = Modifier.height(48.dp))
                 }
             }
@@ -198,7 +152,7 @@ fun ProfileTopBar(onEvent: (ProfileContract.Event) -> Unit) {
 }
 
 @Composable
-fun ProfileHeaderCard(state: ProfileContract.State, onClick: () -> Unit) {
+fun ProfileHeaderCard(state: ProfileContract.State, onClick: () -> Unit, onTrackNewHabit: () -> Unit) {
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = Color.Transparent),
@@ -306,7 +260,7 @@ fun ProfileHeaderCard(state: ProfileContract.State, onClick: () -> Unit) {
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Button(
-                    onClick = { /* Could launch create habit */ },
+                    onClick = onTrackNewHabit,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.White,
                         contentColor = BrandBlueDark

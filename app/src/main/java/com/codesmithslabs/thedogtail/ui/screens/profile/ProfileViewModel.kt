@@ -74,12 +74,6 @@ class ProfileViewModel @Inject constructor(
             ProfileContract.Event.OnEditProfileClicked -> {
                 viewModelScope.launch { _effect.send(ProfileContract.Effect.NavigateToEditProfile) }
             }
-            ProfileContract.Event.OnBackupClicked -> {
-                viewModelScope.launch { _effect.send(ProfileContract.Effect.ShowToast("Backup feature coming soon!")) }
-            }
-            ProfileContract.Event.OnLogoutClicked -> {
-                viewModelScope.launch { _effect.send(ProfileContract.Effect.ShowToast("Logout feature coming soon!")) }
-            }
             ProfileContract.Event.OnPreferencesClicked -> {
                 viewModelScope.launch { _effect.send(ProfileContract.Effect.NavigateToPreferences) }
             }
@@ -87,24 +81,13 @@ class ProfileViewModel @Inject constructor(
                 // Map to Edit Profile for now
                 viewModelScope.launch { _effect.send(ProfileContract.Effect.NavigateToEditProfile) }
             }
-            ProfileContract.Event.OnAccountSecurityClicked -> {
-                viewModelScope.launch { _effect.send(ProfileContract.Effect.ShowToast("Account & Security coming soon!")) }
-            }
-            ProfileContract.Event.OnLinkedAccountsClicked -> {
-                viewModelScope.launch { _effect.send(ProfileContract.Effect.ShowToast("Linked Accounts coming soon!")) }
-            }
-            ProfileContract.Event.OnAppAppearanceClicked -> {
-                viewModelScope.launch { _effect.send(ProfileContract.Effect.ShowToast("App Appearance coming soon!")) }
-            }
-            ProfileContract.Event.OnDataAnalyticsClicked -> {
-                viewModelScope.launch { _effect.send(ProfileContract.Effect.ShowToast("Data & Analytics coming soon!")) }
-            }
-            ProfileContract.Event.OnHelpSupportClicked -> {
-                viewModelScope.launch { _effect.send(ProfileContract.Effect.ShowToast("Help & Support coming soon!")) }
-            }
             ProfileContract.Event.OnLevelBannerClicked -> {
                 viewModelScope.launch { _effect.send(ProfileContract.Effect.NavigateToAchievements) }
             }
+            ProfileContract.Event.OnTrackNewHabitClicked -> {
+                viewModelScope.launch { _effect.send(ProfileContract.Effect.NavigateToCreateHabit) }
+            }
+            else -> {} // Removed unused events for clean up
         }
     }
 }

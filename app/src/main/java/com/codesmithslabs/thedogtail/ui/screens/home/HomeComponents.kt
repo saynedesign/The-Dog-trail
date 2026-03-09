@@ -183,25 +183,6 @@ fun DailyGoalCard(
                         color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                     )
                 }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Button(
-                    onClick = { /* TODO */ },
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f),
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    shape = RoundedCornerShape(12.dp),
-                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
-                    modifier = Modifier.height(32.dp)
-                ) {
-                    Text(
-                        text = stringResource(R.string.common_view_all),
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
             }
         }
     }
