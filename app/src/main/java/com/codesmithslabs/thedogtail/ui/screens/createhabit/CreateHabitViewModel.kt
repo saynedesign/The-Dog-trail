@@ -120,6 +120,15 @@ class CreateHabitViewModel @Inject constructor(
             is CreateHabitContract.Event.OnTypeChange -> {
                 _state.value = _state.value.copy(habitType = event.type)
             }
+            is CreateHabitContract.Event.OnTargetChange -> {
+                _state.value = _state.value.copy(target = event.target)
+            }
+            is CreateHabitContract.Event.OnUnitChange -> {
+                _state.value = _state.value.copy(unitName = event.unit)
+            }
+            is CreateHabitContract.Event.OnTargetRuleToggle -> {
+                _state.value = _state.value.copy(isAtLeast = event.isAtLeast)
+            }
             
             // New Events
             is CreateHabitContract.Event.OnToggleOneTime -> {

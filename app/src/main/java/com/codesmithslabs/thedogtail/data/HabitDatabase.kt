@@ -8,18 +8,16 @@ import androidx.room.RoomDatabase
         HabitEntity::class,
         UserEntity::class,
         HabitLogEntity::class,
-        MoodEntity::class,
         HabitRestDayEntity::class,
         XpEventEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 abstract class HabitDatabase : RoomDatabase() {
     abstract fun habitDao(): HabitDao
     abstract fun userDao(): UserDao
     abstract fun habitLogDao(): HabitLogDao
-    abstract fun moodDao(): MoodDao
     abstract fun habitRestDayDao(): HabitRestDayDao
     abstract fun xpEventDao(): XpEventDao
 }

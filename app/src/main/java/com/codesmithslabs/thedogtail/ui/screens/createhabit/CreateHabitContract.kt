@@ -6,7 +6,7 @@ interface CreateHabitContract {
         val habitName: String = "",
         val description: String = "",
         val habitIcon: String = "📝", // Default emoji
-        val habitType: HabitType = HabitType.YES_NO, // Simplified for new UI
+        val habitType: HabitType = HabitType.YES_NO,
         val target: String = "1",
         val unitName: String = "Times",
         val isAtLeast: Boolean = true,
@@ -48,6 +48,9 @@ interface CreateHabitContract {
         data class OnNameChange(val name: String) : Event()
         data class OnDescriptionChange(val description: String) : Event()
         data class OnTypeChange(val type: HabitType) : Event()
+        data class OnTargetChange(val target: String) : Event()
+        data class OnUnitChange(val unit: String) : Event()
+        data class OnTargetRuleToggle(val isAtLeast: Boolean) : Event()
         
         // New UI Events
         data class OnToggleOneTime(val isOneTime: Boolean) : Event()

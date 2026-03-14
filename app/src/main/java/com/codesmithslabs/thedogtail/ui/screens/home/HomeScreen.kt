@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.Face
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Card
@@ -50,8 +49,6 @@ import com.codesmithslabs.thedogtail.R
 import com.codesmithslabs.thedogtail.ui.screens.home.habits.HabitsContract
 import com.codesmithslabs.thedogtail.ui.screens.home.habits.HabitsScreen
 import com.codesmithslabs.thedogtail.ui.screens.home.habits.HabitsViewModel
-import com.codesmithslabs.thedogtail.ui.screens.mood.MoodStatsScreen
-import com.codesmithslabs.thedogtail.ui.screens.mood.MoodViewModel
 import com.codesmithslabs.thedogtail.ui.screens.profile.ProfileContract
 import com.codesmithslabs.thedogtail.ui.screens.profile.ProfileScreen
 import com.codesmithslabs.thedogtail.ui.screens.profile.ProfileViewModel
@@ -65,7 +62,7 @@ fun HomeScreen(
 ) {
     val view = LocalView.current
     val isDarkTheme = isSystemInDarkTheme()
-    
+
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as android.app.Activity).window
@@ -77,7 +74,6 @@ fun HomeScreen(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
-            // Floating Dock Bottom Bar
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -88,7 +84,6 @@ fun HomeScreen(
                     modifier = Modifier.align(Alignment.BottomCenter),
                     onHomeClick = { onEvent(HomeContract.Event.OnHomeClicked) },
                     onProfileClick = { onEvent(HomeContract.Event.OnProfileClicked) },
-                    onMoodClick = { onEvent(HomeContract.Event.OnMoodClicked) },
                     onReportClick = { onEvent(HomeContract.Event.OnReportClicked) }
                 )
             }
@@ -112,23 +107,6 @@ fun HomeScreen(
         ) { currentTab ->
             Box(modifier = Modifier.fillMaxSize()) {
                 when (currentTab) {
-                    HomeContract.HomeTab.MOOD -> {
-                        val moodViewModel = hiltViewModel<MoodViewModel>()
-                        val moodState by moodViewModel.state.collectAsState()
-
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(bottom = innerPadding.calculateBottomPadding())
-                        ) {
-                            MoodStatsScreen(
-                                state = moodState,
-                                onEvent = moodViewModel::handleEvent,
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        }
-                    }
-
                     HomeContract.HomeTab.REPORT -> {
                         val reportViewModel = hiltViewModel<ReportViewModel>()
                         val reportState by reportViewModel.state.collectAsState()
@@ -183,14 +161,8 @@ fun HomeScreen(
                         val habitsViewModel = hiltViewModel<HabitsViewModel>()
                         val habitsState by habitsViewModel.state.collectAsState()
 
-                        // Forward navigation effects triggered by HabitsViewModel upwards
                         LaunchedEffect(Unit) {
-                            habitsViewModel.effect.collect { effect ->
-                                // Note: Depending on your navigation setup, you may need a callback in HomeScreen 
-                                // to handle these effects directly or forward them to the NavGraph.
-                                // Typically, these callbacks are passed as parameters to the top-level Screen components.
-                                // For now, we will handle them in the host component where this Screen is declared.
-                            }
+                            habitsViewModel.effect.collect { _ -> }
                         }
 
                         HabitsScreen(
@@ -200,8 +172,8 @@ fun HomeScreen(
                             innerPadding = innerPadding
                         )
                     }
-                } // End when
-            } // End Box wrapping AnimatedContent child
+                }
+            }
         }
     }
 }
@@ -212,7 +184,6 @@ fun HomeBottomNavigation(
     modifier: Modifier = Modifier,
     onHomeClick: () -> Unit = {},
     onProfileClick: () -> Unit = {},
-    onMoodClick: () -> Unit = {},
     onReportClick: () -> Unit = {}
 ) {
     Card(
@@ -233,13 +204,6 @@ fun HomeBottomNavigation(
                 imageVector = Icons.Default.Home,
                 contentDescription = stringResource(R.string.home_nav_home),
                 onClick = onHomeClick
-            )
-
-            HomeBottomNavigationItem(
-                selected = currentTab == HomeContract.HomeTab.MOOD,
-                imageVector = Icons.Default.Face,
-                contentDescription = stringResource(R.string.home_nav_mood),
-                onClick = onMoodClick
             )
 
             HomeBottomNavigationItem(
@@ -292,8 +256,7 @@ private fun HomeBottomNavigationItem(
 private fun HomeContract.HomeTab.index(): Int {
     return when (this) {
         HomeContract.HomeTab.HABITS -> 0
-        HomeContract.HomeTab.MOOD -> 1
-        HomeContract.HomeTab.REPORT -> 2
-        HomeContract.HomeTab.PROFILE -> 3
+        HomeContract.HomeTab.REPORT -> 1
+        HomeContract.HomeTab.PROFILE -> 2
     }
 }

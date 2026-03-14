@@ -40,10 +40,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.codesmithslabs.thedogtail.R
 import com.codesmithslabs.thedogtail.ui.components.HabitOutlinedTextField
-import java.text.SimpleDateFormat
+import java.text.SimpleDateFormat // Optional: If you need any formatting
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -125,6 +126,91 @@ fun CreateHabitScreen(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
+                }
+            }
+
+            if (!state.isOneTime) {
+                item {
+                    CreateHabitSection {
+                        Text(
+                            text = "Habit Type",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        HabitTypeSelector(
+                            selectedType = state.habitType,
+                            onTypeSelect = { onEvent(CreateHabitContract.Event.OnTypeChange(it)) }
+                        )
+                        
+                        // Show additional inputs if not Yes/No
+                        AnimatedVisibility(
+                            visible = state.habitType != CreateHabitContract.HabitType.YES_NO,
+                            enter = expandVertically() + fadeIn(),
+                            exit = shrinkVertically() + fadeOut()
+                        ) {
+                            Column(modifier = Modifier.padding(top = 16.dp)) {
+                                Text(
+                                    text = "Target",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    // At Least / At Most Toggle
+                                    Box(
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .height(56.dp)
+                                            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
+                                            .clickable { onEvent(CreateHabitContract.Event.OnTargetRuleToggle(!state.isAtLeast)) }
+                                            .padding(horizontal = 16.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = if (state.isAtLeast) "At least" else "At most",
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                    }
+                                    
+                                    // Target Value Input
+                                    OutlinedTextField(
+                                        value = state.target,
+                                        onValueChange = { onEvent(CreateHabitContract.Event.OnTargetChange(it)) },
+                                        placeholder = { Text("e.g. 10") },
+                                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                                            keyboardType = KeyboardType.Number
+                                        ),
+                                        singleLine = true,
+                                        modifier = Modifier.weight(1f),
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                                        )
+                                    )
+
+                                    // Unit Input
+                                    OutlinedTextField(
+                                        value = state.unitName,
+                                        onValueChange = { onEvent(CreateHabitContract.Event.OnUnitChange(it)) },
+                                        placeholder = { Text(if (state.habitType == CreateHabitContract.HabitType.TIMER) "mins" else "times") },
+                                        singleLine = true,
+                                        modifier = Modifier.weight(1f),
+                                        shape = RoundedCornerShape(12.dp),
+                                        colors = OutlinedTextFieldDefaults.colors(
+                                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
@@ -491,6 +577,44 @@ fun HabitTypeToggle(
                 color = if (isOneTime) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
                 fontWeight = FontWeight.SemiBold
             )
+        }
+    }
+}
+
+@Composable
+fun HabitTypeSelector(
+    selectedType: CreateHabitContract.HabitType,
+    onTypeSelect: (CreateHabitContract.HabitType) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        val options = listOf(
+            CreateHabitContract.HabitType.YES_NO to "Yes/No",
+            CreateHabitContract.HabitType.NUMERIC to "Numeric",
+            CreateHabitContract.HabitType.TIMER to "Timer"
+        )
+        options.forEach { (type, label) ->
+            val isSelected = type == selectedType
+            Button(
+                onClick = { onTypeSelect(type) },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+                    contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                ),
+                border = if (!isSelected) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null,
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.weight(1f),
+                contentPadding = PaddingValues(horizontal = 4.dp, vertical = 0.dp) // Avoid text cutoff on small screens
+            ) {
+                Text(
+                    text = label,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
         }
     }
 }

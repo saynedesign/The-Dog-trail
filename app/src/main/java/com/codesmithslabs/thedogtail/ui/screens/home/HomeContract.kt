@@ -1,14 +1,8 @@
 package com.codesmithslabs.thedogtail.ui.screens.home
 
-import com.codesmithslabs.thedogtail.data.HabitEntity
-import com.codesmithslabs.thedogtail.data.HabitLogEntity
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
-import java.util.Locale
-
 interface HomeContract {
     enum class HomeTab {
-        HABITS, MOOD, REPORT, PROFILE
+        HABITS, REPORT, PROFILE
     }
 
     data class State(
@@ -17,7 +11,6 @@ interface HomeContract {
 
     sealed class Event {
         data object OnProfileClicked : Event()
-        data object OnMoodClicked : Event()
         data object OnReportClicked : Event()
         data object OnHomeClicked : Event()
         data object OnEditProfileRequested : Event()
@@ -30,6 +23,5 @@ interface HomeContract {
         data object NavigateToEditProfile : Effect()
         data object NavigateToPreferences : Effect()
         data object NavigateToAchievements : Effect()
-        data object NavigateToMoodStats : Effect()
     }
 }

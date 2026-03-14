@@ -46,9 +46,6 @@ import com.codesmithslabs.thedogtail.ui.screens.home.HomeScreen
 import com.codesmithslabs.thedogtail.ui.screens.home.HomeViewModel
 import com.codesmithslabs.thedogtail.ui.screens.home.habits.HabitsContract
 import com.codesmithslabs.thedogtail.ui.screens.home.habits.HabitsViewModel
-import com.codesmithslabs.thedogtail.ui.screens.mood.MoodContract
-import com.codesmithslabs.thedogtail.ui.screens.mood.MoodStatsScreen
-import com.codesmithslabs.thedogtail.ui.screens.mood.MoodViewModel
 import com.codesmithslabs.thedogtail.ui.screens.onboarding.OnboardingContract
 import com.codesmithslabs.thedogtail.ui.screens.onboarding.OnboardingScreen
 import com.codesmithslabs.thedogtail.ui.screens.onboarding.OnboardingViewModel
@@ -84,7 +81,7 @@ class MainActivity : ComponentActivity() {
             "preferences",
             "achievements",
             "timer",
-            "mood_stats" -> TransitionStyle.Modal
+                -> TransitionStyle.Modal
             else -> TransitionStyle.Standard
         }
     }
@@ -233,9 +230,6 @@ class MainActivity : ComponentActivity() {
                                     when (effect) {
                                         is HomeContract.Effect.NavigateToProfile -> {
                                             navController.navigate("profile")
-                                        }
-                                        is HomeContract.Effect.NavigateToMoodStats -> {
-                                            navController.navigate("mood_stats")
                                         }
                                         is HomeContract.Effect.NavigateToEditProfile -> {
                                             navController.navigate("edit_profile")
@@ -456,28 +450,6 @@ class MainActivity : ComponentActivity() {
                             }
 
                             HabitDetailScreen(
-                                state = state,
-                                onEvent = viewModel::handleEvent
-                            )
-                        }
-                        composable("mood_stats") {
-                            val viewModel = hiltViewModel<MoodViewModel>()
-                            val state by viewModel.state.collectAsState()
-
-                            LaunchedEffect(Unit) {
-                                viewModel.effect.collect { effect ->
-                                    when (effect) {
-                                        is MoodContract.Effect.NavigateBack -> {
-                                            navController.popBackStack()
-                                        }
-                                        is MoodContract.Effect.ShowToast -> {
-                                            Toast.makeText(this@MainActivity, effect.message, Toast.LENGTH_SHORT).show()
-                                        }
-                                    }
-                                }
-                            }
-
-                            MoodStatsScreen(
                                 state = state,
                                 onEvent = viewModel::handleEvent
                             )

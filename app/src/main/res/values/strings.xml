@@ -46,7 +46,6 @@
     <string name="home_increase">Increase</string>
     <string name="home_start_timer">Start Timer</string>
     <string name="home_nav_home">Home</string>
-    <string name="home_nav_mood">Mood</string>
     <string name="home_nav_stats">Stats</string>
     <string name="home_nav_profile">Profile</string>
     <string name="home_daily_goal_title">Your daily goals almost done! 🔥</string>
@@ -134,71 +133,6 @@
     <string name="create_habit_time_afternoon">Afternoon</string>
     <string name="create_habit_time_evening">Evening</string>
 
-    <string name="mood_history_title">Mood Stat History</string>
-    <string name="mood_history_today_date">Today, %1$s</string>
-    <string name="mood_history_yesterday_date">Yesterday, %1$s</string>
-    <string name="mood_history_feeling_separator"> • %1$s</string>
-
-    <string name="mood_stats_title">Mood Stat</string>
-    <string name="mood_stats_history">History</string>
-    <string name="mood_stats_previous_month">Previous Month</string>
-    <string name="mood_stats_next_month">Next Month</string>
-    <string name="mood_stats_day_mo">Mo</string>
-    <string name="mood_stats_day_tu">Tu</string>
-    <string name="mood_stats_day_we">We</string>
-    <string name="mood_stats_day_th">Th</string>
-    <string name="mood_stats_day_fr">Fr</string>
-    <string name="mood_stats_day_sa">Sa</string>
-    <string name="mood_stats_day_su">Su</string>
-    <string name="mood_stats_today">Today</string>
-    <string name="mood_stats_mood">Mood</string>
-    <string name="mood_label_great">Great</string>
-    <string name="mood_label_good">Good</string>
-    <string name="mood_label_okay">Okay</string>
-    <string name="mood_label_not_good">Not Good</string>
-    <string name="mood_label_bad">Bad</string>
-    <string name="mood_stats_how_today">How is your mood today?</string>
-    <string name="mood_stats_i_feel">I Feel %1$s!</string>
-    <string name="mood_stats_select_mood">Select a Mood</string>
-    <string name="mood_stats_describe_feelings">%1$s! How would you describe your feelings?</string>
-    <string name="mood_stats_select_feeling">Select a Feeling</string>
-    <string name="mood_stats_placeholder_face">☺︎</string>
-    <string name="mood_feeling_happy">Happy</string>
-    <string name="mood_feeling_brave">Brave</string>
-    <string name="mood_feeling_motivated">Motivated</string>
-    <string name="mood_feeling_creative">Creative</string>
-    <string name="mood_feeling_confident">Confident</string>
-    <string name="mood_feeling_calm">Calm</string>
-    <string name="mood_feeling_grateful">Grateful</string>
-    <string name="mood_feeling_peaceful">Peaceful</string>
-    <string name="mood_feeling_excited">Excited</string>
-    <string name="mood_feeling_loved">Loved</string>
-    <string name="mood_feeling_hopeful">Hopeful</string>
-    <string name="mood_feeling_inspired">Inspired</string>
-    <string name="mood_feeling_proud">Proud</string>
-    <string name="mood_feeling_euphoric">Euphoric</string>
-    <string name="mood_feeling_nostalgic">Nostalgic</string>
-    <string name="mood_feeling_relaxed">Relaxed</string>
-    <string name="mood_feeling_content">Content</string>
-    <string name="mood_feeling_optimistic">Optimistic</string>
-    <string name="mood_feeling_productive">Productive</string>
-    <string name="mood_feeling_neutral">Neutral</string>
-    <string name="mood_feeling_tired">Tired</string>
-    <string name="mood_feeling_bored">Bored</string>
-    <string name="mood_feeling_distracted">Distracted</string>
-    <string name="mood_feeling_busy">Busy</string>
-    <string name="mood_feeling_normal">Normal</string>
-    <string name="mood_feeling_anxious">Anxious</string>
-    <string name="mood_feeling_stressed">Stressed</string>
-    <string name="mood_feeling_lonely">Lonely</string>
-    <string name="mood_feeling_sad">Sad</string>
-    <string name="mood_feeling_frustrated">Frustrated</string>
-    <string name="mood_feeling_disappointed">Disappointed</string>
-    <string name="mood_feeling_angry">Angry</string>
-    <string name="mood_feeling_depressed">Depressed</string>
-    <string name="mood_feeling_hopeless">Hopeless</string>
-    <string name="mood_feeling_heartbroken">Heartbroken</string>
-    <string name="mood_feeling_exhausted">Exhausted</string>
 
     <string name="report_title">Report</string>
     <string name="report_current_streak">Current streak</string>
@@ -217,7 +151,6 @@
     <string name="report_day_fri">Fri</string>
     <string name="report_day_sat">Sat</string>
     <string name="report_day_sun">Sun</string>
-    <string name="report_mood_chart">Mood Chart</string>
 
     <string name="habit_detail_progress">Progress</string>
     <string name="habit_detail_not_found">Habit not found</string>
@@ -264,4 +197,6 @@
     <string name="habit_detail_one_time_on">One-time on %1$s</string>
     <string name="habit_detail_no_end_date">No end date</string>
     <string name="habit_detail_regular_end">Regular habit • End: %1$s</string>
+    <string name="report_recent_growth">Recent Growth</string>
+    <string name="habit_detail_status_today">Today\'s Status</string>
 </resources>

@@ -5,10 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.codesmithslabs.thedogtail.data.HabitDao
 import com.codesmithslabs.thedogtail.data.HabitLogDao
 import com.codesmithslabs.thedogtail.data.HabitRestDayDao
-import com.codesmithslabs.thedogtail.data.MoodDao
 import com.codesmithslabs.thedogtail.data.UserDao
 import com.codesmithslabs.thedogtail.data.XpEventDao
-import com.codesmithslabs.thedogtail.util.LevelSystem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,7 +22,6 @@ import javax.inject.Inject
 class ReportViewModel @Inject constructor(
     private val habitDao: HabitDao,
     private val habitLogDao: HabitLogDao,
-    private val moodDao: MoodDao,
     private val habitRestDayDao: HabitRestDayDao,
     private val userDao: UserDao,
     private val xpEventDao: XpEventDao
@@ -64,29 +61,25 @@ class ReportViewModel @Inject constructor(
             combine(
                 habitDao.getAllHabits(),
                 habitLogDao.getAllLogs(),
-                moodDao.getAllMoods(),
                 habitRestDayDao.getAllRestDays()
-            ) { habits, logs, moods, restDays ->
+            ) { habits, logs, restDays ->
                 data class CombinedData(
                     val habits: List<com.codesmithslabs.thedogtail.data.HabitEntity>,
                     val logs: List<com.codesmithslabs.thedogtail.data.HabitLogEntity>,
-                    val moods: List<com.codesmithslabs.thedogtail.data.MoodEntity>,
                     val restDays: List<com.codesmithslabs.thedogtail.data.HabitRestDayEntity>
                 )
-                CombinedData(habits, logs, moods, restDays)
-            }.collect { (habits, logs, moods, restDays) ->
+                CombinedData(habits, logs, restDays)
+            }.collect { (habits, logs, restDays) ->
                 val today = LocalDate.now()
 
                 // Build rest day sets
-                // Per-habit rest days grouped by epoch
                 val restDaysByEpoch = restDays.groupBy { it.dateEpochDay }
                 val restDayEpochsAll = restDays.map { it.dateEpochDay }.toSet()
-                // For a given day+habit: check if rest
                 fun isRestDay(epoch: Long, habitId: Long): Boolean {
                     return restDaysByEpoch[epoch]?.any { it.habitId == habitId } == true
                 }
 
-                // Total Effort Points (was totalCompleted)
+                // Total Effort Points
                 val totalEffortPoints = logs.size
 
                 // Group logs by day
@@ -95,7 +88,6 @@ class ReportViewModel @Inject constructor(
                 // --- Active Momentum (rest-neutral streak) ---
                 var activeMomentum = 0
                 var checkDate = today
-                // Grace: if nothing today, start from yesterday
                 val todayEpoch = today.toEpochDay()
                 val todayLogs = logsByDay[todayEpoch] ?: emptyList()
                 val todayHasRest = restDaysByEpoch.containsKey(todayEpoch)
@@ -108,7 +100,6 @@ class ReportViewModel @Inject constructor(
                     val dayHasRest = restDaysByEpoch.containsKey(epoch)
                     when {
                         dayHasRest && dayLogs.isEmpty() -> {
-                            // All habits resting — skip neutral
                             checkDate = checkDate.minusDays(1)
                         }
                         dayLogs.isNotEmpty() -> {
@@ -148,7 +139,6 @@ class ReportViewModel @Inject constructor(
                         it.selectedDays.split(",").mapNotNull { d -> d.trim().toIntOrNull() }.contains(dayOfWeek)
                     }
 
-                    // Exclude habits that have a rest day on this date
                     val nonRestingHabits = activeHabits.filter { !isRestDay(dayEpoch, it.id) }
                     val scheduledCount = nonRestingHabits.size
                     val completedCount = logsByDay[dayEpoch]?.count { log ->
@@ -162,19 +152,16 @@ class ReportViewModel @Inject constructor(
                         if (completedCount >= scheduledCount) {
                             perfectDays++
                         }
-                        // Strong Day: >= 75% completion
                         if (completedCount.toFloat() / scheduledCount >= 0.75f) {
                             strongDays++
                         }
 
-                        // Weekly window
                         if (dayEpoch >= weekStart7) {
                             weekScheduled += scheduledCount
                             weekCompleted += completedCount
                         }
                     }
 
-                    // Calendar stats for selected month
                     if (!date.isBefore(selectedMonthStart) && !date.isAfter(selectedMonthEnd)) {
                         val rate = if (scheduledCount > 0) completedCount.toFloat() / scheduledCount else 0f
                         calendarStats.add(ReportContract.CalendarDayStat(date, rate.coerceIn(0f, 1f)))
@@ -227,32 +214,6 @@ class ReportViewModel @Inject constructor(
                     )
                 }
 
-                // Weekly Moods
-                val moodMap = moods.associateBy {
-                    java.time.Instant.ofEpochMilli(it.timestamp).atZone(ZoneId.systemDefault()).toLocalDate().toEpochDay()
-                }
-
-                val weeklyMoods = (0..6).map { i ->
-                    val date = today.minusDays((6 - i).toLong())
-                    val epoch = date.toEpochDay()
-                    val mood = moodMap[epoch]
-
-                    val moodValue = when(mood?.moodType) {
-                        "Great" -> 5
-                        "Good" -> 4
-                        "Okay" -> 3
-                        "Not Good" -> 2
-                        "Bad" -> 1
-                        else -> 0
-                    }
-
-                    ReportContract.DailyMood(
-                        dayLabel = date.dayOfMonth.toString(),
-                        moodValue = moodValue,
-                        moodEmoji = mood?.moodEmoji ?: ""
-                    )
-                }
-
                 _state.value = _state.value.copy(
                     isLoading = false,
                     currentStreak = activeMomentum,
@@ -261,9 +222,7 @@ class ReportViewModel @Inject constructor(
                     totalPerfectDays = perfectDays,
                     weeklyHabitCounts = weeklyHabitCounts,
                     monthlyCompletionRates = monthlyRates,
-                    weeklyMoods = weeklyMoods,
                     calendarStats = calendarStats,
-                    // Optimistic
                     weeklyConsistencyScore = weeklyConsistencyScore,
                     activeMomentum = activeMomentum,
                     strongDays = strongDays,

@@ -30,6 +30,8 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.foundation.Canvas
 import com.codesmithslabs.thedogtail.R
 import com.codesmithslabs.thedogtail.data.HabitEntity
 import com.codesmithslabs.thedogtail.data.HabitLogEntity
@@ -103,9 +105,21 @@ fun HabitDetailScreen(
                             habitXp = state.habitXp
                         )
                     }
+                    
+                    item {
+                        TodayStatusActionCard(
+                            habit = state.habit,
+                            isCompletedToday = state.isCompletedToday,
+                            todayLogValue = state.todayLogValue,
+                            onToggleCompletion = { onEvent(HabitDetailContract.Event.OnToggleTodayCompletion(it)) },
+                            onLogValueChanged = { onEvent(HabitDetailContract.Event.OnUpdateTodayLogValue(it)) }
+                        )
+                    }
 
                     item {
-                        SavedDetailsCard(habit = state.habit)
+                        HabitGrowthChartCard(
+                            logs = state.logs
+                        )
                     }
 
                     item {
@@ -122,6 +136,10 @@ fun HabitDetailScreen(
                             unit = state.habit.unit,
                             totalCompletions = state.totalCompletions
                         )
+                    }
+
+                    item {
+                        SavedDetailsCard(habit = state.habit)
                     }
 
                     item {
@@ -279,6 +297,208 @@ fun MetricChip(
     ) {
         Text(text = title, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Text(text = value, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
+    }
+}
+
+@Composable
+fun TodayStatusActionCard(
+    habit: HabitEntity,
+    isCompletedToday: Boolean,
+    todayLogValue: Float,
+    onToggleCompletion: (Boolean) -> Unit,
+    onLogValueChanged: (Float) -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.habit_detail_status_today), // Reusing or you can add new string
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            
+            // Depends on habit type
+            when (habit.type) {
+                "NUMERIC", "TIMER" -> {
+                    // Show a slider or numeric input block here
+                    // Simple input setup for now
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text("Logged: ${formatValue(todayLogValue)} / ${formatValue(habit.targetValue)} ${habit.unit}")
+                        Button(
+                            onClick = { 
+                                if (isCompletedToday) onToggleCompletion(false) else onToggleCompletion(true)
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isCompletedToday) com.codesmithslabs.thedogtail.ui.theme.SuccessGreen else MaterialTheme.colorScheme.primary
+                            )
+                        ) {
+                            Text(if (isCompletedToday) "Undo" else "Log Full")
+                        }
+                    }
+                }
+                else -> {
+                    // YES / NO
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = if (isCompletedToday) "Completed! Well done." else "Not completed today.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Button(
+                            onClick = { onToggleCompletion(!isCompletedToday) },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isCompletedToday) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.primary,
+                                contentColor = if (isCompletedToday) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onPrimary
+                            )
+                        ) {
+                            Text(if (isCompletedToday) "Undo" else "Check In")
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun HabitGrowthChartCard(logs: List<HabitLogEntity>) {
+    // Generate data for the last 14 days
+    val today = remember { LocalDate.now() }
+    val last14Days = remember {
+        (13 downTo 0).map { today.minusDays(it.toLong()) }
+    }
+    
+    // Map dates to values
+    val chartData = remember(logs) {
+        val logMap = logs.associateBy { it.dateEpochDay }
+        last14Days.map { date ->
+            val epoch = date.toEpochDay()
+            logMap[epoch]?.value ?: 0f
+        }
+    }
+
+    Card(
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.report_recent_growth), // Or just "Recent Growth" if resource is missing
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            val primaryColor = MaterialTheme.colorScheme.primary
+            val surfaceColor = MaterialTheme.colorScheme.surface
+            val maxValue = remember(chartData) { chartData.maxOrNull()?.coerceAtLeast(1f) ?: 1f }
+
+            Canvas(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp)
+            ) {
+                val width = size.width
+                val height = size.height
+                val spacePerPoint = width / (chartData.size - 1).coerceAtLeast(1)
+                
+                val path = androidx.compose.ui.graphics.Path()
+                val points = mutableListOf<Offset>()
+
+                chartData.forEachIndexed { index, value ->
+                    val x = index * spacePerPoint
+                    val y = height - ((value / maxValue) * height * 0.8f) // 80% max height to leave top margin
+                    
+                    points.add(Offset(x, y))
+                    
+                    if (index == 0) {
+                        path.moveTo(x, y)
+                    } else {
+                        path.lineTo(x, y)
+                    }
+                }
+                
+                // Draw gradient fill
+                val fillPath = androidx.compose.ui.graphics.Path().apply {
+                    addPath(path)
+                    lineTo(width, height)
+                    lineTo(0f, height)
+                    close()
+                }
+                
+                drawPath(
+                    path = fillPath,
+                    brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                        colors = listOf(primaryColor.copy(alpha = 0.3f), Color.Transparent),
+                        startY = 0f,
+                        endY = height
+                    )
+                )
+
+                // Draw line
+                drawPath(
+                    path = path,
+                    color = primaryColor,
+                    style = androidx.compose.ui.graphics.drawscope.Stroke(
+                        width = 4f, 
+                        cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                        join = androidx.compose.ui.graphics.StrokeJoin.Round
+                    )
+                )
+
+                // Draw end point emphasis
+                points.lastOrNull()?.let { lastPoint ->
+                    drawCircle(color = surfaceColor, radius = 8f, center = lastPoint)
+                    drawCircle(
+                        color = primaryColor, 
+                        radius = 8f, 
+                        center = lastPoint, 
+                        style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4f)
+                    )
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "14 Days Ago",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "Today",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }
 

@@ -16,16 +16,20 @@ interface HabitDetailContract {
         val activeMomentum: Int = 0,
         val weeklyConsistency: Int = 0,
         val strongDays: Int = 0,
-        // XP
         val habitXp: Int = 0,
         // Rest Days
-        val restDayEpochs: Set<Long> = emptySet()
+        val restDayEpochs: Set<Long> = emptySet(),
+        // Today Status
+        val isCompletedToday: Boolean = false,
+        val todayLogValue: Float = 0f
     )
 
     sealed class Event {
         data object OnBackClicked : Event()
         data object OnEditClicked : Event()
         data object OnDeleteClicked : Event()
+        data class OnToggleTodayCompletion(val isDone: Boolean) : Event()
+        data class OnUpdateTodayLogValue(val value: Float) : Event()
     }
 
     sealed class Effect {

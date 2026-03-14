@@ -1,6 +1,5 @@
 package com.codesmithslabs.thedogtail.ui.screens.report
 
-import com.codesmithslabs.thedogtail.data.MoodEntity
 import java.time.LocalDate
 
 interface ReportContract {
@@ -12,7 +11,6 @@ interface ReportContract {
         val totalPerfectDays: Int = 0,
         val weeklyHabitCounts: List<DailyHabitCount> = emptyList(),
         val monthlyCompletionRates: List<MonthlyRate> = emptyList(),
-        val weeklyMoods: List<DailyMood> = emptyList(),
         val calendarStats: List<CalendarDayStat> = emptyList(),
         val selectedMonth: LocalDate = LocalDate.now(),
         // Optimistic Metrics
@@ -43,12 +41,6 @@ interface ReportContract {
         val rate: Int
     )
 
-    data class DailyMood(
-        val dayLabel: String,
-        val moodValue: Int, // 1-5 scale
-        val moodEmoji: String
-    )
-    
     data class CalendarDayStat(
         val date: LocalDate,
         val completionRate: Float, // 0.0 to 1.0

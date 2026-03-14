@@ -7,7 +7,10 @@ import com.codesmithslabs.thedogtail.data.HabitDao
 import com.codesmithslabs.thedogtail.data.HabitEntity
 import com.codesmithslabs.thedogtail.data.HabitLogEntity
 import com.codesmithslabs.thedogtail.data.HabitRestDayDao
+import com.codesmithslabs.thedogtail.data.UserDao
 import com.codesmithslabs.thedogtail.data.XpEventDao
+import com.codesmithslabs.thedogtail.util.AwardXpUseCase
+import com.codesmithslabs.thedogtail.util.LevelSystem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,6 +29,8 @@ class HabitDetailViewModel @Inject constructor(
     private val habitLogDao: HabitLogDao,
     private val habitRestDayDao: HabitRestDayDao,
     private val xpEventDao: XpEventDao,
+    private val userDao: UserDao,
+    private val awardXpUseCase: AwardXpUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -66,6 +71,9 @@ class HabitDetailViewModel @Inject constructor(
                         val totalVal = logs.sumOf { it.value?.toDouble() ?: 0.0 }.toFloat()
                         val consistency = calculateConsistency(logs, habit, restDayEpochs)
                         val strong = calculateStrongDays(logs, habit, restDayEpochs)
+                        
+                        val todayEpoch = LocalDate.now().toEpochDay()
+                        val todayLog = logs.find { it.dateEpochDay == todayEpoch }
 
                         _state.value = _state.value.copy(
                             habit = habit,
@@ -78,6 +86,8 @@ class HabitDetailViewModel @Inject constructor(
                             weeklyConsistency = calculateWeeklyConsistency(logs, habit, restDayEpochs),
                             strongDays = strong,
                             restDayEpochs = restDayEpochs,
+                            isCompletedToday = todayLog != null,
+                            todayLogValue = todayLog?.value ?: 0f,
                             isLoading = false
                         )
                     }
@@ -241,6 +251,52 @@ class HabitDetailViewModel @Inject constructor(
                     _effect.send(HabitDetailContract.Effect.NavigateToEdit(habitId))
                 }
             }
+            is HabitDetailContract.Event.OnToggleTodayCompletion -> {
+                toggleTodayCompletion(event.isDone)
+            }
+            is HabitDetailContract.Event.OnUpdateTodayLogValue -> {
+                updateTodayLogValue(event.value)
+            }
+        }
+    }
+    
+    private fun toggleTodayCompletion(isDone: Boolean) {
+        viewModelScope.launch {
+            val todayEpoch = LocalDate.now().toEpochDay()
+            val existing = habitLogDao.getLogForDay(habitId, todayEpoch)
+            val currentState = _state.value
+            val habitTarget = currentState.habit?.targetValue ?: 1f
+            
+            if (isDone && existing == null) {
+                habitLogDao.insertLog(HabitLogEntity(habitId = habitId, dateEpochDay = todayEpoch, value = habitTarget))
+                awardXpUseCase.award(LevelSystem.XpRewards.HABIT_COMPLETE, LevelSystem.XpReasons.HABIT_COMPLETE, habitId)
+                // Reload
+                loadData()
+                loadXp()
+            } else if (!isDone && existing != null) {
+                habitLogDao.deleteLog(existing)
+                awardXpUseCase.award(-LevelSystem.XpRewards.HABIT_COMPLETE, LevelSystem.XpReasons.HABIT_COMPLETE + "_REVOKE", habitId)
+                // Reload
+                loadData()
+                loadXp()
+            }
+        }
+    }
+    
+    private fun updateTodayLogValue(value: Float) {
+        viewModelScope.launch {
+            val todayEpoch = LocalDate.now().toEpochDay()
+            val existing = habitLogDao.getLogForDay(habitId, todayEpoch)
+            
+            if (existing != null) {
+                habitLogDao.insertLog(existing.copy(value = value))
+            } else {
+                habitLogDao.insertLog(HabitLogEntity(habitId = habitId, dateEpochDay = todayEpoch, value = value))
+                awardXpUseCase.award(LevelSystem.XpRewards.HABIT_COMPLETE, LevelSystem.XpReasons.HABIT_COMPLETE, habitId)
+            }
+            // Reload
+            loadData()
+            loadXp()
         }
     }
 }

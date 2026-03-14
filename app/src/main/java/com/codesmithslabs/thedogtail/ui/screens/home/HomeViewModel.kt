@@ -25,9 +25,6 @@ class HomeViewModel @Inject constructor() : ViewModel() {
             is HomeContract.Event.OnProfileClicked -> {
                 _state.value = _state.value.copy(currentTab = HomeContract.HomeTab.PROFILE)
             }
-            is HomeContract.Event.OnMoodClicked -> {
-                _state.value = _state.value.copy(currentTab = HomeContract.HomeTab.MOOD)
-            }
             is HomeContract.Event.OnReportClicked -> {
                 _state.value = _state.value.copy(currentTab = HomeContract.HomeTab.REPORT)
             }
