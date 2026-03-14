@@ -35,6 +35,7 @@ import androidx.compose.foundation.Canvas
 import com.codesmithslabs.thedogtail.R
 import com.codesmithslabs.thedogtail.data.HabitEntity
 import com.codesmithslabs.thedogtail.data.HabitLogEntity
+import com.codesmithslabs.thedogtail.ui.components.headerTitleBrush
 import com.codesmithslabs.thedogtail.ui.theme.SuccessGreen
 import com.codesmithslabs.thedogtail.ui.theme.WarningOrange
 import java.time.Instant
@@ -54,7 +55,7 @@ fun HabitDetailScreen(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Image(
-                            painter = painterResource(R.drawable.ic_icon_habit_loop),
+                            painter = painterResource(R.drawable.habit_tracker_icon),
                             contentDescription = stringResource(R.string.app_name),
                             modifier = Modifier
                                 .size(24.dp)
@@ -62,17 +63,28 @@ fun HabitDetailScreen(
                             contentScale = ContentScale.Crop
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.habit_detail_progress), fontWeight = FontWeight.Bold)
+                        Text(
+                            stringResource(R.string.habit_detail_progress),
+                            style = MaterialTheme.typography.titleLarge.copy(brush = headerTitleBrush()),
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = { onEvent(HabitDetailContract.Event.OnBackClicked) }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.common_back))
+                        Icon(
+                            Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.common_back)
+                        )
                     }
                 },
                 actions = {
                     IconButton(onClick = { onEvent(HabitDetailContract.Event.OnEditClicked) }) {
-                        Icon(Icons.Default.Edit, contentDescription = stringResource(R.string.common_edit), tint = MaterialTheme.colorScheme.primary)
+                        Icon(
+                            Icons.Default.Edit,
+                            contentDescription = stringResource(R.string.common_edit),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = MaterialTheme.colorScheme.background)

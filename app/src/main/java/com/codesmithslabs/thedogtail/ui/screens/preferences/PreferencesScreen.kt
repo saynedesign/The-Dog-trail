@@ -22,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.codesmithslabs.thedogtail.R
+import com.codesmithslabs.thedogtail.ui.components.headerTitleBrush
 import android.app.TimePickerDialog
 import java.util.Calendar
 
@@ -65,7 +66,7 @@ fun PreferencesScreen(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Image(
-                            painter = painterResource(R.drawable.ic_icon_habit_loop),
+                            painter = painterResource(R.drawable.habit_tracker_icon),
                             contentDescription = stringResource(R.string.app_name),
                             modifier = Modifier
                                 .size(24.dp)
@@ -75,7 +76,7 @@ fun PreferencesScreen(
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             stringResource(R.string.preferences_title),
-                            style = MaterialTheme.typography.titleLarge,
+                            style = MaterialTheme.typography.titleLarge.copy(brush = headerTitleBrush()),
                             fontWeight = FontWeight.Bold
                         )
                     }

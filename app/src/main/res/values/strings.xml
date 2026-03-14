@@ -15,6 +15,9 @@
     <string name="common_add">Add</string>
     <string name="common_edit">Edit</string>
     <string name="common_continue">Continue</string>
+    <string name="common_next">Next</string>
+    <string name="common_finish">Finish</string>
+    <string name="common_skip">Skip</string>
     <string name="common_more">More</string>
     <string name="common_menu">Menu</string>
     <string name="common_saving">Saving...</string>
@@ -50,6 +53,9 @@
     <string name="home_nav_profile">Profile</string>
     <string name="home_daily_goal_title">Your daily goals almost done! 🔥</string>
     <string name="home_daily_goal_progress">%1$d of %2$d completed</string>
+    <string name="home_empty_habits_title">No habits or tasks yet</string>
+    <string name="home_empty_habits_message">Create your first task and start tracking your progress today.</string>
+    <string name="home_empty_habits_cta">Create Task</string>
 
     <string name="preferences_title">Preferences</string>
     <string name="preferences_morning">Morning</string>
@@ -99,6 +105,16 @@
     <string name="user_info_terms_notice">By continuing, you agree to our Terms of Service</string>
     <string name="user_info_title">Tell us about you</string>
     <string name="user_info_subtitle">Let\'s personalize your experience. This helps\nus tailor habits just for you.</string>
+    <string name="user_info_step_progress">Step %1$d of %2$d</string>
+    <string name="user_info_step_one_title">Let\'s start with basics</string>
+    <string name="user_info_step_one_subtitle">Add your photo and full name.</string>
+    <string name="user_info_step_two_title">Your birthday details</string>
+    <string name="user_info_step_two_subtitle">Tell us your date of birth.</string>
+    <string name="user_info_step_three_title">Set your height</string>
+    <string name="user_info_step_three_subtitle">Choose unit and enter your height.</string>
+    <string name="user_info_step_four_title">Review your details</string>
+    <string name="user_info_step_four_subtitle">You can still skip and complete setup now.</string>
+    <string name="user_info_not_provided">Not provided</string>
     <string name="user_info_name_placeholder">Mert Kahveci</string>
     <string name="user_info_dob_placeholder">mm/dd/yyyy</string>
     <string name="user_info_select_date">Select Date</string>

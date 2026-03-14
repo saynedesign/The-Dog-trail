@@ -45,6 +45,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.codesmithslabs.thedogtail.R
+import com.codesmithslabs.thedogtail.ui.components.headerTitleBrush
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,7 +59,7 @@ fun TimerScreen(
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Image(
-                            painter = painterResource(R.drawable.ic_icon_habit_loop),
+                            painter = painterResource(R.drawable.habit_tracker_icon),
                             contentDescription = stringResource(R.string.app_name),
                             modifier = Modifier
                                 .size(24.dp)
@@ -66,7 +67,11 @@ fun TimerScreen(
                             contentScale = ContentScale.Crop
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(state.habitTitle, fontWeight = FontWeight.Bold)
+                        Text(
+                            state.habitTitle,
+                            style = MaterialTheme.typography.titleLarge.copy(brush = headerTitleBrush()),
+                            fontWeight = FontWeight.Bold
+                        )
                     }
                 },
                 navigationIcon = {

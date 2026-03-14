@@ -44,6 +44,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.codesmithslabs.thedogtail.R
 import com.codesmithslabs.thedogtail.ui.components.HabitOutlinedTextField
+import com.codesmithslabs.thedogtail.ui.components.headerTitleBrush
 import java.text.SimpleDateFormat // Optional: If you need any formatting
 import java.util.*
 
@@ -909,10 +910,10 @@ fun CreateHabitTopBar(
                 tint = MaterialTheme.colorScheme.onBackground
             )
         }
-        
+
         Row(verticalAlignment = Alignment.CenterVertically) {
             Image(
-                painter = painterResource(R.drawable.ic_icon_habit_loop),
+                painter = painterResource(R.drawable.habit_tracker_icon),
                 contentDescription = stringResource(R.string.app_name),
                 modifier = Modifier
                     .size(24.dp)
@@ -922,13 +923,11 @@ fun CreateHabitTopBar(
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = stringResource(R.string.create_habit_title),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
+                style = MaterialTheme.typography.titleLarge.copy(brush = headerTitleBrush()),
+                fontWeight = FontWeight.Bold
             )
         }
-        
-        // Spacer to balance the close icon
+
         Spacer(modifier = Modifier.size(48.dp))
     }
 }

@@ -57,17 +57,16 @@ fun ScreenHeader(
                 tint = TextPrimary
             )
         }
-        
+
         Spacer(modifier = Modifier.width(8.dp))
-        
+
         Text(
             text = title,
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.titleLarge.copy(brush = headerTitleBrush()),
             fontWeight = FontWeight.Bold,
-            color = TextPrimary,
             modifier = Modifier.weight(1f)
         )
-        
+
         if (action != null) {
             action()
         }
@@ -96,13 +95,13 @@ fun HomeHeader(
             contentAlignment = Alignment.Center
         ) {
             Image(
-                painter = painterResource(R.drawable.ic_icon_habit_loop),
+                painter = painterResource(R.drawable.habit_tracker_icon),
                 contentDescription = stringResource(R.string.app_name),
                 modifier = Modifier.fillMaxWidth(),
                 contentScale = ContentScale.Crop
             )
         }
-        
+
         Box(
             modifier = Modifier.weight(1f),
             contentAlignment = Alignment.Center
@@ -110,12 +109,10 @@ fun HomeHeader(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = stringResource(R.string.app_name),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
+                    style = MaterialTheme.typography.titleLarge.copy(brush = headerTitleBrush()),
+                    fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                // XP Pill
                 Row(
                     modifier = Modifier
                         .background(BrandBackground, CircleShape)
@@ -133,8 +130,7 @@ fun HomeHeader(
                 }
             }
         }
-        
-        // Replaced notification icon with a spacer to maintain center alignment
+
         Spacer(modifier = Modifier.size(circleSize))
     }
 }

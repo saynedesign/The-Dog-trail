@@ -9,7 +9,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CheckCircle
@@ -33,8 +32,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.codesmithslabs.thedogtail.R
+import com.codesmithslabs.thedogtail.ui.components.headerTitleBrush
 import com.codesmithslabs.thedogtail.ui.theme.BrandBlueLight
-import com.codesmithslabs.thedogtail.ui.theme.BrandBlueDark
 import com.codesmithslabs.thedogtail.ui.theme.SparkleGold
 
 @Composable
@@ -120,20 +119,21 @@ fun ProfileScreen(
 fun ProfileTopBar(onEvent: (ProfileContract.Event) -> Unit) {
     CenterAlignedTopAppBar(
         navigationIcon = {
-            IconButton(onClick = { onEvent(ProfileContract.Event.OnBackClicked) }) {
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = MaterialTheme.colorScheme.onBackground
-                )
-            }
+            Image(
+                painter = painterResource(R.drawable.habit_tracker_icon),
+                contentDescription = stringResource(R.string.app_name),
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .size(32.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
+            )
         },
         title = {
             Text(
                 text = "Account",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
+                style = MaterialTheme.typography.titleLarge.copy(brush = headerTitleBrush()),
+                fontWeight = FontWeight.Bold
             )
         },
         actions = {
@@ -166,7 +166,10 @@ fun ProfileHeaderCard(state: ProfileContract.State, onClick: () -> Unit, onTrack
                 .fillMaxWidth()
                 .background(
                     brush = Brush.verticalGradient(
-                        colors = listOf(BrandBlueLight, BrandBlueDark)
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primary,
+                            MaterialTheme.colorScheme.secondary
+                        )
                     )
                 )
         ) {
@@ -263,7 +266,7 @@ fun ProfileHeaderCard(state: ProfileContract.State, onClick: () -> Unit, onTrack
                     onClick = onTrackNewHabit,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = Color.White,
-                        contentColor = BrandBlueDark
+                        contentColor = MaterialTheme.colorScheme.primary
                     ),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.fillMaxWidth()

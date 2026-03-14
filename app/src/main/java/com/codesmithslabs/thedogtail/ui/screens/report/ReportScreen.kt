@@ -37,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.codesmithslabs.thedogtail.R
+import com.codesmithslabs.thedogtail.ui.components.headerTitleBrush
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
@@ -54,7 +55,7 @@ fun ReportScreen(
             CenterAlignedTopAppBar(
                 navigationIcon = {
                     Image(
-                        painter = painterResource(R.drawable.ic_icon_habit_loop),
+                        painter = painterResource(R.drawable.habit_tracker_icon),
                         contentDescription = stringResource(R.string.app_name),
                         modifier = Modifier
                             .padding(start = 8.dp)
@@ -66,9 +67,8 @@ fun ReportScreen(
                 title = {
                     Text(
                         text = stringResource(R.string.report_title),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
+                        style = MaterialTheme.typography.titleLarge.copy(brush = headerTitleBrush()),
+                        fontWeight = FontWeight.Bold
                     )
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(

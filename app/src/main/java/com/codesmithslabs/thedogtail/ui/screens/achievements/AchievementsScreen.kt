@@ -30,8 +30,6 @@ import androidx.compose.ui.res.stringResource
 import com.codesmithslabs.thedogtail.R
 import com.codesmithslabs.thedogtail.ui.theme.AccentGold
 import com.codesmithslabs.thedogtail.ui.theme.AccentOrangeSoft
-import com.codesmithslabs.thedogtail.ui.theme.AccentGold
-import com.codesmithslabs.thedogtail.ui.theme.AccentOrangeSoft
 import com.codesmithslabs.thedogtail.ui.theme.AccentOrangeStrong
 
 @Composable
@@ -71,7 +69,7 @@ fun AchievementsScreen(
                 Spacer(modifier = Modifier.weight(1f))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Image(
-                        painter = painterResource(R.drawable.ic_icon_habit_loop),
+                        painter = painterResource(R.drawable.habit_tracker_icon),
                         contentDescription = stringResource(R.string.app_name),
                         modifier = Modifier
                             .size(24.dp)

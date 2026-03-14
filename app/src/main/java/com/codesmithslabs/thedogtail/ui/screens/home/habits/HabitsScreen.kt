@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -32,6 +33,10 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -190,174 +195,241 @@ fun HabitsScreen(
                 }
             }
 
-            items(state.habits, key = { it.id }) { habit ->
-                val log = state.habitLogs[habit.id]
-
-                val dismissState = rememberSwipeToDismissBoxState(
-                    confirmValueChange = {
-                        when (it) {
-                            SwipeToDismissBoxValue.StartToEnd -> {
-                                onEvent(HabitsContract.Event.OnEditHabitClicked(habit.id))
-                                false
+            if (state.habits.isEmpty()) {
+                item {
+                    Card(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 12.dp),
+                        shape = RoundedCornerShape(24.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f)
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp, vertical = 28.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(64.dp)
+                                    .background(
+                                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.14f),
+                                        shape = CircleShape
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Check,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
                             }
-                            SwipeToDismissBoxValue.EndToStart -> {
-                                onEvent(HabitsContract.Event.OnDeleteHabitClicked(habit.id))
-                                false
+                            Text(
+                                text = stringResource(R.string.home_empty_habits_title),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                            Text(
+                                text = stringResource(R.string.home_empty_habits_message),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Button(
+                                onClick = { onEvent(HabitsContract.Event.OnAddHabitClicked) },
+                                shape = RoundedCornerShape(14.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                )
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = null
+                                )
+                                Spacer(modifier = Modifier.size(8.dp))
+                                Text(
+                                    text = stringResource(R.string.home_empty_habits_cta),
+                                    fontWeight = FontWeight.SemiBold
+                                )
                             }
-                            SwipeToDismissBoxValue.Settled -> false
                         }
-                    }
-                )
-
-                LaunchedEffect(dismissState.targetValue) {
-                    if (dismissState.targetValue != SwipeToDismissBoxValue.Settled) {
-                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                     }
                 }
+            } else {
+                items(state.habits, key = { it.id }) { habit ->
+                    val log = state.habitLogs[habit.id]
 
-                SwipeToDismissBox(
-                    state = dismissState,
-                    backgroundContent = {
-                        val color = when (dismissState.targetValue) {
-                            SwipeToDismissBoxValue.StartToEnd -> MaterialTheme.colorScheme.primary
-                            SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.error
-                            else -> Color.Transparent
+                    val dismissState = rememberSwipeToDismissBoxState(
+                        confirmValueChange = {
+                            when (it) {
+                                SwipeToDismissBoxValue.StartToEnd -> {
+                                    onEvent(HabitsContract.Event.OnEditHabitClicked(habit.id))
+                                    false
+                                }
+                                SwipeToDismissBoxValue.EndToStart -> {
+                                    onEvent(HabitsContract.Event.OnDeleteHabitClicked(habit.id))
+                                    false
+                                }
+                                SwipeToDismissBoxValue.Settled -> false
+                            }
                         }
-                        val alignment = when (dismissState.targetValue) {
-                            SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
-                            SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
-                            else -> Alignment.CenterStart
-                        }
-                        val icon = when (dismissState.targetValue) {
-                            SwipeToDismissBoxValue.StartToEnd -> Icons.Default.Edit
-                            SwipeToDismissBoxValue.EndToStart -> Icons.Default.Delete
-                            else -> Icons.Default.Edit
-                        }
+                    )
 
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(vertical = 8.dp)
-                                .background(color, RoundedCornerShape(20.dp))
-                                .padding(horizontal = 20.dp),
-                            contentAlignment = alignment
-                        ) {
-                            Icon(
-                                imageVector = icon,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimary
-                            )
+                    LaunchedEffect(dismissState.targetValue) {
+                        if (dismissState.targetValue != SwipeToDismissBoxValue.Settled) {
+                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                         }
-                    },
-                    content = {
-                        HabitCard(
-                            title = habit.title,
-                            subtitle = when (habit.type) {
-                                "NUMERIC" -> {
-                                    val current = log?.value ?: 0f
-                                    val target = if (habit.targetValue % 1.0 == 0.0) {
-                                        habit.targetValue.toInt().toString()
-                                    } else {
-                                        habit.targetValue.toString()
-                                    }
-                                    val currentStr = if (current % 1.0 == 0.0) current.toInt().toString() else current.toString()
-                                    "$currentStr / $target ${habit.unit}"
-                                }
-                                "TIMER" -> {
-                                    val currentMinutes = log?.value?.toInt() ?: 0
-                                    if (currentMinutes > 0) {
-                                        stringResource(R.string.home_timer_minutes_completed, currentMinutes)
-                                    } else {
-                                        stringResource(R.string.home_timer_habit)
-                                    }
-                                }
-                                else -> stringResource(R.string.home_simple_habit)
-                            },
-                            icon = when (habit.type) {
-                                "NUMERIC" -> Icons.AutoMirrored.Filled.List
-                                "TIMER" -> Icons.Default.Timer
-                                else -> Icons.Default.Check
-                            },
-                            iconTint = Color(habit.color),
-                            isResting = state.restingHabitIds.contains(habit.id),
-                            onClick = {
-                                if (habit.type == "TIMER") {
-                                    onEvent(HabitsContract.Event.OnTimerClicked(habit.id))
-                                } else {
-                                    onEvent(HabitsContract.Event.OnHabitClicked(habit.id))
-                                }
-                            },
-                            onLongClick = {
-                                onEvent(HabitsContract.Event.OnRestDayRequested(habit.id))
-                            },
-                            rightContent = {
-                                when (habit.type) {
+                    }
+
+                    SwipeToDismissBox(
+                        state = dismissState,
+                        backgroundContent = {
+                            val color = when (dismissState.targetValue) {
+                                SwipeToDismissBoxValue.StartToEnd -> MaterialTheme.colorScheme.primary
+                                SwipeToDismissBoxValue.EndToStart -> MaterialTheme.colorScheme.error
+                                else -> Color.Transparent
+                            }
+                            val alignment = when (dismissState.targetValue) {
+                                SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
+                                SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
+                                else -> Alignment.CenterStart
+                            }
+                            val icon = when (dismissState.targetValue) {
+                                SwipeToDismissBoxValue.StartToEnd -> Icons.Default.Edit
+                                SwipeToDismissBoxValue.EndToStart -> Icons.Default.Delete
+                                else -> Icons.Default.Edit
+                            }
+
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(vertical = 8.dp)
+                                    .background(color, RoundedCornerShape(20.dp))
+                                    .padding(horizontal = 20.dp),
+                                contentAlignment = alignment
+                            ) {
+                                Icon(
+                                    imageVector = icon,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+                        },
+                        content = {
+                            HabitCard(
+                                title = habit.title,
+                                subtitle = when (habit.type) {
                                     "NUMERIC" -> {
                                         val current = log?.value ?: 0f
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                        ) {
-                                            IconButton(
-                                                onClick = { onEvent(HabitsContract.Event.OnUpdateHabitValue(habit.id, current - 1)) },
-                                                modifier = Modifier.size(32.dp)
+                                        val target = if (habit.targetValue % 1.0 == 0.0) {
+                                            habit.targetValue.toInt().toString()
+                                        } else {
+                                            habit.targetValue.toString()
+                                        }
+                                        val currentStr = if (current % 1.0 == 0.0) current.toInt().toString() else current.toString()
+                                        "$currentStr / $target ${habit.unit}"
+                                    }
+                                    "TIMER" -> {
+                                        val currentMinutes = log?.value?.toInt() ?: 0
+                                        if (currentMinutes > 0) {
+                                            stringResource(R.string.home_timer_minutes_completed, currentMinutes)
+                                        } else {
+                                            stringResource(R.string.home_timer_habit)
+                                        }
+                                    }
+                                    else -> stringResource(R.string.home_simple_habit)
+                                },
+                                icon = when (habit.type) {
+                                    "NUMERIC" -> Icons.AutoMirrored.Filled.List
+                                    "TIMER" -> Icons.Default.Timer
+                                    else -> Icons.Default.Check
+                                },
+                                iconTint = Color(habit.color),
+                                isResting = state.restingHabitIds.contains(habit.id),
+                                onClick = {
+                                    if (habit.type == "TIMER") {
+                                        onEvent(HabitsContract.Event.OnTimerClicked(habit.id))
+                                    } else {
+                                        onEvent(HabitsContract.Event.OnHabitClicked(habit.id))
+                                    }
+                                },
+                                onLongClick = {
+                                    onEvent(HabitsContract.Event.OnRestDayRequested(habit.id))
+                                },
+                                rightContent = {
+                                    when (habit.type) {
+                                        "NUMERIC" -> {
+                                            val current = log?.value ?: 0f
+                                            Row(
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
                                             ) {
-                                                Icon(
-                                                    Icons.Default.Remove,
-                                                    contentDescription = stringResource(R.string.home_decrease),
-                                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                                IconButton(
+                                                    onClick = { onEvent(HabitsContract.Event.OnUpdateHabitValue(habit.id, current - 1)) },
+                                                    modifier = Modifier.size(32.dp)
+                                                ) {
+                                                    Icon(
+                                                        Icons.Default.Remove,
+                                                        contentDescription = stringResource(R.string.home_decrease),
+                                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                                    )
+                                                }
+
+                                                Text(
+                                                    text = if (current % 1.0 == 0.0) current.toInt().toString() else current.toString(),
+                                                    style = MaterialTheme.typography.bodyLarge,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = MaterialTheme.colorScheme.onBackground
                                                 )
+
+                                                IconButton(
+                                                    onClick = { onEvent(HabitsContract.Event.OnUpdateHabitValue(habit.id, current + 1)) },
+                                                    modifier = Modifier.size(32.dp)
+                                                ) {
+                                                    Icon(
+                                                        Icons.Default.Add,
+                                                        contentDescription = stringResource(R.string.home_increase),
+                                                        tint = MaterialTheme.colorScheme.primary
+                                                    )
+                                                }
                                             }
-
-                                            Text(
-                                                text = if (current % 1.0 == 0.0) current.toInt().toString() else current.toString(),
-                                                style = MaterialTheme.typography.bodyLarge,
-                                                fontWeight = FontWeight.Bold,
-                                                color = MaterialTheme.colorScheme.onBackground
-                                            )
-
+                                        }
+                                        "TIMER" -> {
                                             IconButton(
-                                                onClick = { onEvent(HabitsContract.Event.OnUpdateHabitValue(habit.id, current + 1)) },
-                                                modifier = Modifier.size(32.dp)
+                                                onClick = { onEvent(HabitsContract.Event.OnTimerClicked(habit.id)) },
+                                                modifier = Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape)
                                             ) {
                                                 Icon(
-                                                    Icons.Default.Add,
-                                                    contentDescription = stringResource(R.string.home_increase),
+                                                    Icons.Default.PlayArrow,
+                                                    contentDescription = stringResource(R.string.home_start_timer),
                                                     tint = MaterialTheme.colorScheme.primary
                                                 )
                                             }
                                         }
-                                    }
-                                    "TIMER" -> {
-                                        IconButton(
-                                            onClick = { onEvent(HabitsContract.Event.OnTimerClicked(habit.id)) },
-                                            modifier = Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape)
-                                        ) {
-                                            Icon(
-                                                Icons.Default.PlayArrow,
-                                                contentDescription = stringResource(R.string.home_start_timer),
-                                                tint = MaterialTheme.colorScheme.primary
+                                        else -> {
+                                            Checkbox(
+                                                checked = log != null,
+                                                onCheckedChange = { isChecked ->
+                                                    onEvent(HabitsContract.Event.OnToggleHabit(habit.id, isChecked))
+                                                },
+                                                colors = CheckboxDefaults.colors(
+                                                    checkedColor = MaterialTheme.colorScheme.primary,
+                                                    uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                    checkmarkColor = MaterialTheme.colorScheme.onPrimary
+                                                )
                                             )
                                         }
                                     }
-                                    else -> {
-                                        Checkbox(
-                                            checked = log != null,
-                                            onCheckedChange = { isChecked ->
-                                                onEvent(HabitsContract.Event.OnToggleHabit(habit.id, isChecked))
-                                            },
-                                            colors = CheckboxDefaults.colors(
-                                                checkedColor = MaterialTheme.colorScheme.primary,
-                                                uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                checkmarkColor = MaterialTheme.colorScheme.onPrimary
-                                            )
-                                        )
-                                    }
                                 }
-                            }
-                        )
-                    }
-                )
+                            )
+                        }
+                    )
+                }
             }
 
             item {
