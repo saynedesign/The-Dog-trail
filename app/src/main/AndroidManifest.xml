@@ -28,6 +28,55 @@
         </activity>
         
         <receiver android:name=".receivers.HabitReminderReceiver" android:exported="false" />
+
+        <!-- Widget Receivers -->
+        <receiver
+            android:name=".widget.HabitChecklistWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_checklist_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_habit_checklist_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.StreakSummaryWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_streak_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_streak_summary_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.QuickActionsWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_quick_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_quick_actions_info" />
+        </receiver>
+
+        <receiver
+            android:name=".widget.InspirationWidgetReceiver"
+            android:exported="true"
+            android:label="@string/widget_inspiration_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/widget_inspiration_info" />
+        </receiver>
     </application>
 
 </manifest>

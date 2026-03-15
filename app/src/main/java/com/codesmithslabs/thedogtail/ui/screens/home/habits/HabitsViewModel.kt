@@ -1,5 +1,6 @@
 package com.codesmithslabs.thedogtail.ui.screens.home.habits
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.codesmithslabs.thedogtail.data.HabitDao
@@ -11,7 +12,9 @@ import com.codesmithslabs.thedogtail.data.HabitRestDayEntity
 import com.codesmithslabs.thedogtail.data.UserDao
 import com.codesmithslabs.thedogtail.util.AwardXpUseCase
 import com.codesmithslabs.thedogtail.util.LevelSystem
+import com.codesmithslabs.thedogtail.widget.WidgetUpdateHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,6 +27,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HabitsViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val habitDao: HabitDao,
     private val habitLogDao: HabitLogDao,
     private val habitRestDayDao: HabitRestDayDao,
@@ -156,6 +160,7 @@ class HabitsViewModel @Inject constructor(
                         if (habit != null) {
                             habitDao.deleteHabit(habit)
                         }
+                        WidgetUpdateHelper.updateAll(context)
                     }
                 }
                 _state.value = _state.value.copy(
@@ -202,7 +207,6 @@ class HabitsViewModel @Inject constructor(
                                 dateEpochDay = _state.value.selectedEpochDay
                             )
                         )
-                        // Award XP for taking a rest day
                         awardXpUseCase.award(
                             LevelSystem.XpRewards.REST_DAY,
                             LevelSystem.XpReasons.REST_DAY,
@@ -210,6 +214,7 @@ class HabitsViewModel @Inject constructor(
                         )
                         _state.value = _state.value.copy(xpPopAmount = LevelSystem.XpRewards.REST_DAY)
                         loadRestDayStateForSelectedDate()
+                        WidgetUpdateHelper.updateAll(context)
                     }
                     _state.value = _state.value.copy(
                         showRestDaySheet = false,
@@ -276,6 +281,7 @@ class HabitsViewModel @Inject constructor(
                     awardXpUseCase.award(-LevelSystem.XpRewards.PERFECT_DAY, LevelSystem.XpReasons.PERFECT_DAY + "_REVOKE")
                 }
             }
+            WidgetUpdateHelper.updateAll(context)
         }
     }
 
@@ -309,6 +315,7 @@ class HabitsViewModel @Inject constructor(
 
                 _state.value = _state.value.copy(xpPopAmount = xpAwarded)
             }
+            WidgetUpdateHelper.updateAll(context)
         }
     }
 

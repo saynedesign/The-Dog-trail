@@ -1,7 +1,13 @@
 package com.codesmithslabs.thedogtail.ui.screens.onboarding
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -17,16 +23,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.SpanStyle
-import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.codesmithslabs.thedogtail.R
@@ -54,51 +60,51 @@ fun OnboardingScreen(
                 )
             )
     ) {
-        // Decorative Circles (Approximating the illustration background)
+        // Subtle large background glow circle
         Box(
             modifier = Modifier
                 .align(Alignment.TopCenter)
-                .padding(top = 100.dp)
-                .size(300.dp)
+                .padding(top = 80.dp)
+                .size(340.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.1f))
+                .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.06f))
         )
-        
+
         // Main Content
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(horizontal = 32.dp, vertical = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            
-            // Placeholder for Illustration
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Illustration Area — centered
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
-                 // In a real app, this would be an Image composable
-                 // For now, we simulate the bubbles with a simple composition or leave blank
-                 // to focus on the UI structure requested.
-                 // Using a simple placeholder representation
-                 PeopleBubblesPlaceholder()
+                PeopleBubblesPlaceholder()
             }
 
+            // Text Content — centered
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.Start
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Tagline
+                // Tagline pill
                 Box(
                     modifier = Modifier
                         .background(
-                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f),
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.15f),
                             shape = RoundedCornerShape(50)
                         )
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                        .padding(horizontal = 20.dp, vertical = 10.dp)
                 ) {
                     Text(
                         text = "${stringResource(R.string.onboarding_tagline)} ${stringResource(R.string.onboarding_tagline_emoji)}",
@@ -108,14 +114,16 @@ fun OnboardingScreen(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(28.dp))
 
                 // Title
                 Text(
                     text = stringResource(R.string.onboarding_title),
                     style = MaterialTheme.typography.displayMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimary
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -124,7 +132,9 @@ fun OnboardingScreen(
                 Text(
                     text = stringResource(R.string.onboarding_subtitle),
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.75f),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
                 )
             }
 
@@ -145,38 +155,95 @@ fun OnboardingScreen(
 
 @Composable
 fun PeopleBubblesPlaceholder() {
-    // A simplified visual representation of the bubbles in the design
+    val infiniteTransition = rememberInfiniteTransition(label = "bubble")
+
+    val floatAnim1 by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 12f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2400, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "float1"
+    )
+
+    val floatAnim2 by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = -10f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(3000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "float2"
+    )
+
+    val scaleAnim by infiniteTransition.animateFloat(
+        initialValue = 0.95f,
+        targetValue = 1.05f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2800, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "scale"
+    )
+
     Box(
-        modifier = Modifier.size(300.dp)
+        modifier = Modifier.size(300.dp),
+        contentAlignment = Alignment.Center
     ) {
-        // Top Left Bubble
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(start = 40.dp, top = 40.dp)
-                .size(80.dp)
-                .clip(CircleShape)
-                .background(AccentPeachLight)
-        )
-        
-        // Bottom Center Bubble
+        // Large center bubble with gentle scale
         Box(
             modifier = Modifier
                 .align(Alignment.Center)
-                .offset(y = 20.dp)
-                .size(120.dp)
+                .offset(y = floatAnim1.dp)
+                .scale(scaleAnim)
+                .size(130.dp)
                 .clip(CircleShape)
-                .background(AccentPeach)
+                .background(AccentPeach.copy(alpha = 0.7f))
         )
-        
-         // Top Right Bubble
+
+        // Top-left bubble
+        Box(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(start = 30.dp, top = 30.dp)
+                .offset(y = floatAnim2.dp)
+                .size(85.dp)
+                .clip(CircleShape)
+                .background(AccentPeachLight.copy(alpha = 0.6f))
+        )
+
+        // Top-right bubble
         Box(
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .padding(end = 20.dp, top = 60.dp)
-                .size(60.dp)
+                .padding(end = 15.dp, top = 55.dp)
+                .offset(y = floatAnim1.dp)
+                .size(65.dp)
                 .clip(CircleShape)
-                .background(AccentPeachLight)
+                .background(AccentPeachLight.copy(alpha = 0.5f))
+        )
+
+        // Bottom-left small bubble
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = 55.dp, bottom = 40.dp)
+                .offset(y = floatAnim2.dp)
+                .size(45.dp)
+                .clip(CircleShape)
+                .background(AccentPeach.copy(alpha = 0.4f))
+        )
+
+        // Bottom-right accent bubble
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 30.dp, bottom = 20.dp)
+                .offset(y = floatAnim1.dp)
+                .size(55.dp)
+                .clip(CircleShape)
+                .background(AccentPeachLight.copy(alpha = 0.45f))
         )
     }
 }

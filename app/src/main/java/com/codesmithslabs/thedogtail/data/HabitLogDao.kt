@@ -29,5 +29,11 @@ interface HabitLogDao {
 
     @Query("SELECT COUNT(*) FROM habit_logs")
     fun countAllLogs(): Flow<Int>
+
+    @Query("SELECT * FROM habit_logs WHERE dateEpochDay = :dateEpochDay")
+    suspend fun getLogsForDayOneShot(dateEpochDay: Long): List<HabitLogEntity>
+
+    @Query("SELECT COUNT(DISTINCT dateEpochDay) FROM habit_logs WHERE habitId = :habitId AND dateEpochDay BETWEEN :startDay AND :endDay")
+    suspend fun countLogDaysInRange(habitId: Long, startDay: Long, endDay: Long): Int
 }
 

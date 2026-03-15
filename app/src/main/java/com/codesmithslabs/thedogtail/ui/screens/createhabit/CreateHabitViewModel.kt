@@ -1,5 +1,6 @@
 package com.codesmithslabs.thedogtail.ui.screens.createhabit
 
+import android.content.Context
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,7 +9,9 @@ import com.codesmithslabs.thedogtail.data.HabitEntity
 import com.codesmithslabs.thedogtail.util.AwardXpUseCase
 import com.codesmithslabs.thedogtail.util.LevelSystem
 import com.codesmithslabs.thedogtail.util.NotificationScheduler
+import com.codesmithslabs.thedogtail.widget.WidgetUpdateHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,6 +24,7 @@ import com.codesmithslabs.thedogtail.data.UserPreferencesRepository
 
 @HiltViewModel
 class CreateHabitViewModel @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val habitDao: HabitDao,
     private val notificationScheduler: NotificationScheduler,
     private val awardXpUseCase: AwardXpUseCase,
@@ -248,20 +252,20 @@ class CreateHabitViewModel @Inject constructor(
                     // Update existing
                     val existingHabit = habitDao.getHabitById(currentState.habitId)
                     if (existingHabit != null) {
-                        // Merge fields if necessary, but here we overwrite mostly
                         val updatedHabit = habit.copy(
-                            createdTimestamp = existingHabit.createdTimestamp, // Preserve creation time
-                            isCompletedToday = existingHabit.isCompletedToday // Preserve status
+                            createdTimestamp = existingHabit.createdTimestamp,
+                            isCompletedToday = existingHabit.isCompletedToday
                         )
                         habitDao.updateHabit(updatedHabit)
                         scheduleNotification(currentState, currentState.habitId)
+                        WidgetUpdateHelper.updateAll(context)
                     }
                 } else {
                     // Insert new
                     val habitId = habitDao.insertHabit(habit)
                     scheduleNotification(currentState, habitId)
-                    // Award XP for creating a new habit
                     awardXpUseCase.award(LevelSystem.XpRewards.HABIT_CREATED, LevelSystem.XpReasons.HABIT_CREATED, habitId)
+                    WidgetUpdateHelper.updateAll(context)
                 }
                 
                 _effect.send(CreateHabitContract.Effect.NavigateBack)

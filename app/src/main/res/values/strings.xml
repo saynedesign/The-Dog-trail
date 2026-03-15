@@ -215,4 +215,14 @@
     <string name="habit_detail_regular_end">Regular habit • End: %1$s</string>
     <string name="report_recent_growth">Recent Growth</string>
     <string name="habit_detail_status_today">Today\'s Status</string>
+
+    <!-- Widget Strings -->
+    <string name="widget_checklist_desc">Today\'s habits with quick check-off</string>
+    <string name="widget_streak_desc">Your current streak, level, and XP at a glance</string>
+    <string name="widget_quick_desc">One-tap buttons for your top habits</string>
+    <string name="widget_inspiration_desc">Daily motivational quotes to keep you going</string>
+    <string name="widget_checklist_label">Habit Checklist</string>
+    <string name="widget_streak_label">Streak &amp; XP</string>
+    <string name="widget_quick_label">Quick Actions</string>
+    <string name="widget_inspiration_label">Daily Inspiration</string>
 </resources>

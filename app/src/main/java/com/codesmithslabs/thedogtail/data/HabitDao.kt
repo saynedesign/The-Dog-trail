@@ -16,6 +16,9 @@ interface HabitDao {
     @Query("SELECT * FROM habits WHERE id = :id")
     suspend fun getHabitById(id: Long): HabitEntity?
 
+    @Query("SELECT * FROM habits ORDER BY createdTimestamp DESC")
+    suspend fun getAllHabitsOneShot(): List<HabitEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertHabit(habit: HabitEntity): Long
 
