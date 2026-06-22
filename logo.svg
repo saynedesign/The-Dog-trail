@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+    <defs>
+        <linearGradient id="grad1" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#4B68FF" />
+            <stop offset="1" stop-color="#6C4BFF" />
+        </linearGradient>
+    </defs>
+    <!-- Background rounded rectangle -->
+    <path d="M115,0h282c63.5,0 115,51.5 115,115v282c0,63.5 -51.5,115 -115,115h-282c-63.5,0 -115,-51.5 -115,-115v-282c0,-63.5 51.5,-115 115,-115z" fill="url(#grad1)" />
+    <!-- Faint background circle -->
+    <path d="M256,256m-140,0a140,140 0,1 1,280 0a140,140 0,1 1,-280 0" stroke="#E8EAF6" stroke-opacity="0.2" stroke-width="40" fill="none" />
+    <!-- Foreground 75% circle with rounded caps -->
+    <path d="M256,256m-140,0a140,140 0,1 1,280 0a140,140 0,1 1,-280 0" stroke="#FFFFFF" stroke-width="40" fill="none" stroke-linecap="round" stroke-dasharray="879.645943" stroke-dashoffset="219.911485" />
+    <!-- Checkmark -->
+    <path d="M160,260L235,335L415,115" stroke="#FFFFFF" stroke-width="40" fill="none" stroke-linecap="round" stroke-linejoin="round" />
+</svg>

@@ -7,11 +7,11 @@ plugins {
 }
 
 android {
-    namespace = "com.codesmithslabs.thedogtail"
+    namespace = "com.saynedesign.habitloop"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.codesmithslabs.thedogtail"
+        applicationId = "com.saynedesign.habitloop"
         minSdk = 30
         targetSdk = 36
         versionCode = 1

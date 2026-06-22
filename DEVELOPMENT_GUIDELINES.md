@@ -16,7 +16,7 @@ Each feature/screen should have a corresponding package containing:
   - Should be stateless where possible, receiving state and event callbacks.
 
 ## 2. UI & Components
-- **Components**: Use standard components from `com.codesmithslabs.thedogtail.components` package.
+- **Components**: Use standard components from `com.saynedesign.habitloop.components` package.
   - Do not create custom buttons or inputs unless absolutely necessary.
   - Extend existing components if a new variant is needed.
 - **Theme**: Use `MaterialTheme.colorScheme` and `MaterialTheme.typography`.
