@@ -8,6 +8,7 @@ class PreferencesContract {
         val firstDayOfWeek: String = "Monday",
         val isVacationMode: Boolean = false,
         val isDailyReminderEnabled: Boolean = true,
+        val isOverlayReminderEnabled: Boolean = false,
         val reminderTime: String = "07:00",
         
         // Dialog states
@@ -31,9 +32,11 @@ class PreferencesContract {
         data object OnFirstDayOfWeekClick : Event()
         data class OnVacationModeToggle(val enabled: Boolean) : Event()
         data class OnDailyReminderToggle(val enabled: Boolean) : Event()
+        data class OnOverlayReminderToggle(val enabled: Boolean) : Event()
         
         data object OnClearCacheClicked : Event()
         data object OnRestartHabitsClicked : Event()
+        data object OnSeedDataClicked : Event()
     }
 
     sealed class Effect {

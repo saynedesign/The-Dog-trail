@@ -157,8 +157,29 @@ fun PreferencesScreen(
                         title = stringResource(R.string.preferences_reminder_time),
                         value = state.reminderTime,
                         onClick = { onEvent(PreferencesContract.Event.OnTimeClick(PreferencesContract.TimePickerType.REMINDER)) },
-                        showDivider = false,
+                        showDivider = true,
                         enabled = state.isDailyReminderEnabled
+                    )
+                    PreferenceToggleItem(
+                        title = "Overlay Reminders",
+                        checked = state.isOverlayReminderEnabled,
+                        onCheckedChange = { isChecked ->
+                            if (isChecked) {
+                                if (!android.provider.Settings.canDrawOverlays(context)) {
+                                    val intent = android.content.Intent(
+                                        android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                                        android.net.Uri.parse("package:${context.packageName}")
+                                    )
+                                    context.startActivity(intent)
+                                    onEvent(PreferencesContract.Event.OnOverlayReminderToggle(false))
+                                } else {
+                                    onEvent(PreferencesContract.Event.OnOverlayReminderToggle(true))
+                                }
+                            } else {
+                                onEvent(PreferencesContract.Event.OnOverlayReminderToggle(false))
+                            }
+                        },
+                        showDivider = false
                     )
                 }
             }
@@ -175,6 +196,14 @@ fun PreferencesScreen(
                         onClick = { onEvent(PreferencesContract.Event.OnRestartHabitsClicked) },
                         showDivider = false
                     )
+                    /*
+                    // Uncomment this item during development to seed the database with 30 days of mock history
+                    PreferenceItem(
+                        title = "Seed Sample Data",
+                        onClick = { onEvent(PreferencesContract.Event.OnSeedDataClicked) },
+                        showDivider = false
+                    )
+                    */
                 }
             }
             

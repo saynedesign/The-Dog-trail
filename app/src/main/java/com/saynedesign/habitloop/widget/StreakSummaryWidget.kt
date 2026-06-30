@@ -58,7 +58,8 @@ class StreakSummaryWidget : GlanceAppWidget() {
             val user = db.userDao().getUserOneShot()
 
             var streak = 0
-            var checkDay = todayEpoch
+            val todayLogsExist = db.habitLogDao().getLogsForDayOneShot(todayEpoch).isNotEmpty()
+            var checkDay = if (todayLogsExist) todayEpoch else todayEpoch - 1
             while (true) {
                 val logsForDay = db.habitLogDao().getLogsForDayOneShot(checkDay)
                 if (logsForDay.isNotEmpty()) { streak++; checkDay-- } else break

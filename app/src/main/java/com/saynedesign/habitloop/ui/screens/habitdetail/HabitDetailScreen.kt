@@ -11,8 +11,10 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
@@ -320,6 +322,7 @@ fun TodayStatusActionCard(
     onToggleCompletion: (Boolean) -> Unit,
     onLogValueChanged: (Float) -> Unit
 ) {
+    val accentColor = Color(habit.color)
     Card(
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -333,31 +336,62 @@ fun TodayStatusActionCard(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
-                text = stringResource(R.string.habit_detail_status_today), // Reusing or you can add new string
+                text = stringResource(R.string.habit_detail_status_today),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
             
-            // Depends on habit type
             when (habit.type) {
                 "NUMERIC", "TIMER" -> {
-                    // Show a slider or numeric input block here
-                    // Simple input setup for now
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Logged: ${formatValue(todayLogValue)} / ${formatValue(habit.targetValue)} ${habit.unit}")
-                        Button(
-                            onClick = { 
-                                if (isCompletedToday) onToggleCompletion(false) else onToggleCompletion(true)
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isCompletedToday) com.saynedesign.habitloop.ui.theme.SuccessGreen else MaterialTheme.colorScheme.primary
+                        Column {
+                            Text(
+                                text = "Today's Progress",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "${formatValue(todayLogValue)} / ${formatValue(habit.targetValue)} ${habit.unit}",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                        
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Text(if (isCompletedToday) "Undo" else "Log Full")
+                            IconButton(
+                                onClick = { onLogValueChanged((todayLogValue - 1f).coerceAtLeast(0f)) },
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Remove,
+                                    contentDescription = "Decrease Progress",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            
+                            IconButton(
+                                onClick = { onLogValueChanged(todayLogValue + 1f) },
+                                modifier = Modifier
+                                    .size(36.dp)
+                                    .background(accentColor.copy(alpha = 0.12f), CircleShape)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = "Increase Progress",
+                                    tint = accentColor
+                                )
+                            }
                         }
                     }
                 }

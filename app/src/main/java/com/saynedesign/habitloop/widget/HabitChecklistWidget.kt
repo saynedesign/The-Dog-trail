@@ -15,6 +15,7 @@ import androidx.glance.action.clickable
 import androidx.glance.appwidget.CheckBox
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import androidx.glance.appwidget.LinearProgressIndicator
 import androidx.glance.appwidget.action.ActionCallback
 import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.provideContent
@@ -118,22 +119,13 @@ private fun HabitChecklistContent(
         Spacer(modifier = GlanceModifier.height(8.dp))
 
         // Progress bar background
-        Box(
-            modifier = GlanceModifier
-                .fillMaxWidth()
-                .height(6.dp)
-                .background(ColorProvider(WidgetAccentSurface))
-        ) {
-            val progress = if (total > 0) completed.toFloat() / total else 0f
-            if (progress > 0f) {
-                Box(
-                    modifier = GlanceModifier
-                        .height(6.dp)
-                        .width((progress * 200).dp)
-                        .background(ColorProvider(WidgetAccent))
-                ) { /* fill bar */ }
-            }
-        }
+        val progress = if (total > 0) completed.toFloat() / total else 0f
+        LinearProgressIndicator(
+            progress = progress,
+            modifier = GlanceModifier.fillMaxWidth().height(6.dp),
+            color = ColorProvider(WidgetAccent),
+            backgroundColor = ColorProvider(WidgetAccentSurface)
+        )
 
         Spacer(modifier = GlanceModifier.height(12.dp))
 
@@ -218,6 +210,7 @@ class ToggleHabitAction : ActionCallback {
 
         HabitChecklistWidget().updateAll(context)
         StreakSummaryWidget().updateAll(context)
+        QuickActionsWidget().updateAll(context)
     }
 }
 
