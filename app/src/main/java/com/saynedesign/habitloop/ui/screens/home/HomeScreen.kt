@@ -11,9 +11,13 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -21,6 +25,11 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Home
@@ -191,10 +200,12 @@ fun HomeBottomNavigation(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .height(70.dp),
-        shape = RoundedCornerShape(32.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
+            .height(72.dp),
+        shape = RoundedCornerShape(36.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSystemInDarkTheme()) Color(0xFF1C202B) else Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxSize(),
@@ -204,21 +215,21 @@ fun HomeBottomNavigation(
             HomeBottomNavigationItem(
                 selected = currentTab == HomeContract.HomeTab.HABITS,
                 imageVector = Icons.Default.Home,
-                contentDescription = stringResource(R.string.home_nav_home),
+                label = "Home",
                 onClick = onHomeClick
             )
 
             HomeBottomNavigationItem(
                 selected = currentTab == HomeContract.HomeTab.REPORT,
                 imageVector = Icons.Default.BarChart,
-                contentDescription = stringResource(R.string.home_nav_stats),
+                label = "Stats",
                 onClick = onReportClick
             )
 
             HomeBottomNavigationItem(
                 selected = currentTab == HomeContract.HomeTab.PROFILE,
                 imageVector = Icons.Default.Person,
-                contentDescription = stringResource(R.string.home_nav_profile),
+                label = "Profile",
                 onClick = onProfileClick
             )
         }
@@ -229,29 +240,47 @@ fun HomeBottomNavigation(
 private fun HomeBottomNavigationItem(
     selected: Boolean,
     imageVector: ImageVector,
-    contentDescription: String,
+    label: String,
     onClick: () -> Unit
 ) {
-    val tint by animateColorAsState(
-        targetValue = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-        animationSpec = tween(220),
-        label = "bottom_nav_tint"
-    )
-    val scale by animateFloatAsState(
-        targetValue = if (selected) 1.12f else 1f,
-        animationSpec = tween(220),
-        label = "bottom_nav_scale"
-    )
+    val isDark = isSystemInDarkTheme()
+    val primaryColor = Color(0xFF4B68FF)
+    
+    val bgBrush = if (selected) {
+        if (isDark) Color(0xFF222635) else Color(0xFFEEF1FF)
+    } else {
+        Color.Transparent
+    }
 
-    IconButton(onClick = onClick) {
-        Icon(
-            imageVector = imageVector,
-            contentDescription = contentDescription,
-            tint = tint,
-            modifier = Modifier
-                .size(28.dp)
-                .scale(scale)
-        )
+    Box(
+        modifier = Modifier
+            .clip(CircleShape)
+            .background(bgBrush)
+            .clickable { onClick() }
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = imageVector,
+                contentDescription = label,
+                tint = if (selected) primaryColor else (if (isDark) Color(0xFF8B93A6) else Color(0xFF757575)),
+                modifier = Modifier.size(24.dp)
+            )
+            
+            if (selected) {
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = primaryColor
+                )
+            }
+        }
     }
 }
 

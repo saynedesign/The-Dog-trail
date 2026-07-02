@@ -6,19 +6,24 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.border
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -44,79 +49,179 @@ import com.saynedesign.habitloop.ui.theme.TextSecondary
 fun HabitCard(
     title: String,
     subtitle: String,
-    icon: ImageVector,
-    iconTint: Color = BrandBlue,
+    iconEmoji: String,
+    color: Color,
+    streak: Int,
+    isCompleted: Boolean,
+    xpReward: Int,
+    progressPercentage: Float?, // For numeric/timer, e.g. 80f
     isResting: Boolean = false,
     onClick: () -> Unit,
     onLongClick: (() -> Unit)? = null,
-    modifier: Modifier = Modifier,
-    rightContent: @Composable () -> Unit = {}
+    onCheckClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
+    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+    
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = onLongClick
-            )
             .padding(vertical = 4.dp),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        colors = CardDefaults.cardColors(
+            containerColor = if (isDark) Color(0xFF1C202B) else Color.White
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min)
+                .combinedClickable(
+                    onClick = onClick,
+                    onLongClick = onLongClick
+                )
         ) {
+            // Color strip on left
             Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(iconTint.copy(alpha = 0.1f)),
-                contentAlignment = Alignment.Center
+                    .fillMaxHeight()
+                    .width(5.dp)
+                    .background(color)
+            )
+            
+            Row(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .weight(1f),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = iconTint,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            
-            Spacer(modifier = Modifier.width(16.dp))
-            
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = if (isResting) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            
-            if (isResting) {
-                // Rest indicator
+                // Circle icon background
                 Box(
                     modifier = Modifier
-                        .background(SuccessGreen.copy(alpha = 0.1f), RoundedCornerShape(12.dp))
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .size(52.dp)
+                        .clip(CircleShape)
+                        .background(color.copy(alpha = 0.12f)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(text = iconEmoji, fontSize = 24.sp)
+                }
+                
+                Spacer(modifier = Modifier.width(16.dp))
+                
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = if (isDark) Color.White else Color.Black
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (isDark) Color(0xFF8B93A6) else Color(0xFF757575)
+                    )
+                    
+                    if (streak > 0) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("🔥", fontSize = 11.sp)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "$streak day streak",
+                                style = MaterialTheme.typography.labelSmall,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFFFF7A00)
+                            )
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.width(12.dp))
+                
+                // Right check container
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "🌿 Rest",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = SuccessGreen,
-                        fontWeight = FontWeight.Bold
+                        text = "+$xpReward XP",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF4B68FF)
                     )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    if (isResting) {
+                        Box(
+                            modifier = Modifier
+                                .background(SuccessGreen.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
+                            Text(
+                                text = "🌿 Rest",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = SuccessGreen,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    } else {
+                        // Custom Check Box
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .clickable { onCheckClick() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (isCompleted) {
+                                // Completed filled circle
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .clip(CircleShape)
+                                        .background(color),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Check,
+                                        contentDescription = "Completed",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                            } else if (progressPercentage != null) {
+                                // Numeric/Timer progress checker
+                                Box(
+                                    modifier = Modifier.fillMaxSize(),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    androidx.compose.material3.CircularProgressIndicator(
+                                        progress = { progressPercentage / 100f },
+                                        modifier = Modifier.fillMaxSize(),
+                                        color = color,
+                                        trackColor = if (isDark) Color(0xFF222635) else Color(0xFFEEF1FF),
+                                        strokeWidth = 3.dp
+                                    )
+                                    Text(
+                                        text = "${progressPercentage.toInt()}%",
+                                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 8.sp),
+                                        fontWeight = FontWeight.Bold,
+                                        color = color
+                                    )
+                                }
+                            } else {
+                                // YES_NO pending outline circle
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .border(1.5.dp, color, CircleShape)
+                                )
+                            }
+                        }
+                    }
                 }
-            } else {
-                rightContent()
             }
         }
     }

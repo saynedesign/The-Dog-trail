@@ -73,7 +73,9 @@ class HabitsViewModel @Inject constructor(
             userDao.getUser().collect { user ->
                 _state.value = _state.value.copy(
                     totalXp = user?.totalXp ?: 0,
-                    currentLevel = user?.currentLevel ?: 1
+                    currentLevel = user?.currentLevel ?: 1,
+                    userName = user?.name ?: "",
+                    profileImageUri = user?.profileImageUri
                 )
             }
         }
@@ -96,7 +98,15 @@ class HabitsViewModel @Inject constructor(
         val logsForDay = logsCache.asSequence()
             .filter { it.dateEpochDay == day }
             .associateBy { it.habitId }
-        _state.value = _state.value.copy(habitLogs = logsForDay)
+        
+        val streaks = allHabitsCache.associate { habit ->
+            habit.id to calculateStreakForHabit(habit.id, logsCache)
+        }
+        
+        _state.value = _state.value.copy(
+            habitLogs = logsForDay,
+            habitStreaks = streaks
+        )
     }
 
     private fun loadRestDayStateForSelectedDate() {
@@ -289,31 +299,54 @@ class HabitsViewModel @Inject constructor(
         viewModelScope.launch {
             val day = _state.value.selectedEpochDay
             val existing = habitLogDao.getLogForDay(habitId, day)
-            if (existing != null) {
-                habitLogDao.insertLog(existing.copy(value = newValue))
+            
+            if (newValue <= 0f) {
+                if (existing != null) {
+                    habitLogDao.deleteLog(existing)
+                    
+                    // Revoke completion XP
+                    val logsToday = logsCache.count { it.dateEpochDay == day }
+                    awardXpUseCase.award(-LevelSystem.XpRewards.HABIT_COMPLETE, LevelSystem.XpReasons.HABIT_COMPLETE + "_REVOKE", habitId)
+                    if (logsToday == 1) {
+                        awardXpUseCase.award(-LevelSystem.XpRewards.FIRST_OF_DAY, LevelSystem.XpReasons.FIRST_OF_DAY + "_REVOKE", habitId)
+                    }
+
+                    val scheduledHabits = _state.value.habits
+                    val restingIds = _state.value.restingHabitIds
+                    val nonRestingHabits = scheduledHabits.filter { it.id !in restingIds }
+                    val logsForDayBeforeUncheck = logsCache.filter { it.dateEpochDay == day }.map { it.habitId }.toSet()
+                    val allDoneBefore = nonRestingHabits.all { it.id in logsForDayBeforeUncheck }
+                    if (allDoneBefore && nonRestingHabits.isNotEmpty()) {
+                        awardXpUseCase.award(-LevelSystem.XpRewards.PERFECT_DAY, LevelSystem.XpReasons.PERFECT_DAY + "_REVOKE")
+                    }
+                }
             } else {
-                habitLogDao.insertLog(HabitLogEntity(habitId = habitId, dateEpochDay = day, value = newValue))
-                
-                val logsToday = logsCache.count { it.dateEpochDay == day }
-                var xpAwarded = LevelSystem.XpRewards.HABIT_COMPLETE
-                awardXpUseCase.award(LevelSystem.XpRewards.HABIT_COMPLETE, LevelSystem.XpReasons.HABIT_COMPLETE, habitId)
+                if (existing != null) {
+                    habitLogDao.insertLog(existing.copy(value = newValue))
+                } else {
+                    habitLogDao.insertLog(HabitLogEntity(habitId = habitId, dateEpochDay = day, value = newValue))
+                    
+                    val logsToday = logsCache.count { it.dateEpochDay == day }
+                    var xpAwarded = LevelSystem.XpRewards.HABIT_COMPLETE
+                    awardXpUseCase.award(LevelSystem.XpRewards.HABIT_COMPLETE, LevelSystem.XpReasons.HABIT_COMPLETE, habitId)
 
-                if (logsToday == 0) {
-                    awardXpUseCase.award(LevelSystem.XpRewards.FIRST_OF_DAY, LevelSystem.XpReasons.FIRST_OF_DAY, habitId)
-                    xpAwarded += LevelSystem.XpRewards.FIRST_OF_DAY
+                    if (logsToday == 0) {
+                        awardXpUseCase.award(LevelSystem.XpRewards.FIRST_OF_DAY, LevelSystem.XpReasons.FIRST_OF_DAY, habitId)
+                        xpAwarded += LevelSystem.XpRewards.FIRST_OF_DAY
+                    }
+
+                    val scheduledHabits = _state.value.habits
+                    val restingIds = _state.value.restingHabitIds
+                    val nonRestingHabits = scheduledHabits.filter { it.id !in restingIds }
+                    val logsForDay = logsCache.filter { it.dateEpochDay == day }.map { it.habitId }.toSet() + habitId
+                    val allDone = nonRestingHabits.all { it.id in logsForDay }
+                    if (allDone && nonRestingHabits.isNotEmpty()) {
+                        awardXpUseCase.award(LevelSystem.XpRewards.PERFECT_DAY, LevelSystem.XpReasons.PERFECT_DAY)
+                        xpAwarded += LevelSystem.XpRewards.PERFECT_DAY
+                    }
+
+                    _state.value = _state.value.copy(xpPopAmount = xpAwarded)
                 }
-
-                val scheduledHabits = _state.value.habits
-                val restingIds = _state.value.restingHabitIds
-                val nonRestingHabits = scheduledHabits.filter { it.id !in restingIds }
-                val logsForDay = logsCache.filter { it.dateEpochDay == day }.map { it.habitId }.toSet() + habitId
-                val allDone = nonRestingHabits.all { it.id in logsForDay }
-                if (allDone && nonRestingHabits.isNotEmpty()) {
-                    awardXpUseCase.award(LevelSystem.XpRewards.PERFECT_DAY, LevelSystem.XpReasons.PERFECT_DAY)
-                    xpAwarded += LevelSystem.XpRewards.PERFECT_DAY
-                }
-
-                _state.value = _state.value.copy(xpPopAmount = xpAwarded)
             }
             WidgetUpdateHelper.updateAll(context)
         }
@@ -323,5 +356,25 @@ class HabitsViewModel @Inject constructor(
         viewModelScope.launch {
             _effect.send(effect)
         }
+    }
+
+    private fun calculateStreakForHabit(habitId: Long, logs: List<HabitLogEntity>): Int {
+        val habitLogs = logs.filter { it.habitId == habitId }
+        if (habitLogs.isEmpty()) return 0
+        val logDates = habitLogs.map { it.dateEpochDay }.toSet()
+        
+        var streak = 0
+        var checkDate = LocalDate.now().toEpochDay()
+        
+        if (!logDates.contains(checkDate)) {
+            checkDate--
+        }
+        
+        while (logDates.contains(checkDate)) {
+            streak++
+            checkDate--
+            if (streak > 365) break
+        }
+        return streak
     }
 }

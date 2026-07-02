@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -58,9 +60,16 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Star
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.isSystemInDarkTheme
 import com.saynedesign.habitloop.R
 import com.saynedesign.habitloop.ui.components.HabitCard
-import com.saynedesign.habitloop.ui.components.HomeHeader
 import com.saynedesign.habitloop.ui.screens.home.CalendarStrip
 import com.saynedesign.habitloop.util.LevelSystem
 import kotlinx.coroutines.delay
@@ -140,24 +149,233 @@ fun HabitsScreen(
         )
     }
 
+    val isDark = isSystemInDarkTheme()
+
     Box(modifier = modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(top = innerPadding.calculateTopPadding())
                 .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            // 1. Welcome Header
             item {
                 val levelInfo = LevelSystem.getLevelInfo(state.currentLevel)
-                HomeHeader(
-                    totalXp = state.totalXp,
-                    levelEmoji = levelInfo.emoji,
-                    onNotificationClick = { /* TODO */ },
-                    modifier = Modifier.padding(horizontal = 0.dp)
-                )
+                val name = if (state.userName.isNotEmpty()) state.userName.split(" ").firstOrNull() ?: "Aman" else "Aman"
+                
+                val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
+                val greetingPrefix = when (hour) {
+                    in 5..11 -> "Good Morning"
+                    in 12..16 -> "Good Afternoon"
+                    else -> "Good Evening"
+                }
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Profile Image / Dog Emoji circle
+                    Box(
+                        modifier = Modifier
+                            .size(52.dp)
+                            .clip(CircleShape)
+                            .background(if (isDark) Color(0xFF1E2230) else Color(0xFFF0F2FA)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (state.profileImageUri != null) {
+                            AsyncImage(
+                                model = state.profileImageUri,
+                                contentDescription = "Profile Image",
+                                modifier = Modifier.fillMaxSize(),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            Text("🐶", fontSize = 28.sp)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(12.dp))
+
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = "$greetingPrefix, $name! 👋",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isDark) Color.White else Color.Black
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Let's build something amazing today.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (isDark) Color(0xFF8B93A6) else Color(0xFF757575)
+                        )
+                    }
+
+                    // XP Badge
+                    Box(
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .background(if (isDark) Color(0xFF222635) else Color(0xFFEEF1FF))
+                            .padding(horizontal = 14.dp, vertical = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("🐾", fontSize = 14.sp)
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "${state.totalXp} XP",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF4B68FF)
+                            )
+                        }
+                    }
+                }
             }
 
+            // 2. Today's Progress Card & Level Badge Card
+            item {
+                val totalHabits = state.habits.size
+                val completedHabits = state.habits.count { habit ->
+                    val log = state.habitLogs[habit.id]
+                    log != null && (habit.type != "NUMERIC" && habit.type != "TIMER" || (log.value ?: 0f) >= habit.targetValue)
+                }
+                val progress = if (totalHabits > 0) completedHabits.toFloat() / totalHabits else 0f
+                val motivationText = when {
+                    progress == 0f -> "Start your habits today! 🚀"
+                    progress > 0f && progress < 0.5f -> "Off to a good start! Keep it up 👍"
+                    progress >= 0.5f && progress < 1f -> "Halfway there! Keep going 💪"
+                    else -> "Perfect day! You've crushed all habits! 🎉"
+                }
+                val levelInfo = LevelSystem.getLevelInfo(state.currentLevel)
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Today's Progress Card (Left)
+                    Card(
+                        modifier = Modifier.weight(0.65f),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isDark) Color(0xFF1C202B) else Color.White
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Circular Indicator
+                            Box(
+                                modifier = Modifier.size(54.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator(
+                                    progress = { progress },
+                                    modifier = Modifier.fillMaxSize(),
+                                    color = Color(0xFF4B68FF),
+                                    trackColor = if (isDark) Color(0xFF222635) else Color(0xFFEEF1FF),
+                                    strokeWidth = 4.dp
+                                )
+                                Text(
+                                    text = "$completedHabits/$totalHabits",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isDark) Color.White else Color.Black
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Column {
+                                Text(
+                                    text = "Today's Progress",
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                    color = if (isDark) Color(0xFF8B93A6) else Color(0xFF757575)
+                                )
+                                Text(
+                                    text = "$completedHabits of $totalHabits completed",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isDark) Color.White else Color.Black
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                LinearProgressIndicator(
+                                    progress = { progress },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(4.dp)
+                                        .clip(CircleShape),
+                                    color = Color(0xFF4B68FF),
+                                    trackColor = if (isDark) Color(0xFF222635) else Color(0xFFEEF1FF)
+                                )
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = motivationText,
+                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                                    color = if (isDark) Color(0xFF8B93A6) else Color(0xFF757575),
+                                    maxLines = 1,
+                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                    }
+
+                    // Level Card (Right)
+                    Card(
+                        modifier = Modifier.weight(0.35f),
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = if (isDark) Color(0xFF222635) else Color(0xFFF3F5FF)
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .padding(12.dp)
+                                .fillMaxWidth(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFF6C4BFF).copy(alpha = 0.12f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Star,
+                                    contentDescription = null,
+                                    tint = Color(0xFF6C4BFF),
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(6.dp))
+                            Text(
+                                text = "Level ${levelInfo.level}",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF6C4BFF)
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = levelInfo.name,
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                                color = if (isDark) Color(0xFF8B93A6) else Color(0xFF757575),
+                                maxLines = 1,
+                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                }
+            }
+
+            // 3. Weekly Calendar Strip
             item {
                 CalendarStrip(
                     selectedDate = state.selectedDate,
@@ -165,36 +383,63 @@ fun HabitsScreen(
                 )
             }
 
+            // 4. Section Header
             item {
+                val totalHabits = state.habits.size
+                val completedHabits = state.habits.count { habit ->
+                    val log = state.habitLogs[habit.id]
+                    log != null && (habit.type != "NUMERIC" && habit.type != "TIMER" || (log.value ?: 0f) >= habit.targetValue)
+                }
+                val remaining = (totalHabits - completedHabits).coerceAtLeast(0)
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = stringResource(R.string.home_habits),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
+                    Column {
+                        Text(
+                            text = "Today's Habits",
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isDark) Color.White else Color.Black
+                        )
+                        Text(
+                            text = "$remaining remaining",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (isDark) Color(0xFF8B93A6) else Color(0xFF757575)
+                        )
+                    }
 
-                    // Simple + button
+                    // "+ Add Habit" button in capsule layout
                     Box(
                         modifier = Modifier
-                            .size(32.dp)
-                            .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape)
-                            .clickable { onEvent(HabitsContract.Event.OnAddHabitClicked) },
+                            .clip(CircleShape)
+                            .background(if (isDark) Color(0xFF222635) else Color(0xFFEEF1FF))
+                            .clickable { onEvent(HabitsContract.Event.OnAddHabitClicked) }
+                            .padding(horizontal = 14.dp, vertical = 8.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Add,
-                            contentDescription = stringResource(R.string.common_add),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Add,
+                                contentDescription = "Add Habit",
+                                tint = Color(0xFF4B68FF),
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Add Habit",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF4B68FF)
+                            )
+                        }
                     }
                 }
             }
 
+            // 5. Habits List Items
             if (state.habits.isEmpty()) {
                 item {
                     Card(
@@ -263,6 +508,34 @@ fun HabitsScreen(
             } else {
                 items(state.habits, key = { it.id }) { habit ->
                     val log = state.habitLogs[habit.id]
+                    
+                    val isCompleted = log != null && (habit.type != "NUMERIC" || (log.value ?: 0f) >= habit.targetValue)
+                    
+                    val subtitle = when (habit.type) {
+                        "NUMERIC" -> {
+                            val current = log?.value ?: 0f
+                            val currentStr = if (current % 1f == 0f) current.toInt().toString() else current.toString()
+                            val targetStr = if (habit.targetValue % 1f == 0f) habit.targetValue.toInt().toString() else habit.targetValue.toString()
+                            "💧 $currentStr / $targetStr ${habit.unit} • ${habit.timeOfDay}"
+                        }
+                        "TIMER" -> {
+                            val currentMinutes = log?.value?.toInt() ?: 0
+                            "⏱️ $currentMinutes min • ${habit.timeOfDay}"
+                        }
+                        else -> {
+                            "⏰ ${habit.timeOfDay}"
+                        }
+                    }
+                    
+                    val progressPercentage = if (!isCompleted && (habit.type == "NUMERIC" || habit.type == "TIMER")) {
+                        val current = log?.value ?: 0f
+                        ((current / habit.targetValue) * 100f).coerceIn(0f, 100f)
+                    } else {
+                        null
+                    }
+                    
+                    val iconEmoji = habit.icon.ifEmpty { "🎯" }
+                    val streak = state.habitStreaks[habit.id] ?: 0
 
                     val dismissState = rememberSwipeToDismissBoxState(
                         confirmValueChange = {
@@ -323,33 +596,13 @@ fun HabitsScreen(
                         content = {
                             HabitCard(
                                 title = habit.title,
-                                subtitle = when (habit.type) {
-                                    "NUMERIC" -> {
-                                        val current = log?.value ?: 0f
-                                        val target = if (habit.targetValue % 1.0 == 0.0) {
-                                            habit.targetValue.toInt().toString()
-                                        } else {
-                                            habit.targetValue.toString()
-                                        }
-                                        val currentStr = if (current % 1.0 == 0.0) current.toInt().toString() else current.toString()
-                                        "$currentStr / $target ${habit.unit}"
-                                    }
-                                    "TIMER" -> {
-                                        val currentMinutes = log?.value?.toInt() ?: 0
-                                        if (currentMinutes > 0) {
-                                            stringResource(R.string.home_timer_minutes_completed, currentMinutes)
-                                        } else {
-                                            stringResource(R.string.home_timer_habit)
-                                        }
-                                    }
-                                    else -> stringResource(R.string.home_simple_habit)
-                                },
-                                icon = when (habit.type) {
-                                    "NUMERIC" -> Icons.AutoMirrored.Filled.List
-                                    "TIMER" -> Icons.Default.Timer
-                                    else -> Icons.Default.Check
-                                },
-                                iconTint = Color(habit.color),
+                                subtitle = subtitle,
+                                iconEmoji = iconEmoji,
+                                color = Color(habit.color),
+                                streak = streak,
+                                isCompleted = isCompleted,
+                                xpReward = 10,
+                                progressPercentage = progressPercentage,
                                 isResting = state.restingHabitIds.contains(habit.id),
                                 onClick = {
                                     if (habit.type == "TIMER") {
@@ -361,74 +614,76 @@ fun HabitsScreen(
                                 onLongClick = {
                                     onEvent(HabitsContract.Event.OnRestDayRequested(habit.id))
                                 },
-                                rightContent = {
-                                    when (habit.type) {
-                                        "NUMERIC" -> {
-                                            val current = log?.value ?: 0f
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                            ) {
-                                                IconButton(
-                                                    onClick = { onEvent(HabitsContract.Event.OnUpdateHabitValue(habit.id, current - 1)) },
-                                                    modifier = Modifier.size(32.dp)
-                                                ) {
-                                                    Icon(
-                                                        Icons.Default.Remove,
-                                                        contentDescription = stringResource(R.string.home_decrease),
-                                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                                    )
-                                                }
-
-                                                Text(
-                                                    text = if (current % 1.0 == 0.0) current.toInt().toString() else current.toString(),
-                                                    style = MaterialTheme.typography.bodyLarge,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = MaterialTheme.colorScheme.onBackground
-                                                )
-
-                                                IconButton(
-                                                    onClick = { onEvent(HabitsContract.Event.OnUpdateHabitValue(habit.id, current + 1)) },
-                                                    modifier = Modifier.size(32.dp)
-                                                ) {
-                                                    Icon(
-                                                        Icons.Default.Add,
-                                                        contentDescription = stringResource(R.string.home_increase),
-                                                        tint = MaterialTheme.colorScheme.primary
-                                                    )
-                                                }
-                                            }
+                                onCheckClick = {
+                                    if (habit.type == "NUMERIC") {
+                                        val current = log?.value ?: 0f
+                                        if (current >= habit.targetValue) {
+                                            onEvent(HabitsContract.Event.OnUpdateHabitValue(habit.id, 0f))
+                                        } else {
+                                            onEvent(HabitsContract.Event.OnUpdateHabitValue(habit.id, current + 1f))
                                         }
-                                        "TIMER" -> {
-                                            IconButton(
-                                                onClick = { onEvent(HabitsContract.Event.OnTimerClicked(habit.id)) },
-                                                modifier = Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f), CircleShape)
-                                            ) {
-                                                Icon(
-                                                    Icons.Default.PlayArrow,
-                                                    contentDescription = stringResource(R.string.home_start_timer),
-                                                    tint = MaterialTheme.colorScheme.primary
-                                                )
-                                            }
-                                        }
-                                        else -> {
-                                            Checkbox(
-                                                checked = log != null,
-                                                onCheckedChange = { isChecked ->
-                                                    onEvent(HabitsContract.Event.OnToggleHabit(habit.id, isChecked))
-                                                },
-                                                colors = CheckboxDefaults.colors(
-                                                    checkedColor = MaterialTheme.colorScheme.primary,
-                                                    uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                                    checkmarkColor = MaterialTheme.colorScheme.onPrimary
-                                                )
-                                            )
-                                        }
+                                    } else {
+                                        onEvent(HabitsContract.Event.OnToggleHabit(habit.id, !isCompleted))
                                     }
                                 }
                             )
                         }
                     )
+                }
+            }
+
+            // 6. BOTTOM CALLOUT / ENCOURAGEMENT CARD
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (isDark) Color(0xFF1C202B) else Color(0xFFF5F7FF)
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF4B68FF).copy(alpha = 0.12f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("✨", fontSize = 18.sp)
+                        }
+                        
+                        Spacer(modifier = Modifier.width(12.dp))
+                        
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "You're doing great!",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isDark) Color.White else Color.Black
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = "Consistency today, better tomorrow.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = if (isDark) Color(0xFF8B93A6) else Color(0xFF757575)
+                            )
+                        }
+                        
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = if (isDark) Color(0xFF8B93A6) else Color(0xFF757575),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
 

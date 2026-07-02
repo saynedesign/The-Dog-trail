@@ -2,6 +2,7 @@ package com.saynedesign.habitloop.ui.screens.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -51,11 +52,12 @@ fun CalendarStrip(
     onDateSelected: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isDark = isSystemInDarkTheme()
     val dates = remember {
         val today = LocalDate.now()
         val dateFormatter = DateTimeFormatter.ofPattern("d", Locale.getDefault())
         val dayFormatter = DateTimeFormatter.ofPattern("EEE", Locale.getDefault())
-        (-30..0).map { offset ->
+        (-30..14).map { offset -> // Show a window of past 30 days to next 14 days
             val date = today.plusDays(offset.toLong())
             Triple(
                 date.format(dayFormatter),
@@ -67,191 +69,76 @@ fun CalendarStrip(
 
     val listState = rememberLazyListState()
 
-    // Scroll to today (or selected date) on first launch
+    // Scroll to selected date on launch
     LaunchedEffect(selectedDate) {
-        // Find index of today or selected date
         val targetIndex = dates.indexOfFirst { it.third == selectedDate }.takeIf { it != -1 }
             ?: dates.indexOfFirst { it.third == LocalDate.now() }
         
         if (targetIndex != -1) {
-            listState.animateScrollToItem(targetIndex)
+            listState.animateScrollToItem((targetIndex - 2).coerceAtLeast(0))
         }
     }
 
     LazyRow(
-        modifier = modifier
-            .fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         state = listState,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
         contentPadding = PaddingValues(horizontal = 16.dp)
     ) {
         items(dates) { (dayStr, dateStr, localDate) ->
             val isSelected = localDate == selectedDate
+            val activeColor = Color(0xFF4B68FF)
+            
+            val containerColor = if (isSelected) {
+                activeColor
+            } else {
+                if (isDark) Color(0xFF1C202B) else Color(0xFFF5F6FA)
+            }
             
             Card(
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface
-                ),
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = if (isSelected) 8.dp else 4.dp
-                ),
+                colors = CardDefaults.cardColors(containerColor = containerColor),
+                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                 modifier = Modifier
-                    .width(60.dp) // Fixed width for consistency
+                    .width(56.dp)
                     .clickable { onDateSelected(localDate) }
             ) {
                 Column(
                     modifier = Modifier
-                        .padding(vertical = 14.dp)
+                        .padding(vertical = 12.dp)
                         .fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
+                    Text(
+                        text = dayStr.take(3).uppercase(),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = if (isSelected) Color.White.copy(alpha = 0.8f) else (if (isDark) Color(0xFF8B93A6) else Color(0xFF757575)),
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = dateStr,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+                        color = if (isSelected) Color.White else (if (isDark) Color.White else Color.Black)
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = dayStr.uppercase(),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f) else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                    )
+                    
+                    if (isSelected) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(4.dp)
+                                .clip(CircleShape)
+                                .background(Color.White)
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.height(10.dp)) // Maintain same height alignment
+                    }
                 }
             }
         }
     }
 }
 
-@Composable
-fun DailyGoalCard(
-    completed: Int,
-    total: Int,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.Transparent),
-        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .background(
-                    brush = Brush.horizontalGradient(
-                        colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.secondary)
-                    )
-                )
-                .padding(20.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier.size(60.dp)
-                ) {
-                    CircularProgressIndicator(
-                        progress = { completed.toFloat() / total },
-                        modifier = Modifier.size(60.dp),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        trackColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.3f),
-                        strokeWidth = 4.dp
-                    )
-                    Text(
-                        text = "${(completed.toFloat() / total * 100).toInt()}%",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                
-                Spacer(modifier = Modifier.width(16.dp))
-                
-                Column(modifier = Modifier.weight(1f)) {
-                    Text(
-                        text = stringResource(R.string.home_daily_goal_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = stringResource(R.string.home_daily_goal_progress, completed, total),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun ChallengeCard(
-    title: String,
-    timeLeft: String,
-    icon: ImageVector,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.background),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-            
-            Spacer(modifier = Modifier.width(16.dp))
-            
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                Text(
-                    text = timeLeft,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            
-            // Avatars placeholder
-            Row {
-                Box(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary)
-                )
-                Spacer(modifier = Modifier.width((-8).dp))
-                Box(
-                    modifier = Modifier
-                        .size(24.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.secondary)
-                )
-            }
-        }
-    }
-}

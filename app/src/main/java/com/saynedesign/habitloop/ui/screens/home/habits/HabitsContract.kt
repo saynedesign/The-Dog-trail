@@ -11,6 +11,7 @@ interface HabitsContract {
         val selectedEpochDay: Long = LocalDate.now().toEpochDay(),
         val habits: List<HabitEntity> = emptyList(),
         val habitLogs: Map<Long, HabitLogEntity> = emptyMap(),
+        val habitStreaks: Map<Long, Int> = emptyMap(),
         val isLoading: Boolean = false,
         
         // Dialogs
@@ -27,7 +28,9 @@ interface HabitsContract {
         // XP Context
         val totalXp: Int = 0,
         val currentLevel: Int = 1,
-        val xpPopAmount: Int? = null
+        val xpPopAmount: Int? = null,
+        val userName: String = "",
+        val profileImageUri: String? = null
     )
 
     sealed class Event {

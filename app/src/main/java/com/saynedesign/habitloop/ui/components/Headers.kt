@@ -73,67 +73,6 @@ fun ScreenHeader(
     }
 }
 
-@Composable
-fun HomeHeader(
-    levelEmoji: String = "🐾",
-    totalXp: Int = 0,
-    onNotificationClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        val circleSize = 45.dp
-
-        Box(
-            modifier = Modifier
-                .size(circleSize)
-                .clip(CircleShape)
-                .background(Color.Transparent),
-            contentAlignment = Alignment.Center
-        ) {
-            Image(
-                painter = painterResource(R.drawable.habit_tracker_icon),
-                contentDescription = stringResource(R.string.app_name),
-                modifier = Modifier.fillMaxWidth(),
-                contentScale = ContentScale.Crop
-            )
-        }
-
-        Box(
-            modifier = Modifier.weight(1f),
-            contentAlignment = Alignment.Center
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(
-                    text = stringResource(R.string.app_name),
-                    style = MaterialTheme.typography.titleLarge.copy(brush = headerTitleBrush()),
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Row(
-                    modifier = Modifier
-                        .background(BrandBackground, CircleShape)
-                        .padding(horizontal = 8.dp, vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(text = levelEmoji, style = MaterialTheme.typography.labelSmall)
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "${totalXp} XP",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = BrandBlue
-                    )
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.size(circleSize))
-    }
-}
 
 @Composable
 fun SectionHeader(
