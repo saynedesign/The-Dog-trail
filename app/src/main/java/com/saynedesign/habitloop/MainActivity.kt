@@ -261,6 +261,9 @@ class MainActivity : ComponentActivity() {
                                         is HomeContract.Effect.NavigateToAbout -> {
                                             navController.navigate("about")
                                         }
+                                        is HomeContract.Effect.NavigateToCreateHabit -> {
+                                            navController.navigate("create_habit")
+                                        }
                                     }
                                 }
                             }

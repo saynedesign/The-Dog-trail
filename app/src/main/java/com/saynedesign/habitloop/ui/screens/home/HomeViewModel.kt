@@ -46,6 +46,9 @@ class HomeViewModel @Inject constructor() : ViewModel() {
             is HomeContract.Event.OnAboutRequested -> {
                 sendEffect(HomeContract.Effect.NavigateToAbout)
             }
+            is HomeContract.Event.OnCreateHabitRequested -> {
+                sendEffect(HomeContract.Effect.NavigateToCreateHabit)
+            }
         }
     }
 

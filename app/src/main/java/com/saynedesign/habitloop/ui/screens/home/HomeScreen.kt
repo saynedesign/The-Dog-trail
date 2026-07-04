@@ -161,6 +161,9 @@ fun HomeScreen(
                                     is ProfileContract.Effect.NavigateToAbout -> {
                                         onEvent(HomeContract.Event.OnAboutRequested)
                                     }
+                                    is ProfileContract.Effect.NavigateToCreateHabit -> {
+                                        onEvent(HomeContract.Event.OnCreateHabitRequested)
+                                    }
                                     is ProfileContract.Effect.ShowToast -> {
                                         Toast.makeText(context, effect.message, Toast.LENGTH_SHORT).show()
                                     }
