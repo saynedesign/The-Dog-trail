@@ -14,7 +14,11 @@ interface ProfileContract {
         val xpProgress: Float = 0f,
         val levelName: String = "Pup",
         val levelEmoji: String = "🐾",
-        val nextLevelXp: Int = 200
+        val nextLevelXp: Int = 200,
+        val currentStreak: Int = 0,
+        val bestStreak: Int = 0,
+        val totalCheckIns: Int = 0,
+        val badgesCount: Int = 0
     )
 
     sealed class Event {
@@ -33,6 +37,7 @@ interface ProfileContract {
         data object OnHelpSupportClicked : Event()
         data object OnLevelBannerClicked : Event()
         data object OnTrackNewHabitClicked : Event()
+        data object OnViewStatsClicked : Event()
     }
 
     sealed class Effect {
@@ -41,6 +46,7 @@ interface ProfileContract {
         data object NavigateToPreferences : Effect()
         data object NavigateToAchievements : Effect()
         data object NavigateToCreateHabit : Effect()
+        data object NavigateToStats : Effect()
         data class ShowToast(val message: String) : Effect()
     }
 }

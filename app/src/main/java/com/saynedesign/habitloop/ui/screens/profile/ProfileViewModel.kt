@@ -3,6 +3,7 @@ package com.saynedesign.habitloop.ui.screens.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.saynedesign.habitloop.data.HabitLogDao
+import com.saynedesign.habitloop.data.HabitRestDayDao
 import com.saynedesign.habitloop.data.UserDao
 import com.saynedesign.habitloop.data.UserEntity
 import com.saynedesign.habitloop.util.LevelSystem
@@ -22,7 +23,8 @@ import javax.inject.Inject
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val userDao: UserDao,
-    private val habitLogDao: HabitLogDao
+    private val habitLogDao: HabitLogDao,
+    private val habitRestDayDao: HabitRestDayDao
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ProfileContract.State())
@@ -39,13 +41,67 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             combine(
                 userDao.getUser(),
-                habitLogDao.countAllLogs()
-            ) { user, count ->
+                habitLogDao.getAllLogs(),
+                habitRestDayDao.getAllRestDays()
+            ) { user, logs, restDays ->
                 val xp = user?.totalXp ?: 0
                 val level = LevelSystem.getLevelForXp(xp)
                 val levelInfo = LevelSystem.getLevelInfo(level)
                 val progress = LevelSystem.getProgressToNextLevel(xp)
                 val nextXp = LevelSystem.getNextLevelRequirement(xp)
+
+                // Calculate current streak & best streak
+                val today = LocalDate.now()
+                val logsByDay = logs.groupBy { it.dateEpochDay }
+                val restDaysByEpoch = restDays.groupBy { it.dateEpochDay }
+
+                var activeMomentum = 0
+                var checkDate = today
+                val todayEpoch = today.toEpochDay()
+                val todayLogs = logsByDay[todayEpoch] ?: emptyList()
+                val todayHasRest = restDaysByEpoch.containsKey(todayEpoch)
+                if (todayLogs.isEmpty() && !todayHasRest) {
+                    checkDate = checkDate.minusDays(1)
+                }
+                while (true) {
+                    val epoch = checkDate.toEpochDay()
+                    val dayLogs = logsByDay[epoch] ?: emptyList()
+                    val dayHasRest = restDaysByEpoch.containsKey(epoch)
+                    when {
+                        dayHasRest && dayLogs.isEmpty() -> {
+                            checkDate = checkDate.minusDays(1)
+                        }
+                        dayLogs.isNotEmpty() -> {
+                            activeMomentum++
+                            checkDate = checkDate.minusDays(1)
+                        }
+                        else -> break
+                    }
+                    if (activeMomentum > 3650) break
+                }
+
+                val minDate = logs.minOfOrNull { it.dateEpochDay } ?: today.toEpochDay()
+                val maxDate = today.toEpochDay()
+                var bestStreak = 0
+                var runningStreak = 0
+                for (dayEpoch in minDate..maxDate) {
+                    val dayLogs = logsByDay[dayEpoch] ?: emptyList()
+                    val dayHasRest = restDaysByEpoch.containsKey(dayEpoch)
+                    if (dayLogs.isNotEmpty()) {
+                        runningStreak++
+                    } else if (dayHasRest) {
+                        // Rest day: neutral
+                    } else {
+                        if (dayEpoch == maxDate) {
+                            // Don't reset running streak on today yet
+                        } else {
+                            bestStreak = maxOf(bestStreak, runningStreak)
+                            runningStreak = 0
+                        }
+                    }
+                }
+                bestStreak = maxOf(bestStreak, runningStreak)
+
                 ProfileContract.State(
                     userName = user?.name ?: "",
                     userDob = user?.dob ?: "",
@@ -53,12 +109,16 @@ class ProfileViewModel @Inject constructor(
                     profileImageUri = user?.profileImageUri,
                     isLoading = false,
                     level = level,
-                    totalHabitCount = count,
+                    totalHabitCount = logs.size,
                     totalXp = xp,
                     xpProgress = progress,
                     levelName = levelInfo.name,
                     levelEmoji = levelInfo.emoji,
-                    nextLevelXp = nextXp
+                    nextLevelXp = nextXp,
+                    currentStreak = activeMomentum,
+                    bestStreak = bestStreak,
+                    totalCheckIns = logs.size,
+                    badgesCount = level
                 )
             }.collectLatest { newState ->
                 _state.value = newState
@@ -86,6 +146,9 @@ class ProfileViewModel @Inject constructor(
             }
             ProfileContract.Event.OnTrackNewHabitClicked -> {
                 viewModelScope.launch { _effect.send(ProfileContract.Effect.NavigateToCreateHabit) }
+            }
+            ProfileContract.Event.OnViewStatsClicked -> {
+                viewModelScope.launch { _effect.send(ProfileContract.Effect.NavigateToStats) }
             }
             else -> {} // Removed unused events for clean up
         }

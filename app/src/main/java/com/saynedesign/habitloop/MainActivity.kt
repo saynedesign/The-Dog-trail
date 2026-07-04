@@ -326,6 +326,9 @@ class MainActivity : ComponentActivity() {
                                         is ProfileContract.Effect.NavigateToCreateHabit -> {
                                             navController.navigate("create_habit")
                                         }
+                                        is ProfileContract.Effect.NavigateToStats -> {
+                                            navController.navigate("home")
+                                        }
                                     }
                                 }
                             }

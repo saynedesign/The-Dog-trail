@@ -152,6 +152,9 @@ fun HomeScreen(
                                     is ProfileContract.Effect.NavigateToAchievements -> {
                                         onEvent(HomeContract.Event.OnAchievementsRequested)
                                     }
+                                    is ProfileContract.Effect.NavigateToStats -> {
+                                        onEvent(HomeContract.Event.OnReportClicked)
+                                    }
                                     is ProfileContract.Effect.ShowToast -> {
                                         Toast.makeText(context, effect.message, Toast.LENGTH_SHORT).show()
                                     }

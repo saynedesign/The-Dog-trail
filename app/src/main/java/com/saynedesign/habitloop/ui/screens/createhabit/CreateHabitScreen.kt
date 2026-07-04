@@ -798,7 +798,8 @@ fun DatePickerRow(
         calendar.get(Calendar.DAY_OF_MONTH)
     )
 
-    val dateFormat = SimpleDateFormat("EEEE, MMMM d, yyyy", Locale.getDefault())
+    val locale = androidx.compose.ui.platform.LocalConfiguration.current.locales[0]
+    val dateFormat = SimpleDateFormat("EEEE, MMMM d, yyyy", locale)
     val dateString = dateFormat.format(Date(date))
 
     Row(

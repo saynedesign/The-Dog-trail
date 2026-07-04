@@ -8,12 +8,12 @@ plugins {
 
 android {
     namespace = "com.saynedesign.habitloop"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.saynedesign.habitloop"
         minSdk = 30
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 2
         versionName = "1.0.1"
 
@@ -43,6 +43,7 @@ android {
 
 dependencies {
     implementation("androidx.datastore:datastore-preferences:1.0.0")
+    implementation(libs.errorprone.annotations)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
