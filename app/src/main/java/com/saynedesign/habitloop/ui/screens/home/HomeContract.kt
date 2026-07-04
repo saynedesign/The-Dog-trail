@@ -16,12 +16,14 @@ interface HomeContract {
         data object OnEditProfileRequested : Event()
         data object OnPreferencesRequested : Event()
         data object OnAchievementsRequested : Event()
+        data object OnAppearanceRequested : Event()
     }
 
     sealed class Effect {
         data object NavigateToProfile : Effect()
         data object NavigateToEditProfile : Effect()
         data object NavigateToPreferences : Effect()
+        data object NavigateToAppearance : Effect()
         data object NavigateToAchievements : Effect()
     }
 }

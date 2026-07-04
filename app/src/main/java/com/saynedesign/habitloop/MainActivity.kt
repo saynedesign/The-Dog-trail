@@ -83,6 +83,7 @@ class MainActivity : ComponentActivity() {
             "preferences",
             "achievements",
             "timer",
+            "appearance",
                 -> TransitionStyle.Modal
             else -> TransitionStyle.Standard
         }
@@ -95,9 +96,15 @@ class MainActivity : ComponentActivity() {
             navigationBarStyle = SystemBarStyle.auto(Color.TRANSPARENT, Color.TRANSPARENT)
         )
         setContent {
-            TheDogTailTheme {
+            val mainViewModel = hiltViewModel<MainViewModel>()
+            val themeState by mainViewModel.theme.collectAsState()
+            val darkTheme = when (themeState) {
+                "light" -> false
+                "dark" -> true
+                else -> androidx.compose.foundation.isSystemInDarkTheme()
+            }
+            TheDogTailTheme(darkTheme = darkTheme) {
                 val navController = rememberNavController()
-                val mainViewModel = hiltViewModel<MainViewModel>()
                 val isLoading by mainViewModel.isLoading.collectAsState()
                 val startDestination by mainViewModel.startDestination.collectAsState()
 
@@ -239,6 +246,9 @@ class MainActivity : ComponentActivity() {
                                         is HomeContract.Effect.NavigateToPreferences -> {
                                             navController.navigate("preferences")
                                         }
+                                        is HomeContract.Effect.NavigateToAppearance -> {
+                                            navController.navigate("appearance")
+                                        }
                                         is HomeContract.Effect.NavigateToAchievements -> {
                                             navController.navigate("achievements")
                                         }
@@ -320,6 +330,9 @@ class MainActivity : ComponentActivity() {
                                         is ProfileContract.Effect.NavigateToPreferences -> {
                                             navController.navigate("preferences")
                                         }
+                                        is ProfileContract.Effect.NavigateToAppearance -> {
+                                            navController.navigate("appearance")
+                                        }
                                         is ProfileContract.Effect.NavigateToAchievements -> {
                                             navController.navigate("achievements")
                                         }
@@ -381,6 +394,29 @@ class MainActivity : ComponentActivity() {
                             }
 
                             PreferencesScreen(
+                                state = state,
+                                onEvent = viewModel::handleEvent
+                            )
+                        }
+
+                        composable("appearance") {
+                            val viewModel = hiltViewModel<com.saynedesign.habitloop.ui.screens.appearance.AppearanceViewModel>()
+                            val state by viewModel.state.collectAsState()
+
+                            LaunchedEffect(Unit) {
+                                viewModel.effect.collect { effect ->
+                                    when (effect) {
+                                        is com.saynedesign.habitloop.ui.screens.appearance.AppearanceContract.Effect.NavigateBack -> {
+                                            navController.popBackStack()
+                                        }
+                                        is com.saynedesign.habitloop.ui.screens.appearance.AppearanceContract.Effect.ShowToast -> {
+                                            Toast.makeText(this@MainActivity, effect.message, Toast.LENGTH_SHORT).show()
+                                        }
+                                    }
+                                }
+                            }
+
+                            com.saynedesign.habitloop.ui.screens.appearance.AppearanceScreen(
                                 state = state,
                                 onEvent = viewModel::handleEvent
                             )

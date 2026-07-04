@@ -5,7 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
+import com.saynedesign.habitloop.ui.theme.isAppInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
@@ -100,7 +100,7 @@ fun ProfileScreen(
                     AccountPreferencesList(
                         onPersonalInfo = { onEvent(ProfileContract.Event.OnPersonalInfoClicked) },
                         onNotifications = { onEvent(ProfileContract.Event.OnPreferencesClicked) },
-                        onAppearance = { onEvent(ProfileContract.Event.OnPreferencesClicked) },
+                        onAppearance = { onEvent(ProfileContract.Event.OnAppAppearanceClicked) },
                         onPrivacy = { onEvent(ProfileContract.Event.OnPreferencesClicked) },
                         onAbout = { onEvent(ProfileContract.Event.OnPreferencesClicked) }
                     )
@@ -325,7 +325,7 @@ fun CurrentLevelCard(state: ProfileContract.State, onClick: () -> Unit) {
                     )
                 }
 
-                val tagGreen = if (isSystemInDarkTheme()) Color(0xFF81C784) else Color(0xFF2E7D32)
+                val tagGreen = if (isAppInDarkTheme()) Color(0xFF81C784) else Color(0xFF2E7D32)
                 Box(
                     modifier = Modifier
                         .background(tagGreen.copy(alpha = 0.12f), RoundedCornerShape(12.dp))
@@ -380,7 +380,7 @@ fun CurrentLevelCard(state: ProfileContract.State, onClick: () -> Unit) {
 
 @Composable
 fun StatsGrid(state: ProfileContract.State) {
-    val isDark = isSystemInDarkTheme()
+    val isDark = isAppInDarkTheme()
 
     val streakColor = if (isDark) Color(0xFFFF8A65) else Color(0xFFE64A19)
     val xpColor = MaterialTheme.colorScheme.primary
@@ -510,7 +510,7 @@ fun QuickActionsRow(
     onViewStats: () -> Unit,
     onAchievements: () -> Unit
 ) {
-    val isDark = isSystemInDarkTheme()
+    val isDark = isAppInDarkTheme()
     val successColor = if (isDark) Color(0xFF81C784) else Color(0xFF2E7D32)
 
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -625,7 +625,7 @@ fun AccountPreferencesList(
     onPrivacy: () -> Unit,
     onAbout: () -> Unit
 ) {
-    val isDark = isSystemInDarkTheme()
+    val isDark = isAppInDarkTheme()
 
     val blueBg = if (isDark) Color(0xFF1E3A8A) else Color(0xFFE3F2FD)
     val blueTint = if (isDark) Color(0xFF93C5FD) else Color(0xFF1E88E5)

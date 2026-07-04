@@ -10,7 +10,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.isSystemInDarkTheme
+import com.saynedesign.habitloop.ui.theme.isAppInDarkTheme
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -71,7 +71,7 @@ fun HomeScreen(
     onEvent: (HomeContract.Event) -> Unit
 ) {
     val view = LocalView.current
-    val isDarkTheme = isSystemInDarkTheme()
+    val isDarkTheme = isAppInDarkTheme()
 
     if (!view.isInEditMode) {
         SideEffect {
@@ -149,6 +149,9 @@ fun HomeScreen(
                                     is ProfileContract.Effect.NavigateToPreferences -> {
                                         onEvent(HomeContract.Event.OnPreferencesRequested)
                                     }
+                                    is ProfileContract.Effect.NavigateToAppearance -> {
+                                        onEvent(HomeContract.Event.OnAppearanceRequested)
+                                    }
                                     is ProfileContract.Effect.NavigateToAchievements -> {
                                         onEvent(HomeContract.Event.OnAchievementsRequested)
                                     }
@@ -206,7 +209,7 @@ fun HomeBottomNavigation(
             .height(72.dp),
         shape = RoundedCornerShape(36.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (isSystemInDarkTheme()) Color(0xFF1C202B) else Color.White
+            containerColor = if (isAppInDarkTheme()) Color(0xFF1C202B) else Color.White
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
@@ -246,7 +249,7 @@ private fun HomeBottomNavigationItem(
     label: String,
     onClick: () -> Unit
 ) {
-    val isDark = isSystemInDarkTheme()
+    val isDark = isAppInDarkTheme()
     val primaryColor = Color(0xFF4B68FF)
     
     val bgBrush = if (selected) {

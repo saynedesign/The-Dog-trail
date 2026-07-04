@@ -23,9 +23,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.saynedesign.habitloop.ui.theme.BrandBlue
-import com.saynedesign.habitloop.ui.theme.BrandLightBlue
-import com.saynedesign.habitloop.ui.theme.TextPrimary
-import com.saynedesign.habitloop.ui.theme.TextSecondary
 
 @Composable
 fun CircularProgress(
@@ -33,8 +30,8 @@ fun CircularProgress(
     modifier: Modifier = Modifier,
     radius: Dp = 40.dp,
     strokeWidth: Dp = 8.dp,
-    color: Color = BrandBlue,
-    backgroundColor: Color = BrandLightBlue,
+    color: Color = MaterialTheme.colorScheme.primary,
+    backgroundColor: Color = MaterialTheme.colorScheme.outlineVariant,
     content: @Composable () -> Unit = {}
 ) {
     Box(contentAlignment = Alignment.Center, modifier = modifier.size(radius * 2)) {
@@ -74,7 +71,7 @@ fun HabitLinearProgress(
                     Text(
                         text = label,
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.align(Alignment.CenterStart)
                     )
                 }
@@ -82,7 +79,7 @@ fun HabitLinearProgress(
                     Text(
                         text = valueLabel,
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextPrimary,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.align(Alignment.CenterEnd)
                     )
@@ -96,8 +93,8 @@ fun HabitLinearProgress(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(8.dp),
-            color = BrandBlue,
-            trackColor = BrandLightBlue,
+            color = MaterialTheme.colorScheme.primary,
+            trackColor = MaterialTheme.colorScheme.outlineVariant,
             strokeCap = StrokeCap.Round,
         )
     }

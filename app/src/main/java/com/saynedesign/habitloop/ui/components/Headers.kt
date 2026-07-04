@@ -32,10 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.saynedesign.habitloop.R
-import com.saynedesign.habitloop.ui.theme.BrandBackground
 import com.saynedesign.habitloop.ui.theme.BrandBlue
-import com.saynedesign.habitloop.ui.theme.TextPrimary
-import com.saynedesign.habitloop.ui.theme.TextSecondary
 
 @Composable
 fun ScreenHeader(
@@ -54,7 +51,7 @@ fun ScreenHeader(
             Icon(
                 imageVector = Icons.Default.ArrowBack,
                 contentDescription = "Back",
-                tint = TextPrimary
+                tint = MaterialTheme.colorScheme.onBackground
             )
         }
 
@@ -92,14 +89,14 @@ fun SectionHeader(
             text = title,
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = TextPrimary
+            color = MaterialTheme.colorScheme.onBackground
         )
         
         if (actionText != null && onActionClick != null) {
             Text(
                 text = actionText,
                 style = MaterialTheme.typography.labelLarge,
-                color = TextSecondary, // Or BrandBlue
+                color = MaterialTheme.colorScheme.onSurfaceVariant, // Or BrandBlue
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.clickable(onClick = onActionClick)
             )

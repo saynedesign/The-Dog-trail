@@ -25,12 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.saynedesign.habitloop.ui.theme.BrandBackground
 import com.saynedesign.habitloop.ui.theme.BrandBlue
-import com.saynedesign.habitloop.ui.theme.BrandLightBlue
-import com.saynedesign.habitloop.ui.theme.BrandSurface
-import com.saynedesign.habitloop.ui.theme.TextPrimary
-import com.saynedesign.habitloop.ui.theme.TextSecondary
 
 @Composable
 fun DaySelector(
@@ -50,13 +45,13 @@ fun DaySelector(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(if (isSelected) BrandBlue else BrandBackground)
+                    .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
                     .clickable { onDayToggle(index) },
                 contentAlignment = Alignment.Center
             ) {
                 Text(
                     text = day,
-                    color = if (isSelected) Color.White else TextSecondary,
+                    color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -75,10 +70,10 @@ fun SelectionChip(
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
-            .background(if (selected) BrandBlue else BrandSurface)
+            .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface)
             .border(
                 width = 1.dp,
-                color = if (selected) BrandBlue else BrandLightBlue,
+                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
                 shape = RoundedCornerShape(16.dp)
             )
             .clickable(onClick = onClick)
@@ -90,14 +85,14 @@ fun SelectionChip(
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = if (selected) Color.White else TextSecondary,
+                    tint = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.height(8.dp))
             }
             Text(
                 text = title,
-                color = if (selected) Color.White else TextSecondary,
+                color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Bold
             )
         }
@@ -114,13 +109,13 @@ fun FilterChip(
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(20.dp))
-            .background(if (selected) BrandBlue else BrandBackground)
+            .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
             .clickable(onClick = onClick)
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Text(
             text = text,
-            color = if (selected) Color.White else TextSecondary,
+            color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
             fontWeight = FontWeight.Medium
         )
     }

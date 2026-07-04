@@ -67,7 +67,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Star
 import coil.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.foundation.isSystemInDarkTheme
+import com.saynedesign.habitloop.ui.theme.isAppInDarkTheme
 import com.saynedesign.habitloop.R
 import com.saynedesign.habitloop.ui.components.HabitCard
 import com.saynedesign.habitloop.ui.screens.home.CalendarStrip
@@ -149,7 +149,7 @@ fun HabitsScreen(
         )
     }
 
-    val isDark = isSystemInDarkTheme()
+    val isDark = isAppInDarkTheme()
 
     Box(modifier = modifier.fillMaxSize()) {
         LazyColumn(

@@ -2,7 +2,7 @@ package com.saynedesign.habitloop.ui.screens.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
+import com.saynedesign.habitloop.ui.theme.isAppInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,7 +52,7 @@ fun CalendarStrip(
     onDateSelected: (LocalDate) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val isDark = isSystemInDarkTheme()
+    val isDark = isAppInDarkTheme()
     val dates = remember {
         val today = LocalDate.now()
         val dateFormatter = DateTimeFormatter.ofPattern("d", Locale.getDefault())

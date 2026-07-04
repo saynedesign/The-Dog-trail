@@ -40,6 +40,9 @@ class HomeViewModel @Inject constructor() : ViewModel() {
             is HomeContract.Event.OnAchievementsRequested -> {
                 sendEffect(HomeContract.Effect.NavigateToAchievements)
             }
+            is HomeContract.Event.OnAppearanceRequested -> {
+                sendEffect(HomeContract.Effect.NavigateToAppearance)
+            }
         }
     }
 

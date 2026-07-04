@@ -38,12 +38,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.saynedesign.habitloop.ui.theme.BrandBackground
-import com.saynedesign.habitloop.ui.theme.BrandBlue
-import com.saynedesign.habitloop.ui.theme.BrandSurface
+import com.saynedesign.habitloop.ui.theme.isAppInDarkTheme
 import com.saynedesign.habitloop.ui.theme.SuccessGreen
-import com.saynedesign.habitloop.ui.theme.TextPrimary
-import com.saynedesign.habitloop.ui.theme.TextSecondary
 
 @Composable
 fun HabitCard(
@@ -61,7 +57,7 @@ fun HabitCard(
     onCheckClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val isDark = androidx.compose.foundation.isSystemInDarkTheme()
+    val isDark = isAppInDarkTheme()
     
     Card(
         modifier = modifier
@@ -236,7 +232,7 @@ fun InsightCard(
     trend: String? = null,
     trendPositive: Boolean = true,
     modifier: Modifier = Modifier,
-    containerColor: Color = BrandSurface
+    containerColor: Color = MaterialTheme.colorScheme.surface
 ) {
     Card(
         modifier = modifier
@@ -257,13 +253,13 @@ fun InsightCard(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .background(BrandBackground),
+                        .background(MaterialTheme.colorScheme.background),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = icon,
                         contentDescription = null,
-                        tint = BrandBlue,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -291,7 +287,7 @@ fun InsightCard(
                 Text(
                     text = title,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Medium
                 )
                 Row(verticalAlignment = Alignment.Bottom) {
@@ -299,13 +295,13 @@ fun InsightCard(
                         text = value,
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
-                        color = TextPrimary
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = unit,
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
                 }
@@ -326,7 +322,7 @@ fun SimpleListCard(
             .clickable(onClick = onClick)
             .padding(vertical = 4.dp),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = BrandSurface)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
             modifier = Modifier.padding(16.dp),
@@ -341,7 +337,7 @@ fun SimpleListCard(
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                 contentDescription = null,
-                tint = TextSecondary
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

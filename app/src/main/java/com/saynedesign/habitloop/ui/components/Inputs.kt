@@ -21,11 +21,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.saynedesign.habitloop.ui.theme.BrandBackground
 import com.saynedesign.habitloop.ui.theme.BrandBlue
-import com.saynedesign.habitloop.ui.theme.BrandSurface
-import com.saynedesign.habitloop.ui.theme.TextPrimary
-import com.saynedesign.habitloop.ui.theme.TextSecondary
 
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -40,7 +36,7 @@ fun HabitTextField(
     placeholder: String = "",
     singleLine: Boolean = true,
     leadingIcon: @Composable (() -> Unit)? = null,
-    containerColor: Color = BrandSurface
+    containerColor: Color = MaterialTheme.colorScheme.surface
 ) {
     TextField(
         value = value,
@@ -59,9 +55,9 @@ fun HabitTextField(
             disabledContainerColor = containerColor,
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent,
-            cursorColor = BrandBlue,
-            focusedLabelColor = BrandBlue,
-            unfocusedLabelColor = TextSecondary
+            cursorColor = MaterialTheme.colorScheme.primary,
+            focusedLabelColor = MaterialTheme.colorScheme.primary,
+            unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant
         )
     )
 }
@@ -80,14 +76,14 @@ fun HabitOutlinedTextField(
     minLines: Int = 1,
     enabled: Boolean = true,
     colors: androidx.compose.material3.TextFieldColors = OutlinedTextFieldDefaults.colors(
-        focusedContainerColor = Color.White,
-        unfocusedContainerColor = Color.White,
-        disabledContainerColor = Color.White,
-        focusedBorderColor = BrandBlue,
-        unfocusedBorderColor = Color(0xFFE0E0E0),
-        cursorColor = BrandBlue,
-        focusedTextColor = BrandBlue,
-        unfocusedTextColor = BrandBlue
+        focusedContainerColor = MaterialTheme.colorScheme.surface,
+        unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+        disabledContainerColor = MaterialTheme.colorScheme.surface,
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+        cursorColor = MaterialTheme.colorScheme.primary,
+        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+        unfocusedTextColor = MaterialTheme.colorScheme.onSurface
     )
 ) {
     OutlinedTextField(
@@ -95,7 +91,7 @@ fun HabitOutlinedTextField(
         onValueChange = onValueChange,
         modifier = modifier
             .fillMaxWidth(),
-        placeholder = { Text(placeholder, color = TextSecondary) },
+        placeholder = { Text(placeholder, color = MaterialTheme.colorScheme.onSurfaceVariant) },
         leadingIcon = leadingIcon,
         trailingIcon = trailingIcon,
         singleLine = singleLine,

@@ -44,6 +44,7 @@ interface ProfileContract {
         data object NavigateBack : Effect()
         data object NavigateToEditProfile : Effect()
         data object NavigateToPreferences : Effect()
+        data object NavigateToAppearance : Effect()
         data object NavigateToAchievements : Effect()
         data object NavigateToCreateHabit : Effect()
         data object NavigateToStats : Effect()
