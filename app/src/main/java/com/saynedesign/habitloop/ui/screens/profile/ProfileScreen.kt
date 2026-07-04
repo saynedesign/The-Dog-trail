@@ -101,7 +101,6 @@ fun ProfileScreen(
                         onPersonalInfo = { onEvent(ProfileContract.Event.OnPersonalInfoClicked) },
                         onNotifications = { onEvent(ProfileContract.Event.OnPreferencesClicked) },
                         onAppearance = { onEvent(ProfileContract.Event.OnAppAppearanceClicked) },
-                        onPrivacy = { onEvent(ProfileContract.Event.OnPreferencesClicked) },
                         onAbout = { onEvent(ProfileContract.Event.OnAboutClicked) }
                     )
                 }
@@ -622,7 +621,6 @@ fun AccountPreferencesList(
     onPersonalInfo: () -> Unit,
     onNotifications: () -> Unit,
     onAppearance: () -> Unit,
-    onPrivacy: () -> Unit,
     onAbout: () -> Unit
 ) {
     val isDark = isAppInDarkTheme()
@@ -685,15 +683,6 @@ fun AccountPreferencesList(
                     showDivider = true
                 )
 
-                PreferenceListItem(
-                    icon = Icons.Default.Shield,
-                    iconBgColor = greenBg,
-                    iconTint = greenTint,
-                    title = "Privacy & Security",
-                    subtitle = "Manage data & privacy settings",
-                    onClick = onPrivacy,
-                    showDivider = true
-                )
 
                 PreferenceListItem(
                     icon = Icons.Default.Info,
