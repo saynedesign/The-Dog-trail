@@ -156,7 +156,9 @@ class EditProfileViewModel @Inject constructor(
                     profileImageUri = savedImageUri,
                     createdTimestamp = existingUser?.createdTimestamp ?: System.currentTimeMillis(),
                     journal = existingUser?.journal,
-                    journalLastUpdated = existingUser?.journalLastUpdated
+                    journalLastUpdated = existingUser?.journalLastUpdated,
+                    totalXp = existingUser?.totalXp ?: 0,
+                    currentLevel = existingUser?.currentLevel ?: 1
                 )
                 userDao.insertUser(user)
                 _effect.send(EditProfileContract.Effect.ShowToast("Profile updated successfully"))

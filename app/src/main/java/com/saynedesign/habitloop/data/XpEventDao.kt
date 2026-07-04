@@ -16,6 +16,9 @@ interface XpEventDao {
     @Query("SELECT COALESCE(SUM(xpAmount), 0) FROM xp_events")
     fun getTotalXp(): Flow<Int>
 
+    @Query("SELECT COALESCE(SUM(xpAmount), 0) FROM xp_events")
+    suspend fun getTotalXpOneShot(): Int
+
     @Query("SELECT COALESCE(SUM(xpAmount), 0) FROM xp_events WHERE relatedHabitId = :habitId")
     fun getXpForHabit(habitId: Long): Flow<Int>
 

@@ -9,8 +9,15 @@ interface AchievementsContract {
         val levelName: String = "",
         val levelEmoji: String = "",
         val nextLevel: Int = 2,
+        val nextLevelName: String = "",
+        val nextLevelEmoji: String = "",
+        val nextLevelXp: Int = 100,
         val progressToNextLevel: Float = 0f,
-        val levels: List<Pair<Int, Int>> = LevelSystem.levels, // -> List of Pair(level, requiredXp)
+        val levels: List<LevelSystem.LevelInfo> = LevelSystem.levelInfos,
+        val currentStreak: Int = 0,
+        val totalCheckIns: Int = 0,
+        val badgesCount: Int = 0,
+        val profileImageUri: String? = null,
         val isLoading: Boolean = false
     )
 

@@ -8,6 +8,7 @@ import com.saynedesign.habitloop.data.HabitDatabase
 import com.saynedesign.habitloop.data.HabitEntity
 import com.saynedesign.habitloop.data.HabitLogEntity
 import com.saynedesign.habitloop.data.UserEntity
+import com.saynedesign.habitloop.data.XpEventEntity
 import com.saynedesign.habitloop.widget.WidgetUpdateHelper
 import java.time.LocalDate
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -133,6 +134,7 @@ class PreferencesViewModel @Inject constructor(
                         val userDao = db.userDao()
                         val habitDao = db.habitDao()
                         val habitLogDao = db.habitLogDao()
+                        val xpEventDao = db.xpEventDao()
                         
                         userDao.insertUser(
                             UserEntity(
@@ -142,6 +144,14 @@ class PreferencesViewModel @Inject constructor(
                                 profileImageUri = null,
                                 totalXp = 850,
                                 currentLevel = 3
+                            )
+                        )
+                        
+                        xpEventDao.insertEvent(
+                            XpEventEntity(
+                                xpAmount = 850,
+                                reason = "Seeded Initial Progress",
+                                timestamp = System.currentTimeMillis() - 86400000
                             )
                         )
                         
