@@ -102,7 +102,7 @@ fun ProfileScreen(
                         onNotifications = { onEvent(ProfileContract.Event.OnPreferencesClicked) },
                         onAppearance = { onEvent(ProfileContract.Event.OnAppAppearanceClicked) },
                         onPrivacy = { onEvent(ProfileContract.Event.OnPreferencesClicked) },
-                        onAbout = { onEvent(ProfileContract.Event.OnPreferencesClicked) }
+                        onAbout = { onEvent(ProfileContract.Event.OnAboutClicked) }
                     )
                 }
 

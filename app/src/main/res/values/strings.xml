@@ -234,4 +234,22 @@
     <string name="widget_streak_label">Streak &amp; XP</string>
     <string name="widget_quick_label">Quick Actions</string>
     <string name="widget_inspiration_label">Daily Inspiration</string>
+
+    <!-- About Screen -->
+    <string name="about_title">About Habit Loop</string>
+    <string name="about_description">Habit Loop is a dog-themed habit tracker designed to help you build and maintain daily routines. Form positive loops, gain XP, level up, and build a streak!</string>
+    <string name="about_version_title">App Version</string>
+    <string name="about_faq_title">Frequently Asked Questions</string>
+    <string name="about_feedback_title">Help &amp; Feedback</string>
+    <string name="about_feedback_desc">Found a bug or have a suggestion? Let us know!</string>
+    <string name="about_feedback_subject">Feedback Type</string>
+    <string name="about_feedback_message">Message</string>
+    <string name="about_feedback_email">Your Email (Optional)</string>
+    <string name="about_feedback_submit">Submit Feedback</string>
+    <string name="about_feedback_empty_error">Feedback message cannot be empty</string>
+    <string name="about_feedback_success">Thank you for your feedback!</string>
+    <string name="about_support_email">Email Support</string>
+    <string name="about_rate_app">Rate &amp; Review</string>
+    <string name="about_privacy_policy">Privacy Policy</string>
 </resources>
+

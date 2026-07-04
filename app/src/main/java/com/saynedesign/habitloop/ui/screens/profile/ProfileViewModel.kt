@@ -153,6 +153,9 @@ class ProfileViewModel @Inject constructor(
             ProfileContract.Event.OnAppAppearanceClicked -> {
                 viewModelScope.launch { _effect.send(ProfileContract.Effect.NavigateToAppearance) }
             }
+            ProfileContract.Event.OnAboutClicked -> {
+                viewModelScope.launch { _effect.send(ProfileContract.Effect.NavigateToAbout) }
+            }
             else -> {} // Removed unused events for clean up
         }
     }

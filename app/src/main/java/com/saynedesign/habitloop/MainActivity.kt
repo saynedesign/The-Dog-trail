@@ -38,6 +38,11 @@ import com.saynedesign.habitloop.ui.screens.achievements.AchievementsContract
 import com.saynedesign.habitloop.ui.screens.achievements.AchievementsScreen
 import com.saynedesign.habitloop.ui.screens.achievements.AchievementsViewModel
 import com.saynedesign.habitloop.ui.screens.editprofile.EditProfileContract
+import android.content.Intent
+import android.net.Uri
+import com.saynedesign.habitloop.ui.screens.about.AboutContract
+import com.saynedesign.habitloop.ui.screens.about.AboutScreen
+import com.saynedesign.habitloop.ui.screens.about.AboutViewModel
 import com.saynedesign.habitloop.ui.screens.editprofile.EditProfileScreen
 import com.saynedesign.habitloop.ui.screens.editprofile.EditProfileViewModel
 import com.saynedesign.habitloop.ui.screens.habitdetail.HabitDetailContract
@@ -84,6 +89,7 @@ class MainActivity : ComponentActivity() {
             "achievements",
             "timer",
             "appearance",
+            "about",
                 -> TransitionStyle.Modal
             else -> TransitionStyle.Standard
         }
@@ -252,6 +258,9 @@ class MainActivity : ComponentActivity() {
                                         is HomeContract.Effect.NavigateToAchievements -> {
                                             navController.navigate("achievements")
                                         }
+                                        is HomeContract.Effect.NavigateToAbout -> {
+                                            navController.navigate("about")
+                                        }
                                     }
                                 }
                             }
@@ -342,6 +351,9 @@ class MainActivity : ComponentActivity() {
                                         is ProfileContract.Effect.NavigateToStats -> {
                                             navController.navigate("home")
                                         }
+                                        is ProfileContract.Effect.NavigateToAbout -> {
+                                            navController.navigate("about")
+                                        }
                                     }
                                 }
                             }
@@ -350,6 +362,50 @@ class MainActivity : ComponentActivity() {
                                 state = state,
                                 onEvent = viewModel::handleEvent,
                                 showBackButton = true
+                            )
+                        }
+
+                        composable("about") {
+                            val viewModel = hiltViewModel<AboutViewModel>()
+                            val state by viewModel.state.collectAsState()
+
+                            LaunchedEffect(Unit) {
+                                viewModel.effect.collect { effect ->
+                                    when (effect) {
+                                        is AboutContract.Effect.NavigateBack -> {
+                                            navController.popBackStack()
+                                        }
+                                        is AboutContract.Effect.ShowToast -> {
+                                            Toast.makeText(this@MainActivity, effect.message, Toast.LENGTH_SHORT).show()
+                                        }
+                                        is AboutContract.Effect.OpenUrl -> {
+                                            try {
+                                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(effect.url))
+                                                startActivity(intent)
+                                            } catch (e: Exception) {
+                                                Toast.makeText(this@MainActivity, "Could not open link", Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
+                                        is AboutContract.Effect.SendEmail -> {
+                                            try {
+                                                val intent = Intent(Intent.ACTION_SENDTO).apply {
+                                                    data = Uri.parse("mailto:")
+                                                    putExtra(Intent.EXTRA_EMAIL, arrayOf(effect.address))
+                                                    putExtra(Intent.EXTRA_SUBJECT, effect.subject)
+                                                    putExtra(Intent.EXTRA_TEXT, effect.body)
+                                                }
+                                                startActivity(Intent.createChooser(intent, "Send Email"))
+                                            } catch (e: Exception) {
+                                                Toast.makeText(this@MainActivity, "Could not open email client", Toast.LENGTH_SHORT).show()
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            AboutScreen(
+                                state = state,
+                                onEvent = viewModel::handleEvent
                             )
                         }
 

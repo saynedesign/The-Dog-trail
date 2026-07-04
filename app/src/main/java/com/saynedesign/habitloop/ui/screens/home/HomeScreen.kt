@@ -158,6 +158,9 @@ fun HomeScreen(
                                     is ProfileContract.Effect.NavigateToStats -> {
                                         onEvent(HomeContract.Event.OnReportClicked)
                                     }
+                                    is ProfileContract.Effect.NavigateToAbout -> {
+                                        onEvent(HomeContract.Event.OnAboutRequested)
+                                    }
                                     is ProfileContract.Effect.ShowToast -> {
                                         Toast.makeText(context, effect.message, Toast.LENGTH_SHORT).show()
                                     }

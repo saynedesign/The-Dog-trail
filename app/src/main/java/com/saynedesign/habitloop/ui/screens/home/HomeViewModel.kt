@@ -43,6 +43,9 @@ class HomeViewModel @Inject constructor() : ViewModel() {
             is HomeContract.Event.OnAppearanceRequested -> {
                 sendEffect(HomeContract.Effect.NavigateToAppearance)
             }
+            is HomeContract.Event.OnAboutRequested -> {
+                sendEffect(HomeContract.Effect.NavigateToAbout)
+            }
         }
     }
 
