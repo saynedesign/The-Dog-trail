@@ -560,32 +560,37 @@ fun LevelCard(levelInfo: LevelSystem.LevelInfo, currentLevel: Int) {
                 .padding(vertical = 12.dp, horizontal = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Badge Circle containing Emoji (if unlocked) or Lock (if locked)
+            // Badge Circle containing dynamic rank image (if unlocked) or translucent with lock (if locked)
             Box(
                 modifier = Modifier
-                    .size(if (isCurrent) 44.dp else 40.dp)
-                    .background(
-                        color = when {
-                            isCompleted -> Color(0xFFF0ECFF)
-                            isCurrent -> Color(0xFFF0ECFF)
-                            else -> Color(0xFFE8EAF6)
-                        },
+                    .size(if (isCurrent) 50.dp else 46.dp)
+                    .background(Color(0xFFE8EAF6), CircleShape)
+                    .border(
+                        BorderStroke(
+                            width = if (isCurrent) 2.dp else 1.dp,
+                            color = if (isCurrent) Color(0xFF6C4BFF) else Color.Transparent
+                        ),
                         shape = CircleShape
-                    ),
+                    )
+                    .clip(CircleShape),
                 contentAlignment = Alignment.Center
             ) {
+                Image(
+                    painter = painterResource(LevelSystem.getLevelDrawableRes(level)),
+                    contentDescription = name,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    alpha = if (isLocked) 0.35f else 1.0f
+                )
                 if (isLocked) {
                     Icon(
                         imageVector = Icons.Default.Lock,
-                        contentDescription = null,
-                        tint = Color(0xFF9A89FF),
-                        modifier = Modifier.size(18.dp)
-                    )
-                } else {
-                    Text(
-                        text = emoji,
-                        style = MaterialTheme.typography.titleMedium,
-                        textAlign = TextAlign.Center
+                        contentDescription = "Locked",
+                        tint = Color.White,
+                        modifier = Modifier
+                            .size(16.dp)
+                            .background(Color.Black.copy(alpha = 0.4f), CircleShape)
+                            .padding(2.dp)
                     )
                 }
             }

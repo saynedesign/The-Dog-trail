@@ -19,10 +19,29 @@ interface ReportContract {
         val strongDays: Int = 0,
         val totalEffortPoints: Int = 0,
         val restDayEpochs: Set<Long> = emptySet(),
-        // XP
+                // XP
         val totalXp: Int = 0,
         val currentLevel: Int = 1,
-        val weeklyXp: Int = 0
+        val weeklyXp: Int = 0,
+        // Engine V2 Insights
+        val highlights: List<String> = emptyList(),
+        val insights: List<String> = emptyList(),
+        val advices: List<String> = emptyList(),
+        val habitScores: List<HabitScore> = emptyList(),
+        val levelProjectionDays: Int = -1,
+        val isEngineLoading: Boolean = false
+    )
+
+    data class HabitScore(
+        val habitId: Long,
+        val title: String,
+        val grade: String,
+        val consistency7d: Int,
+        val consistency30d: Int,
+        val currentStreak: Int,
+        val longestStreak: Int,
+        val trend: String,
+        val ageDays: Int
     )
 
     sealed class Event {

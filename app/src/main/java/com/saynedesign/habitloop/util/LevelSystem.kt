@@ -1,5 +1,7 @@
 package com.saynedesign.habitloop.util
 
+import com.saynedesign.habitloop.R
+
 object LevelSystem {
     // XP-based level system with dog-themed names
     data class LevelInfo(
@@ -10,17 +12,33 @@ object LevelSystem {
     )
 
     val levelInfos = listOf(
-        LevelInfo(1, "Pup", "🐾", 0),
-        LevelInfo(2, "Good Boy", "🐕", 100),
-        LevelInfo(3, "Bone Collector", "🦴", 500),
-        LevelInfo(4, "Pack Leader", "🏅", 2000),
-        LevelInfo(5, "Alpha", "🌟", 5000),
-        LevelInfo(6, "Sir Barks-a-Lot", "🎩", 10000),
-        LevelInfo(7, "Golden Retriever", "✨", 50000),
-        LevelInfo(8, "Cerberus", "🔥", 100000),
-        LevelInfo(9, "Legend", "🏆", 500000),
-        LevelInfo(10, "Mythic Doge", "🐕‍🦺", 1000000)
+        LevelInfo(1, "Initiate", "🗡️", 0),
+        LevelInfo(2, "Guardian", "🛡️", 100),
+        LevelInfo(3, "Vanguard", "⚔️", 500),
+        LevelInfo(4, "Gladiator", "🏅", 2000),
+        LevelInfo(5, "Centurion", "🎖️", 5000),
+        LevelInfo(6, "Shogun", "⛩️", 10000),
+        LevelInfo(7, "Warlord", "👑", 50000),
+        LevelInfo(8, "Grandmaster", "🏆", 100000),
+        LevelInfo(9, "Overlord", "🔱", 500000),
+        LevelInfo(10, "Undefeated Legend", "🌟", 1000000)
     )
+
+    fun getLevelDrawableRes(level: Int): Int {
+        return when (level) {
+            1 -> R.drawable.warrior_level_1
+            2 -> R.drawable.warrior_level_2
+            3 -> R.drawable.warrior_level_3
+            4 -> R.drawable.warrior_level_4
+            5 -> R.drawable.warrior_level_5
+            6 -> R.drawable.warrior_level_6
+            7 -> R.drawable.warrior_level_7
+            8 -> R.drawable.warrior_level_8
+            9 -> R.drawable.warrior_level_9
+            10 -> R.drawable.warrior_level_10
+            else -> R.drawable.warrior_level_1
+        }
+    }
 
     // Backward-compatible: maps level->requiredXp (replaces habit count)
     val levels = levelInfos.map { it.level to it.requiredXp }

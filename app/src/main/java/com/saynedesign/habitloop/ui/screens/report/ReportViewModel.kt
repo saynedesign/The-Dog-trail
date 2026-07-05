@@ -61,15 +61,17 @@ class ReportViewModel @Inject constructor(
             combine(
                 habitDao.getAllHabits(),
                 habitLogDao.getAllLogs(),
-                habitRestDayDao.getAllRestDays()
-            ) { habits, logs, restDays ->
+                habitRestDayDao.getAllRestDays(),
+                userDao.getUser()
+            ) { habits, logs, restDays, user ->
                 data class CombinedData(
                     val habits: List<com.saynedesign.habitloop.data.HabitEntity>,
                     val logs: List<com.saynedesign.habitloop.data.HabitLogEntity>,
-                    val restDays: List<com.saynedesign.habitloop.data.HabitRestDayEntity>
+                    val restDays: List<com.saynedesign.habitloop.data.HabitRestDayEntity>,
+                    val user: com.saynedesign.habitloop.data.UserEntity?
                 )
-                CombinedData(habits, logs, restDays)
-            }.collect { (habits, logs, restDays) ->
+                CombinedData(habits, logs, restDays, user)
+            }.collect { (habits, logs, restDays, user) ->
                 val today = LocalDate.now()
 
                 // Build rest day sets
@@ -229,6 +231,100 @@ class ReportViewModel @Inject constructor(
                     totalEffortPoints = totalEffortPoints,
                     restDayEpochs = restDayEpochsAll
                 )
+
+                // Trigger JNI calculations asynchronously
+                viewModelScope.launch(kotlinx.coroutines.Dispatchers.Default) {
+                    _state.value = _state.value.copy(isEngineLoading = true)
+                    try {
+                        val hIds = habits.map { it.id }.toLongArray()
+                        val hTitles = habits.map { it.title }.toTypedArray()
+                        val hTargetValues = habits.map { it.targetValue }.toFloatArray()
+                        val hUnits = habits.map { it.unit }.toTypedArray()
+                        val hTypes = habits.map { it.type }.toTypedArray()
+                        val hSelectedDays = habits.map { it.selectedDays }.toTypedArray()
+                        val hFrequencies = habits.map { it.frequency }.toTypedArray()
+                        val hTimesOfDay = habits.map { it.timeOfDay }.toTypedArray()
+                        val hCreatedEpochDays = habits.map {
+                            java.time.Instant.ofEpochMilli(it.createdTimestamp)
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDate()
+                                .toEpochDay()
+                        }.toLongArray()
+
+                        val logHabitIds = logs.map { it.habitId }.toLongArray()
+                        val logDates = logs.map { it.dateEpochDay }.toLongArray()
+                        val logValues = logs.map { it.value ?: 0f }.toFloatArray()
+
+                        val todayEpochDay = LocalDate.now().toEpochDay()
+
+                        val jsonResult = com.saynedesign.habitloop.data.InsightEngine.generateInsightsJson(
+                            userName = user?.name.orEmpty(),
+                            userDob = user?.dob.orEmpty(),
+                            userHeight = user?.height ?: 0f,
+                            userXp = user?.totalXp ?: 0,
+                            userLevel = user?.currentLevel ?: 1,
+                            userJournal = user?.journal.orEmpty(),
+                            habitIds = hIds,
+                            habitTitles = hTitles,
+                            habitTargetValues = hTargetValues,
+                            habitUnits = hUnits,
+                            habitTypes = hTypes,
+                            habitSelectedDays = hSelectedDays,
+                            habitFrequencies = hFrequencies,
+                            habitTimesOfDay = hTimesOfDay,
+                            habitCreatedEpochDays = hCreatedEpochDays,
+                            logHabitIds = logHabitIds,
+                            logDates = logDates,
+                            logValues = logValues,
+                            todayEpochDay = todayEpochDay
+                        )
+
+                        val jsonObject = org.json.JSONObject(jsonResult)
+
+                        fun parseStringArray(key: String): List<String> {
+                            val arr = jsonObject.optJSONArray(key) ?: return emptyList()
+                            return (0 until arr.length()).map { arr.getString(it) }
+                        }
+
+                        val highlightsList = parseStringArray("highlights")
+                        val insightsList = parseStringArray("insights")
+                        val advicesList = parseStringArray("advices")
+                        val levelProj = jsonObject.optInt("levelProjectionDays", -1)
+
+                        val habitScoresList = mutableListOf<ReportContract.HabitScore>()
+                        val scoresArr = jsonObject.optJSONArray("habitScores")
+                        if (scoresArr != null) {
+                            for (i in 0 until scoresArr.length()) {
+                                val obj = scoresArr.getJSONObject(i)
+                                habitScoresList.add(
+                                    ReportContract.HabitScore(
+                                        habitId = obj.optLong("habitId"),
+                                        title = obj.optString("title"),
+                                        grade = obj.optString("grade"),
+                                        consistency7d = obj.optInt("consistency7d"),
+                                        consistency30d = obj.optInt("consistency30d"),
+                                        currentStreak = obj.optInt("currentStreak"),
+                                        longestStreak = obj.optInt("longestStreak"),
+                                        trend = obj.optString("trend"),
+                                        ageDays = obj.optInt("ageDays")
+                                    )
+                                )
+                            }
+                        }
+
+                        _state.value = _state.value.copy(
+                            highlights = highlightsList,
+                            insights = insightsList,
+                            advices = advicesList,
+                            habitScores = habitScoresList,
+                            levelProjectionDays = levelProj,
+                            isEngineLoading = false
+                        )
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        _state.value = _state.value.copy(isEngineLoading = false)
+                    }
+                }
             }
         }
     }
