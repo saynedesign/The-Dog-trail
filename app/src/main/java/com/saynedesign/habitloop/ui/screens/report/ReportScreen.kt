@@ -18,7 +18,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -62,13 +61,6 @@ fun ReportScreen(
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFF8B93A6)
                         )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = {
-                        // Open current month datepicker or show options
-                    }) {
-                        Icon(Icons.Default.DateRange, contentDescription = "Calendar", tint = Color.White)
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
