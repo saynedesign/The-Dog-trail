@@ -30,6 +30,7 @@ class UserPreferencesRepository @Inject constructor(
         val IS_VACATION_MODE = booleanPreferencesKey("is_vacation_mode")
         val IS_DAILY_REMINDER_ENABLED = booleanPreferencesKey("is_daily_reminder_enabled")
         val IS_OVERLAY_REMINDER_ENABLED = booleanPreferencesKey("is_overlay_reminder_enabled")
+        val OVERLAY_REMINDER_SOUND = stringPreferencesKey("overlay_reminder_sound")
         val REMINDER_TIME = stringPreferencesKey("reminder_time")
         val APP_THEME = stringPreferencesKey("app_theme")
     }
@@ -61,6 +62,10 @@ class UserPreferencesRepository @Inject constructor(
 
     val isOverlayReminderEnabled: Flow<Boolean> = dataStore.data.map { preferences ->
         preferences[PreferencesKeys.IS_OVERLAY_REMINDER_ENABLED] ?: false
+    }
+
+    val overlayReminderSound: Flow<String> = dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.OVERLAY_REMINDER_SOUND] ?: "alarm"
     }
 
     val reminderTime: Flow<String> = dataStore.data.map { preferences ->
@@ -117,6 +122,12 @@ class UserPreferencesRepository @Inject constructor(
     suspend fun updateOverlayReminderEnabled(enabled: Boolean) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.IS_OVERLAY_REMINDER_ENABLED] = enabled
+        }
+    }
+
+    suspend fun updateOverlayReminderSound(sound: String) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.OVERLAY_REMINDER_SOUND] = sound
         }
     }
 

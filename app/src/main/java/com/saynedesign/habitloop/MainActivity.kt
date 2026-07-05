@@ -131,41 +131,41 @@ class MainActivity : ComponentActivity() {
                             when (targetState.transitionStyle()) {
                                 TransitionStyle.Modal -> {
                                     slideInVertically(
-                                        initialOffsetY = { fullHeight -> fullHeight / 4 },
-                                        animationSpec = tween(280)
-                                    ) + fadeIn(animationSpec = tween(220))
+                                        initialOffsetY = { fullHeight -> fullHeight },
+                                        animationSpec = tween(300, easing = androidx.compose.animation.core.FastOutSlowInEasing)
+                                    ) + fadeIn(animationSpec = tween(300))
                                 }
                                 TransitionStyle.Standard -> {
                                     slideInHorizontally(
-                                        initialOffsetX = { fullWidth -> fullWidth / 3 },
-                                        animationSpec = tween(320)
-                                    ) + fadeIn(animationSpec = tween(240))
+                                        initialOffsetX = { fullWidth -> fullWidth },
+                                        animationSpec = tween(300, easing = androidx.compose.animation.core.FastOutSlowInEasing)
+                                    ) + fadeIn(animationSpec = tween(300))
                                 }
                             }
                         },
                         exitTransition = {
                             when (targetState.transitionStyle()) {
                                 TransitionStyle.Modal -> {
-                                    fadeOut(animationSpec = tween(140))
+                                    fadeOut(animationSpec = tween(300))
                                 }
                                 TransitionStyle.Standard -> {
                                     slideOutHorizontally(
-                                        targetOffsetX = { fullWidth -> -(fullWidth / 6) },
-                                        animationSpec = tween(260)
-                                    ) + fadeOut(animationSpec = tween(200))
+                                        targetOffsetX = { fullWidth -> -(fullWidth / 3) },
+                                        animationSpec = tween(300, easing = androidx.compose.animation.core.FastOutSlowInEasing)
+                                    ) + fadeOut(animationSpec = tween(300))
                                 }
                             }
                         },
                         popEnterTransition = {
                             when (initialState.transitionStyle()) {
                                 TransitionStyle.Modal -> {
-                                    fadeIn(animationSpec = tween(180))
+                                    fadeIn(animationSpec = tween(300))
                                 }
                                 TransitionStyle.Standard -> {
                                     slideInHorizontally(
-                                        initialOffsetX = { fullWidth -> -(fullWidth / 6) },
-                                        animationSpec = tween(280)
-                                    ) + fadeIn(animationSpec = tween(220))
+                                        initialOffsetX = { fullWidth -> -(fullWidth / 3) },
+                                        animationSpec = tween(300, easing = androidx.compose.animation.core.FastOutSlowInEasing)
+                                    ) + fadeIn(animationSpec = tween(300))
                                 }
                             }
                         },
@@ -173,15 +173,15 @@ class MainActivity : ComponentActivity() {
                             when (initialState.transitionStyle()) {
                                 TransitionStyle.Modal -> {
                                     slideOutVertically(
-                                        targetOffsetY = { fullHeight -> fullHeight / 4 },
-                                        animationSpec = tween(260)
-                                    ) + fadeOut(animationSpec = tween(220))
+                                        targetOffsetY = { fullHeight -> fullHeight },
+                                        animationSpec = tween(300, easing = androidx.compose.animation.core.FastOutSlowInEasing)
+                                    ) + fadeOut(animationSpec = tween(300))
                                 }
                                 TransitionStyle.Standard -> {
                                     slideOutHorizontally(
-                                        targetOffsetX = { fullWidth -> fullWidth / 3 },
-                                        animationSpec = tween(300)
-                                    ) + fadeOut(animationSpec = tween(220))
+                                        targetOffsetX = { fullWidth -> fullWidth },
+                                        animationSpec = tween(300, easing = androidx.compose.animation.core.FastOutSlowInEasing)
+                                    ) + fadeOut(animationSpec = tween(300))
                                 }
                             }
                         }
@@ -544,6 +544,9 @@ class MainActivity : ComponentActivity() {
                                         }
                                         is HabitDetailContract.Effect.NavigateToEdit -> {
                                             navController.navigate("create_habit?habitId=${effect.habitId}")
+                                        }
+                                        is HabitDetailContract.Effect.NavigateToAchievements -> {
+                                            navController.navigate("achievements")
                                         }
                                     }
                                 }

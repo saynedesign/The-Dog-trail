@@ -257,6 +257,14 @@ class HabitDetailViewModel @Inject constructor(
             is HabitDetailContract.Event.OnUpdateTodayLogValue -> {
                 updateTodayLogValue(event.value)
             }
+            is HabitDetailContract.Event.OnToggleHistorySheet -> {
+                _state.value = _state.value.copy(showFullHistorySheet = event.show)
+            }
+            HabitDetailContract.Event.OnViewAllMilestonesClicked -> {
+                viewModelScope.launch {
+                    _effect.send(HabitDetailContract.Effect.NavigateToAchievements)
+                }
+            }
         }
     }
     

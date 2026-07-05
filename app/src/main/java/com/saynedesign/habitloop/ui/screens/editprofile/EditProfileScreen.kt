@@ -147,7 +147,7 @@ fun EditProfileScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
-                    enabled = state.name.isNotBlank() && state.dob.isNotBlank() && state.height.isNotBlank() && !state.isLoading,
+                    enabled = state.name.isNotBlank() && !state.isLoading,
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary,

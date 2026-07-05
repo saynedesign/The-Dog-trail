@@ -9,6 +9,7 @@ class PreferencesContract {
         val isVacationMode: Boolean = false,
         val isDailyReminderEnabled: Boolean = true,
         val isOverlayReminderEnabled: Boolean = false,
+        val overlayReminderSound: String = "alarm",
         val reminderTime: String = "07:00",
         
         // Dialog states
@@ -33,6 +34,7 @@ class PreferencesContract {
         data class OnVacationModeToggle(val enabled: Boolean) : Event()
         data class OnDailyReminderToggle(val enabled: Boolean) : Event()
         data class OnOverlayReminderToggle(val enabled: Boolean) : Event()
+        data class OnOverlayReminderSoundChange(val sound: String) : Event()
         
         data object OnClearCacheClicked : Event()
         data object OnRestartHabitsClicked : Event()

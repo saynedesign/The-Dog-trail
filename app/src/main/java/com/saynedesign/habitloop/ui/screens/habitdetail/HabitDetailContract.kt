@@ -21,7 +21,8 @@ interface HabitDetailContract {
         val restDayEpochs: Set<Long> = emptySet(),
         // Today Status
         val isCompletedToday: Boolean = false,
-        val todayLogValue: Float = 0f
+        val todayLogValue: Float = 0f,
+        val showFullHistorySheet: Boolean = false
     )
 
     sealed class Event {
@@ -30,10 +31,13 @@ interface HabitDetailContract {
         data object OnDeleteClicked : Event()
         data class OnToggleTodayCompletion(val isDone: Boolean) : Event()
         data class OnUpdateTodayLogValue(val value: Float) : Event()
+        data class OnToggleHistorySheet(val show: Boolean) : Event()
+        data object OnViewAllMilestonesClicked : Event()
     }
 
     sealed class Effect {
         data object NavigateBack : Effect()
         data class NavigateToEdit(val habitId: Long) : Effect()
+        data object NavigateToAchievements : Effect()
     }
 }

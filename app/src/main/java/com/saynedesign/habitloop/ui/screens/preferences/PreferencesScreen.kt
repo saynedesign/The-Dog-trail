@@ -10,8 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,6 +32,51 @@ fun PreferencesScreen(
     onEvent: (PreferencesContract.Event) -> Unit
 ) {
     val context = LocalContext.current
+    var showSoundDialog by remember { mutableStateOf(false) }
+
+    if (showSoundDialog) {
+        AlertDialog(
+            onDismissRequest = { showSoundDialog = false },
+            title = { Text("Select Overlay Sound") },
+            text = {
+                Column {
+                    val options = listOf(
+                        "alarm" to "System Alarm 🚨",
+                        "notification" to "System Notification 🔔",
+                        "ringtone" to "System Ringtone 🎵",
+                        "mute" to "Muted 🔇"
+                    )
+                    options.forEach { (key, label) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    onEvent(PreferencesContract.Event.OnOverlayReminderSoundChange(key))
+                                    showSoundDialog = false
+                                }
+                                .padding(vertical = 12.dp, horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = (state.overlayReminderSound == key),
+                                onClick = {
+                                    onEvent(PreferencesContract.Event.OnOverlayReminderSoundChange(key))
+                                    showSoundDialog = false
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(text = label, style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showSoundDialog = false }) {
+                    Text("Close")
+                }
+            }
+        )
+    }
 
     if (state.showTimePicker && state.timePickerType != null) {
         val calendar = Calendar.getInstance()
@@ -179,8 +223,22 @@ fun PreferencesScreen(
                                 onEvent(PreferencesContract.Event.OnOverlayReminderToggle(false))
                             }
                         },
-                        showDivider = false
+                        showDivider = state.isOverlayReminderEnabled
                     )
+                    if (state.isOverlayReminderEnabled) {
+                        PreferenceItem(
+                            title = "Overlay Reminder Sound",
+                            value = when (state.overlayReminderSound) {
+                                "alarm" -> "System Alarm"
+                                "notification" -> "System Notification"
+                                "ringtone" -> "System Ringtone"
+                                "mute" -> "Silent"
+                                else -> state.overlayReminderSound.replaceFirstChar { it.uppercase() }
+                            },
+                            onClick = { showSoundDialog = true },
+                            showDivider = false
+                        )
+                    }
                 }
             }
 
