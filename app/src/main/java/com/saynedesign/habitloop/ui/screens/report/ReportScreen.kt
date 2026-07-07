@@ -36,6 +36,13 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAdjusters
 
+// Semantic accent colors (intentionally constant across light/dark themes)
+private val InsightGradient = listOf(Color(0xFF1A1230), Color(0xFF3B1E43), Color(0xFF8D4F38))
+private val PositiveBadgeGreen = Color(0xFF2E7D32)
+private val PositiveTrendGreen = Color(0xFF81C784)
+private val NegativeTrendRed = Color(0xFFE57373)
+private val MilestoneAchievedBorder = Color(0xFF9E86FF)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportScreen(
@@ -45,7 +52,7 @@ fun ReportScreen(
 ) {
     Scaffold(
         modifier = modifier,
-        containerColor = Color(0xFF070B19), // Midnight dark background matching mockup
+        containerColor = MaterialTheme.colorScheme.background,
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -54,17 +61,17 @@ fun ReportScreen(
                             text = "Growth 🌱",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onBackground
                         )
                         Text(
                             text = "Your journey to a better you",
                             style = MaterialTheme.typography.bodySmall,
-                            color = Color(0xFF8B93A6)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color(0xFF070B19)
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         }
@@ -122,25 +129,27 @@ fun ReportScreen(
 fun XpLevelProgressCard(state: ReportContract.State) {
     val currentLevelInfo = LevelSystem.getLevelInfo(state.currentLevel)
     val nextLevelInfo = LevelSystem.getLevelInfo(state.currentLevel + 1)
-    
+
     val currentLevelXp = currentLevelInfo.requiredXp
     val nextLevelXp = nextLevelInfo.requiredXp
     val xpInLevel = state.totalXp - currentLevelXp
     val xpRequiredForLevel = nextLevelXp - currentLevelXp
-    
+
     val progress = if (xpRequiredForLevel > 0) {
         (xpInLevel.toFloat() / xpRequiredForLevel.toFloat()).coerceIn(0f, 1f)
     } else {
         1.0f
     }
-    
+
     val xpToLevelUp = (nextLevelXp - state.totalXp).coerceAtLeast(0)
+    val accent = MaterialTheme.colorScheme.secondary
+    val subtleFill = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF141A30)), // Deep blue card surface
-        border = BorderStroke(1.dp, Color(0xFF29314F))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Row(
             modifier = Modifier
@@ -152,8 +161,8 @@ fun XpLevelProgressCard(state: ReportContract.State) {
             Box(
                 modifier = Modifier
                     .size(80.dp)
-                    .background(Color(0xFF232A45), CircleShape)
-                    .border(2.dp, Color(0xFF6C4BFF), CircleShape)
+                    .background(subtleFill, CircleShape)
+                    .border(2.dp, accent, CircleShape)
                     .clip(CircleShape)
             ) {
                 Image(
@@ -178,22 +187,22 @@ fun XpLevelProgressCard(state: ReportContract.State) {
                             text = "LEVEL ${state.currentLevel}",
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF6C4BFF)
+                            color = accent
                         )
                         Text(
                             text = "${currentLevelInfo.name} ${currentLevelInfo.emoji}",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onSurface
                         )
                     }
-                    
+
                     // View Rewards link
                     Text(
                         text = "View Rewards >",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.SemiBold,
-                        color = Color(0xFF8B93A6),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.clickable { /* Rewards action */ }
                     )
                 }
@@ -203,14 +212,14 @@ fun XpLevelProgressCard(state: ReportContract.State) {
                 // Next Level Pill
                 Box(
                     modifier = Modifier
-                        .background(Color(0xFF232A45), RoundedCornerShape(12.dp))
+                        .background(subtleFill, RoundedCornerShape(12.dp))
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
                         text = "Next: ${nextLevelInfo.name} ${nextLevelInfo.emoji}",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Medium,
-                        color = Color(0xFFE8EAF6)
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
 
@@ -223,8 +232,8 @@ fun XpLevelProgressCard(state: ReportContract.State) {
                         .fillMaxWidth()
                         .height(8.dp)
                         .clip(RoundedCornerShape(4.dp)),
-                    color = Color(0xFF6C4BFF),
-                    trackColor = Color(0xFF232A45)
+                    color = accent,
+                    trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
                 )
 
                 Spacer(modifier = Modifier.height(6.dp))
@@ -236,12 +245,12 @@ fun XpLevelProgressCard(state: ReportContract.State) {
                     Text(
                         text = "⭐ ${state.totalXp} / ${nextLevelXp} XP",
                         style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF8B93A6)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
                         text = "$xpToLevelUp XP to Level ${state.currentLevel + 1}",
                         style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF8B93A6)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -260,8 +269,8 @@ fun WeeklyMetricsCard(state: ReportContract.State) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF141A30)),
-        border = BorderStroke(1.dp, Color(0xFF29314F))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             // Header Row
@@ -275,27 +284,27 @@ fun WeeklyMetricsCard(state: ReportContract.State) {
                         text = "This Week",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = dateRangeStr,
                         style = MaterialTheme.typography.bodySmall,
-                        color = Color(0xFF8B93A6)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                
+
                 // Static positive indicator comparing to last week
                 Box(
                     modifier = Modifier
-                        .background(Color(0xFF2E7D32).copy(alpha = 0.15f), RoundedCornerShape(8.dp))
+                        .background(PositiveBadgeGreen.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
                         text = "▲ 14% vs last week",
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
-                        color = Color(0xFF81C784)
+                        color = PositiveTrendGreen
                     )
                 }
             }
@@ -365,12 +374,12 @@ fun MetricItem(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = FontWeight.Bold,
-            color = Color.White
+            color = MaterialTheme.colorScheme.onSurface
         )
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            color = Color(0xFF8B93A6),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1
         )
     }
@@ -379,8 +388,8 @@ fun MetricItem(
 @Composable
 fun JniSunsetInsightCard(state: ReportContract.State) {
     // Select the best insight or advice to feature in the sunset card
-    val featuredInsight = state.insights.firstOrNull() 
-        ?: state.advices.firstOrNull() 
+    val featuredInsight = state.insights.firstOrNull()
+        ?: state.advices.firstOrNull()
         ?: "Keep logging your habits to generate custom C++ insights!"
 
     Card(
@@ -391,15 +400,7 @@ fun JniSunsetInsightCard(state: ReportContract.State) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    Brush.horizontalGradient(
-                        colors = listOf(
-                            Color(0xFF1A1230), // Dark indigo
-                            Color(0xFF3B1E43), // Deep purple
-                            Color(0xFF8D4F38)  // Warm sunset orange
-                        )
-                    )
-                )
+                .background(Brush.horizontalGradient(colors = InsightGradient))
                 .padding(16.dp)
         ) {
             Column(modifier = Modifier.fillMaxWidth()) {
@@ -431,8 +432,8 @@ fun HabitPerformanceCard(state: ReportContract.State) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF141A30)),
-        border = BorderStroke(1.dp, Color(0xFF29314F))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             // Header Row
@@ -445,14 +446,14 @@ fun HabitPerformanceCard(state: ReportContract.State) {
                     text = "Habit Performance",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-                
+
                 Text(
                     text = if (expanded.value) "Show Less" else "View All Habits >",
                     style = MaterialTheme.typography.bodySmall,
                     fontWeight = FontWeight.SemiBold,
-                    color = Color(0xFF6C4BFF),
+                    color = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.clickable { expanded.value = !expanded.value }
                 )
             }
@@ -460,12 +461,12 @@ fun HabitPerformanceCard(state: ReportContract.State) {
             Spacer(modifier = Modifier.height(16.dp))
 
             val displayScores = if (expanded.value) state.habitScores else state.habitScores.take(5)
-            
+
             if (displayScores.isEmpty()) {
                 Text(
                     text = "No active habits tracked yet. Start completing habits on the Home screen!",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF8B93A6)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -478,7 +479,7 @@ fun HabitPerformanceCard(state: ReportContract.State) {
                             score.title.contains("sleep", ignoreCase = true) -> Color(0xFF6A1B9A) to "😴"
                             else -> Color(0xFF00ACC1) to "⚡"
                         }
-                        
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             verticalAlignment = Alignment.CenterVertically
@@ -492,21 +493,21 @@ fun HabitPerformanceCard(state: ReportContract.State) {
                             ) {
                                 Text(text = emoji, fontSize = 16.sp)
                             }
-                            
+
                             Spacer(modifier = Modifier.width(12.dp))
-                            
+
                             // Habit Title
                             Text(
                                 text = score.title,
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold,
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.width(100.dp),
                                 maxLines = 1
                             )
-                            
+
                             Spacer(modifier = Modifier.width(12.dp))
-                            
+
                             // Progress bar
                             val progressFactor = (score.consistency30d / 100f).coerceIn(0f, 1f)
                             LinearProgressIndicator(
@@ -516,27 +517,27 @@ fun HabitPerformanceCard(state: ReportContract.State) {
                                     .height(6.dp)
                                     .clip(RoundedCornerShape(3.dp)),
                                 color = catColor,
-                                trackColor = Color(0xFF232A45)
+                                trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
                             )
-                            
+
                             Spacer(modifier = Modifier.width(16.dp))
-                            
+
                             // Percentage text
                             Text(
                                 text = "${score.consistency30d}%",
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 modifier = Modifier.width(42.dp)
                             )
-                            
+
                             // Trend
                             val (trendText, trendColor) = when (score.trend) {
-                                "improving" -> "▲ 8%" to Color(0xFF81C784)
-                                "declining" -> "▼ 4%" to Color(0xFFE57373)
-                                else -> "—" to Color(0xFF8B93A6)
+                                "improving" -> "▲ 8%" to PositiveTrendGreen
+                                "declining" -> "▼ 4%" to NegativeTrendRed
+                                else -> "—" to MaterialTheme.colorScheme.onSurfaceVariant
                             }
-                            
+
                             Text(
                                 text = trendText,
                                 style = MaterialTheme.typography.labelSmall,
@@ -563,12 +564,15 @@ fun MilestonesTimelineCard(state: ReportContract.State) {
         MilestoneItem("Legend", "👑", state.currentLevel >= 9)
     )
     val achievedCount = milestones.count { it.isAchieved }
+    val accent = MaterialTheme.colorScheme.secondary
+    val lockedFill = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
+    val lockedOutline = MaterialTheme.colorScheme.outlineVariant
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF141A30)),
-        border = BorderStroke(1.dp, Color(0xFF29314F))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             // Header Row
@@ -581,12 +585,12 @@ fun MilestonesTimelineCard(state: ReportContract.State) {
                     text = "Milestones",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = "$achievedCount / ${milestones.size} Achieved",
                     style = MaterialTheme.typography.bodySmall,
-                    color = Color(0xFF8B93A6)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
@@ -609,12 +613,12 @@ fun MilestonesTimelineCard(state: ReportContract.State) {
                             modifier = Modifier
                                 .size(50.dp)
                                 .background(
-                                    color = if (milestone.isAchieved) Color(0xFF6C4BFF) else Color(0xFF232A45),
+                                    color = if (milestone.isAchieved) accent else lockedFill,
                                     shape = CircleShape
                                 )
                                 .border(
                                     width = 2.dp,
-                                    color = if (milestone.isAchieved) Color(0xFF9E86FF) else Color(0xFF29314F),
+                                    color = if (milestone.isAchieved) MilestoneAchievedBorder else lockedOutline,
                                     shape = CircleShape
                                 ),
                             contentAlignment = Alignment.Center
@@ -625,19 +629,19 @@ fun MilestonesTimelineCard(state: ReportContract.State) {
                         Text(
                             text = milestone.name,
                             style = MaterialTheme.typography.labelSmall,
-                            color = if (milestone.isAchieved) Color.White else Color(0xFF8B93A6),
+                            color = if (milestone.isAchieved) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                             maxLines = 2
                         )
                     }
-                    
+
                     // Simple divider between nodes except last
                     if (index < milestones.size - 1) {
                         Box(
                             modifier = Modifier
                                 .width(20.dp)
                                 .height(2.dp)
-                                .background(if (milestone.isAchieved && milestones[index+1].isAchieved) Color(0xFF6C4BFF) else Color(0xFF29314F))
+                                .background(if (milestone.isAchieved && milestones[index + 1].isAchieved) accent else lockedOutline)
                         )
                     }
                 }
@@ -659,12 +663,15 @@ fun ConsistencyHeatmapCard(
 ) {
     val selectedMonth = state.selectedMonth
     val calendarStats = state.calendarStats
+    val accent = MaterialTheme.colorScheme.secondary
+    val emptyCellColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f)
+    val restDayColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f)
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF141A30)),
-        border = BorderStroke(1.dp, Color(0xFF29314F))
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             // Header Row
@@ -678,37 +685,37 @@ fun ConsistencyHeatmapCard(
                         text = "Consistency Heatmap",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Icon(
                         Icons.Default.Info,
                         contentDescription = "Info",
-                        tint = Color(0xFF8B93A6),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(16.dp)
                     )
                 }
-                
+
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(
                         onClick = { onMonthChange(selectedMonth.minusMonths(1)) },
                         modifier = Modifier.size(24.dp)
                     ) {
-                        Icon(Icons.Default.ChevronLeft, null, tint = Color.White)
+                        Icon(Icons.Default.ChevronLeft, null, tint = MaterialTheme.colorScheme.onSurface)
                     }
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = selectedMonth.format(DateTimeFormatter.ofPattern("MMM yyyy")),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     IconButton(
                         onClick = { onMonthChange(selectedMonth.plusMonths(1)) },
                         modifier = Modifier.size(24.dp)
                     ) {
-                        Icon(Icons.Default.ChevronRight, null, tint = Color.White)
+                        Icon(Icons.Default.ChevronRight, null, tint = MaterialTheme.colorScheme.onSurface)
                     }
                 }
             }
@@ -716,15 +723,24 @@ fun ConsistencyHeatmapCard(
             Spacer(modifier = Modifier.height(16.dp))
 
             // Calendar Heatmap Grid
-            val daysOfWeekLabels = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
-            
+            val daysOfWeekLabels = if (state.weekStartsOn == com.saynedesign.habitloop.data.WeekStartsOn.SUNDAY) {
+                listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
+            } else {
+                listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+            }
+
             // Pad start of month
             val firstDayOfWeek = selectedMonth.withDayOfMonth(1).dayOfWeek.value // 1=Mon
             val daysInMonth = selectedMonth.lengthOfMonth()
-            
-            val totalCells = firstDayOfWeek - 1 + daysInMonth
+
+            val paddingOffset = if (state.weekStartsOn == com.saynedesign.habitloop.data.WeekStartsOn.SUNDAY) {
+                firstDayOfWeek % 7
+            } else {
+                firstDayOfWeek - 1
+            }
+            val totalCells = paddingOffset + daysInMonth
             val rows = (totalCells + 6) / 7
-            
+
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 // Header of week days
                 Row(
@@ -735,13 +751,13 @@ fun ConsistencyHeatmapCard(
                         Text(
                             text = label,
                             style = MaterialTheme.typography.labelSmall,
-                            color = Color(0xFF8B93A6),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.weight(1f),
                             textAlign = androidx.compose.ui.text.style.TextAlign.Center
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(4.dp))
 
                 for (row in 0 until rows) {
@@ -751,19 +767,19 @@ fun ConsistencyHeatmapCard(
                     ) {
                         for (col in 0 until 7) {
                             val cellIndex = row * 7 + col
-                            val dayNumber = cellIndex - (firstDayOfWeek - 1) + 1
-                            
+                            val dayNumber = cellIndex - paddingOffset + 1
+
                             if (dayNumber in 1..daysInMonth) {
                                 val date = selectedMonth.withDayOfMonth(dayNumber)
                                 val stat = calendarStats.find { it.date == date }
                                 val rate = stat?.completionRate ?: 0f
                                 val isRestDay = state.restDayEpochs.contains(date.toEpochDay())
-                                
+
                                 val itemBgColor = when {
-                                    rate >= 0.75f -> Color(0xFF6C4BFF) // Fully complete (Primary theme color)
-                                    rate > 0f -> Color(0xFF6C4BFF).copy(alpha = rate.coerceAtLeast(0.2f))
-                                    isRestDay -> Color(0xFF232A45) // Rest day indicator background
-                                    else -> Color(0xFF1C223C) // Empty cell
+                                    rate >= 0.75f -> accent // Fully complete (brand accent)
+                                    rate > 0f -> accent.copy(alpha = rate.coerceAtLeast(0.2f))
+                                    isRestDay -> restDayColor // Rest day indicator background
+                                    else -> emptyCellColor // Empty cell
                                 }
 
                                 Box(
@@ -781,7 +797,7 @@ fun ConsistencyHeatmapCard(
                                         Text(
                                             text = dayNumber.toString(),
                                             style = MaterialTheme.typography.labelSmall,
-                                            color = if (rate >= 0.75f) Color.White else Color(0xFF8B93A6)
+                                            color = if (rate >= 0.75f) MaterialTheme.colorScheme.onSecondary else MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
                                 }
@@ -792,7 +808,7 @@ fun ConsistencyHeatmapCard(
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(16.dp))
 
             // Legend / Key
@@ -805,15 +821,15 @@ fun ConsistencyHeatmapCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Text(text = "Less", style = MaterialTheme.typography.labelSmall, color = Color(0xFF8B93A6))
-                    Box(modifier = Modifier.size(12.dp).clip(RoundedCornerShape(3.dp)).background(Color(0xFF1C223C)))
-                    Box(modifier = Modifier.size(12.dp).clip(RoundedCornerShape(3.dp)).background(Color(0xFF6C4BFF).copy(alpha = 0.3f)))
-                    Box(modifier = Modifier.size(12.dp).clip(RoundedCornerShape(3.dp)).background(Color(0xFF6C4BFF).copy(alpha = 0.6f)))
-                    Box(modifier = Modifier.size(12.dp).clip(RoundedCornerShape(3.dp)).background(Color(0xFF6C4BFF)))
-                    Text(text = "More", style = MaterialTheme.typography.labelSmall, color = Color(0xFF8B93A6))
+                    Text(text = "Less", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Box(modifier = Modifier.size(12.dp).clip(RoundedCornerShape(3.dp)).background(emptyCellColor))
+                    Box(modifier = Modifier.size(12.dp).clip(RoundedCornerShape(3.dp)).background(accent.copy(alpha = 0.3f)))
+                    Box(modifier = Modifier.size(12.dp).clip(RoundedCornerShape(3.dp)).background(accent.copy(alpha = 0.6f)))
+                    Box(modifier = Modifier.size(12.dp).clip(RoundedCornerShape(3.dp)).background(accent))
+                    Text(text = "More", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                
-                Text(text = "Tap a day to see details", style = MaterialTheme.typography.labelSmall, color = Color(0xFF8B93A6))
+
+                Text(text = "Tap a day to see details", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

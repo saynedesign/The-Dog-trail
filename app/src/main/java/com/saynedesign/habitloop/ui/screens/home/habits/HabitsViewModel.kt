@@ -43,11 +43,13 @@ class HabitsViewModel @Inject constructor(
 
     private var logsCache: List<HabitLogEntity> = emptyList()
     private var allHabitsCache: List<HabitEntity> = emptyList()
+    private var restDaysCache: List<HabitRestDayEntity> = emptyList()
 
     init {
         loadHabits()
         loadLogs()
         loadXp()
+        loadRestDays()
     }
 
     private fun loadHabits() {
@@ -64,8 +66,50 @@ class HabitsViewModel @Inject constructor(
             habitLogDao.getAllLogs().collect { logs ->
                 logsCache = logs
                 updateHabitLogsForSelectedDate()
+                calculateActiveStreak()
             }
         }
+    }
+
+    private fun loadRestDays() {
+        viewModelScope.launch {
+            habitRestDayDao.getAllRestDays().collect { restDays ->
+                restDaysCache = restDays
+                calculateActiveStreak()
+            }
+        }
+    }
+
+    private fun calculateActiveStreak() {
+        val today = LocalDate.now()
+        val logsByDay = logsCache.groupBy { it.dateEpochDay }
+        val restDaysByEpoch = restDaysCache.groupBy { it.dateEpochDay }
+        
+        var activeMomentum = 0
+        var checkDate = today
+        val todayEpoch = today.toEpochDay()
+        val todayLogs = logsByDay[todayEpoch] ?: emptyList()
+        val todayHasRest = restDaysByEpoch.containsKey(todayEpoch)
+        if (todayLogs.isEmpty() && !todayHasRest) {
+            checkDate = checkDate.minusDays(1)
+        }
+        while (true) {
+            val epoch = checkDate.toEpochDay()
+            val dayLogs = logsByDay[epoch] ?: emptyList()
+            val dayHasRest = restDaysByEpoch.containsKey(epoch)
+            when {
+                dayHasRest && dayLogs.isEmpty() -> {
+                    checkDate = checkDate.minusDays(1)
+                }
+                dayLogs.isNotEmpty() -> {
+                    activeMomentum++
+                    checkDate = checkDate.minusDays(1)
+                }
+                else -> break
+            }
+            if (activeMomentum > 3650) break
+        }
+        _state.value = _state.value.copy(currentStreak = activeMomentum)
     }
 
     private fun loadXp() {
@@ -75,7 +119,8 @@ class HabitsViewModel @Inject constructor(
                     totalXp = user?.totalXp ?: 0,
                     currentLevel = user?.currentLevel ?: 1,
                     userName = user?.name ?: "",
-                    profileImageUri = user?.profileImageUri
+                    profileImageUri = user?.profileImageUri ?: user?.photoUri,
+                    motivationStyle = user?.motivationStyle ?: com.saynedesign.habitloop.data.MotivationStyle.SEEING_PROGRESS
                 )
             }
         }

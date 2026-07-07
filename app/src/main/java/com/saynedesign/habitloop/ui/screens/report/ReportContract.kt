@@ -1,5 +1,6 @@
 package com.saynedesign.habitloop.ui.screens.report
 
+import com.saynedesign.habitloop.data.WeekStartsOn
 import java.time.LocalDate
 
 interface ReportContract {
@@ -29,7 +30,8 @@ interface ReportContract {
         val advices: List<String> = emptyList(),
         val habitScores: List<HabitScore> = emptyList(),
         val levelProjectionDays: Int = -1,
-        val isEngineLoading: Boolean = false
+        val isEngineLoading: Boolean = false,
+        val weekStartsOn: WeekStartsOn = WeekStartsOn.MONDAY
     )
 
     data class HabitScore(

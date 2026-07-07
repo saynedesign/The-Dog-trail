@@ -6,6 +6,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.saynedesign.habitloop.data.UserDao
 import com.saynedesign.habitloop.data.UserEntity
+import com.saynedesign.habitloop.data.PrimaryGoal
+import com.saynedesign.habitloop.data.ProductivityTime
+import com.saynedesign.habitloop.data.MotivationStyle
+import com.saynedesign.habitloop.data.ExperienceLevel
+import com.saynedesign.habitloop.data.WeekStartsOn
+import com.saynedesign.habitloop.data.UnitSystem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -23,7 +29,6 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 import javax.inject.Inject
-import kotlin.math.roundToInt
 
 @HiltViewModel
 class UserInfoViewModel @Inject constructor(
@@ -48,11 +53,14 @@ class UserInfoViewModel @Inject constructor(
             is UserInfoContract.Event.OnHeightChange -> {
                 _state.value = _state.value.copy(height = event.height)
             }
+            is UserInfoContract.Event.OnWeightChange -> {
+                _state.value = _state.value.copy(weight = event.weight)
+            }
             is UserInfoContract.Event.OnImageSelected -> {
                 _state.value = _state.value.copy(profileImageUri = event.uri)
             }
             is UserInfoContract.Event.OnToggleHeightUnit -> {
-                toggleHeightUnit()
+                _state.value = _state.value.copy(isMetric = !_state.value.isMetric)
             }
             is UserInfoContract.Event.OnToggleDatePicker -> {
                 _state.value = _state.value.copy(isDatePickerVisible = !_state.value.isDatePickerVisible)
@@ -68,35 +76,34 @@ class UserInfoViewModel @Inject constructor(
                     _state.value = _state.value.copy(isDatePickerVisible = false)
                 }
             }
+            is UserInfoContract.Event.OnPrimaryGoalChange -> {
+                _state.value = _state.value.copy(primaryGoal = event.goal)
+            }
+            is UserInfoContract.Event.OnProductivityTimeChange -> {
+                _state.value = _state.value.copy(preferredProductivityTime = event.time)
+            }
+            is UserInfoContract.Event.OnWeeklyGoalChange -> {
+                _state.value = _state.value.copy(weeklyGoal = event.goal)
+            }
+            is UserInfoContract.Event.OnMotivationStyleChange -> {
+                _state.value = _state.value.copy(motivationStyle = event.style)
+            }
+            is UserInfoContract.Event.OnExperienceLevelChange -> {
+                _state.value = _state.value.copy(experienceLevel = event.level)
+            }
+            is UserInfoContract.Event.OnWeekStartsOnChange -> {
+                _state.value = _state.value.copy(weekStartsOn = event.startsOn)
+            }
+            is UserInfoContract.Event.OnReminderWindowChange -> {
+                _state.value = _state.value.copy(defaultReminderWindow = event.window)
+            }
+            is UserInfoContract.Event.OnTimezoneChange -> {
+                _state.value = _state.value.copy(timezone = event.timezone)
+            }
             is UserInfoContract.Event.OnSubmit -> {
                 saveUser()
             }
         }
-    }
-
-    private fun toggleHeightUnit() {
-        val currentState = _state.value
-        val currentHeight = currentState.height.toFloatOrNull()
-        
-        if (currentHeight == null) {
-            _state.value = currentState.copy(isMetric = !currentState.isMetric)
-            return
-        }
-
-        val newIsMetric = !currentState.isMetric
-        val newHeight = if (newIsMetric) {
-            // Convert FT to CM (1 ft = 30.48 cm)
-            (currentHeight * 30.48f).roundToInt().toString()
-        } else {
-            // Convert CM to FT (1 cm = 0.0328084 ft)
-            // Keeping 1 decimal place for FT
-            String.format(Locale.US, "%.1f", currentHeight * 0.0328084f)
-        }
-
-        _state.value = currentState.copy(
-            isMetric = newIsMetric,
-            height = newHeight
-        )
     }
 
     private fun saveUser() {
@@ -106,10 +113,23 @@ class UserInfoViewModel @Inject constructor(
                 val currentState = _state.value
                 
                 // Ensure height is saved in CM regardless of display unit
+                val heightVal = currentState.height.toFloatOrNull() ?: 0f
                 val heightInCm = if (currentState.isMetric) {
-                    currentState.height.toFloatOrNull() ?: 0f
+                    heightVal
                 } else {
-                    (currentState.height.toFloatOrNull() ?: 0f) * 30.48f
+                    heightVal * 30.48f
+                }
+
+                // Convert weight to KG if Imperial (1 lb = 0.453592 kg)
+                val weightVal = currentState.weight.toFloatOrNull()
+                val weightInKg = if (weightVal != null) {
+                    if (currentState.isMetric) {
+                        weightVal
+                    } else {
+                        weightVal * 0.453592f
+                    }
+                } else {
+                    null
                 }
 
                 // Copy image to internal storage if it exists
@@ -123,7 +143,19 @@ class UserInfoViewModel @Inject constructor(
                     name = currentState.name,
                     dob = currentState.dob,
                     height = heightInCm,
-                    profileImageUri = savedImageUri
+                    profileImageUri = savedImageUri,
+                    photoUri = savedImageUri,
+                    dateOfBirth = currentState.dob.ifBlank { null },
+                    weight = weightInKg,
+                    unitSystem = if (currentState.isMetric) UnitSystem.METRIC else UnitSystem.IMPERIAL,
+                    primaryGoal = currentState.primaryGoal,
+                    weeklyGoal = currentState.weeklyGoal,
+                    preferredProductivityTime = currentState.preferredProductivityTime,
+                    motivationStyle = currentState.motivationStyle,
+                    experienceLevel = currentState.experienceLevel,
+                    weekStartsOn = currentState.weekStartsOn,
+                    defaultReminderWindow = currentState.defaultReminderWindow,
+                    timezone = currentState.timezone
                 )
                 userDao.insertUser(user)
                 _effect.send(UserInfoContract.Effect.NavigateToHome)

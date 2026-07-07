@@ -286,8 +286,8 @@ fun CurrentLevelCard(state: ProfileContract.State, onClick: () -> Unit) {
                 Box(
                     modifier = Modifier
                         .size(56.dp)
-                        .background(Color(0xFF232A45), RoundedCornerShape(16.dp))
-                        .border(1.dp, Color(0xFF6C4BFF), RoundedCornerShape(16.dp))
+                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.secondary, RoundedCornerShape(16.dp))
                         .clip(RoundedCornerShape(16.dp))
                 ) {
                     Image(

@@ -42,6 +42,9 @@ import com.saynedesign.habitloop.ui.theme.AccentGold
 import com.saynedesign.habitloop.ui.theme.AccentPeach
 import com.saynedesign.habitloop.ui.theme.AccentPeachLight
 import com.saynedesign.habitloop.ui.theme.TheDogTailTheme
+import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
 
 @Composable
 fun OnboardingScreen(
@@ -169,19 +172,9 @@ fun PeopleBubblesPlaceholder() {
         label = "float1"
     )
 
-    val floatAnim2 by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = -10f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(3000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "float2"
-    )
-
     val scaleAnim by infiniteTransition.animateFloat(
-        initialValue = 0.95f,
-        targetValue = 1.05f,
+        initialValue = 0.96f,
+        targetValue = 1.04f,
         animationSpec = infiniteRepeatable(
             animation = tween(2800, easing = LinearEasing),
             repeatMode = RepeatMode.Reverse
@@ -193,59 +186,29 @@ fun PeopleBubblesPlaceholder() {
         modifier = Modifier.size(300.dp),
         contentAlignment = Alignment.Center
     ) {
-        // Large center bubble with gentle scale
+        // Background glow
         Box(
             modifier = Modifier
                 .align(Alignment.Center)
-                .offset(y = floatAnim1.dp)
                 .scale(scaleAnim)
-                .size(130.dp)
+                .size(220.dp)
                 .clip(CircleShape)
-                .background(AccentPeach.copy(alpha = 0.7f))
+                .background(
+                    Brush.radialGradient(
+                        colors = listOf(
+                            Color.White.copy(alpha = 0.12f),
+                            Color.Transparent
+                        )
+                    )
+                )
         )
-
-        // Top-left bubble
-        Box(
+        // Puppy Mascot Illustration
+        Image(
+            painter = painterResource(R.drawable.puppy_level_avatar),
+            contentDescription = "Dog Mascot",
             modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(start = 30.dp, top = 30.dp)
-                .offset(y = floatAnim2.dp)
-                .size(85.dp)
-                .clip(CircleShape)
-                .background(AccentPeachLight.copy(alpha = 0.6f))
-        )
-
-        // Top-right bubble
-        Box(
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(end = 15.dp, top = 55.dp)
+                .size(180.dp)
                 .offset(y = floatAnim1.dp)
-                .size(65.dp)
-                .clip(CircleShape)
-                .background(AccentPeachLight.copy(alpha = 0.5f))
-        )
-
-        // Bottom-left small bubble
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(start = 55.dp, bottom = 40.dp)
-                .offset(y = floatAnim2.dp)
-                .size(45.dp)
-                .clip(CircleShape)
-                .background(AccentPeach.copy(alpha = 0.4f))
-        )
-
-        // Bottom-right accent bubble
-        Box(
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(end = 30.dp, bottom = 20.dp)
-                .offset(y = floatAnim1.dp)
-                .size(55.dp)
-                .clip(CircleShape)
-                .background(AccentPeachLight.copy(alpha = 0.45f))
         )
     }
 }

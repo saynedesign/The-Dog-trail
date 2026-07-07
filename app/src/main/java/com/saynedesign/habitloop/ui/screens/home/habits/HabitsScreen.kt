@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -235,8 +236,7 @@ fun HabitsScreen(
                     }
                 }
             }
-
-            // 2. Today's Progress Card & Level Badge Card
+            // 2. Motivation custom header based on MotivationStyle
             item {
                 val totalHabits = state.habits.size
                 val completedHabits = state.habits.count { habit ->
@@ -252,124 +252,310 @@ fun HabitsScreen(
                 }
                 val levelInfo = LevelSystem.getLevelInfo(state.currentLevel)
 
-                Row(
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // Today's Progress Card (Left)
-                    Card(
-                        modifier = Modifier.weight(0.65f),
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (isDark) Color(0xFF1C202B) else Color.White
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(14.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            // Circular Indicator
-                            Box(
-                                modifier = Modifier.size(54.dp),
-                                contentAlignment = Alignment.Center
+                    when (state.motivationStyle) {
+                        com.saynedesign.habitloop.data.MotivationStyle.KEEPING_STREAKS -> {
+                            // Streak Card
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(20.dp),
+                                colors = CardDefaults.cardColors(containerColor = if (isDark) Color(0xFF2E1C18) else Color(0xFFFFF3E0)),
+                                border = BorderStroke(1.dp, if (isDark) Color(0xFF7E3B20) else Color(0xFFFFB74D))
                             ) {
-                                CircularProgressIndicator(
-                                    progress = { progress },
-                                    modifier = Modifier.fillMaxSize(),
-                                    color = Color(0xFF4B68FF),
-                                    trackColor = if (isDark) Color(0xFF222635) else Color(0xFFEEF1FF),
-                                    strokeWidth = 4.dp
-                                )
-                                Text(
-                                    text = "$completedHabits/$totalHabits",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isDark) Color.White else Color.Black
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.width(12.dp))
-
-                            Column {
-                                Text(
-                                    text = "Today's Progress",
-                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
-                                    color = if (isDark) Color(0xFF8B93A6) else Color(0xFF757575)
-                                )
-                                Text(
-                                    text = "$completedHabits of $totalHabits completed",
-                                    style = MaterialTheme.typography.labelMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    color = if (isDark) Color.White else Color.Black
-                                )
-                                Spacer(modifier = Modifier.height(6.dp))
-                                LinearProgressIndicator(
-                                    progress = { progress },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(4.dp)
-                                        .clip(CircleShape),
-                                    color = Color(0xFF4B68FF),
-                                    trackColor = if (isDark) Color(0xFF222635) else Color(0xFFEEF1FF)
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = motivationText,
-                                    style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                                    color = if (isDark) Color(0xFF8B93A6) else Color(0xFF757575),
-                                    maxLines = 1,
-                                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                                )
+                                Row(
+                                    modifier = Modifier.padding(18.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(54.dp)
+                                            .background(if (isDark) Color(0xFF4E2A1C) else Color(0xFFFFE0B2), CircleShape),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text("🔥", fontSize = 28.sp)
+                                    }
+                                    Spacer(modifier = Modifier.width(16.dp))
+                                    Column {
+                                        Text(
+                                            text = "Active Day Streak",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = if (isDark) Color(0xFFFFB74D) else Color(0xFFE65100),
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(
+                                            text = "${state.currentStreak} Days Active",
+                                            style = MaterialTheme.typography.titleLarge,
+                                            fontWeight = FontWeight.ExtraBold,
+                                            color = if (isDark) Color.White else Color.Black
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = "Keep the fire burning! Consistently perform habits daily.",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = if (isDark) Color(0xFFD7CCC8) else Color(0xFF5D4037)
+                                        )
+                                    }
+                                }
                             }
                         }
-                    }
-
-                    // Level Card (Right)
-                    Card(
-                        modifier = Modifier.weight(0.35f),
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = if (isDark) Color(0xFF222635) else Color(0xFFF3F5FF)
-                        ),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .padding(12.dp)
-                                .fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(28.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFF6C4BFF).copy(alpha = 0.12f)),
-                                contentAlignment = Alignment.Center
+                        com.saynedesign.habitloop.data.MotivationStyle.LEVELING_UP -> {
+                            // Large XP / Level Card
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(20.dp),
+                                colors = CardDefaults.cardColors(containerColor = if (isDark) Color(0xFF1E2235) else Color(0xFFE8EAF6)),
+                                border = BorderStroke(1.dp, if (isDark) Color(0xFF3F51B5) else Color(0xFFC5CAE9))
                             ) {
-                                Icon(
-                                    imageVector = Icons.Default.Star,
-                                    contentDescription = null,
-                                    tint = Color(0xFF6C4BFF),
-                                    modifier = Modifier.size(16.dp)
-                                )
+                                Column(modifier = Modifier.padding(18.dp)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(44.dp)
+                                                .background(if (isDark) Color(0xFF283593) else Color(0xFFC5CAE9), CircleShape),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(Icons.Default.Star, null, tint = Color(0xFF3F51B5), modifier = Modifier.size(24.dp))
+                                        }
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Column {
+                                            Text(
+                                                text = "LEVEL PROGRESS",
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = Color(0xFF3F51B5),
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                text = "Level ${levelInfo.level} - ${levelInfo.name}",
+                                                style = MaterialTheme.typography.titleMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (isDark) Color.White else Color.Black
+                                            )
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(14.dp))
+                                    val progressToNext = LevelSystem.getProgressToNextLevel(state.totalXp)
+                                    LinearProgressIndicator(
+                                        progress = { if (progressToNext.isNaN()) 0f else progressToNext },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(8.dp)
+                                            .clip(CircleShape),
+                                        color = Color(0xFF3F51B5),
+                                        trackColor = if (isDark) Color(0xFF222635) else Color(0xFFEEF1FF)
+                                    )
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    val req = LevelSystem.getNextLevelRequirement(state.totalXp)
+                                    Text(
+                                        text = "${state.totalXp} / $req XP",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = if (isDark) Color(0xFF8B93A6) else Color(0xFF757575)
+                                    )
+                                }
                             }
-                            Spacer(modifier = Modifier.height(6.dp))
-                            Text(
-                                text = "Level ${levelInfo.level}",
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = Color(0xFF6C4BFF)
+                        }
+                        com.saynedesign.habitloop.data.MotivationStyle.ACHIEVEMENTS -> {
+                            // Achievements / Badges Card
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(20.dp),
+                                colors = CardDefaults.cardColors(containerColor = if (isDark) Color(0xFF1E2824) else Color(0xFFE8F5E9)),
+                                border = BorderStroke(1.dp, if (isDark) Color(0xFF2E7D32) else Color(0xFFC8E6C9))
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(18.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(54.dp)
+                                            .background(if (isDark) Color(0xFF1B5E20) else Color(0xFFC8E6C9), CircleShape),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text("🏆", fontSize = 28.sp)
+                                    }
+                                    Spacer(modifier = Modifier.width(16.dp))
+                                    Column {
+                                        Text(
+                                            text = "UNLOCKED BADGES",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = Color(0xFF2E7D32),
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Text(
+                                            text = "${state.currentLevel} Badges Earned",
+                                            style = MaterialTheme.typography.titleMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = if (isDark) Color.White else Color.Black
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = "Unlock special achievements for consistency. Every milestone matters!",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = if (isDark) Color(0xFFA5D6A7) else Color(0xFF1B5E20)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        com.saynedesign.habitloop.data.MotivationStyle.QUOTES -> {
+                            // Quote Card
+                            val quotes = listOf(
+                                "We are what we repeatedly do. Excellence, then, is not an act, but a habit. - Aristotle" to "Aristotle",
+                                "It is easier to prevent bad habits than to break them. - Benjamin Franklin" to "Benjamin Franklin",
+                                "Your habits will determine your future. - Jack Canfield" to "Jack Canfield",
+                                "Small daily improvements over time lead to stunning results. - Robin Sharma" to "Robin Sharma"
                             )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            Text(
-                                text = levelInfo.name,
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
-                                color = if (isDark) Color(0xFF8B93A6) else Color(0xFF757575),
-                                maxLines = 1,
-                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-                            )
+                            val index = 0 // Show first for stable rendering
+                            val quotePair = quotes[index]
+
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(20.dp),
+                                colors = CardDefaults.cardColors(containerColor = if (isDark) Color(0xFF251C2C) else Color(0xFFF3E5F5)),
+                                border = BorderStroke(1.dp, if (isDark) Color(0xFF7B1FA2) else Color(0xFFE1BEE7))
+                            ) {
+                                Column(modifier = Modifier.padding(18.dp)) {
+                                    Text(
+                                        text = "DAILY INSPIRATION",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = Color(0xFF7B1FA2),
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Text(
+                                        text = "\"${quotePair.first.substringBefore(" -")}\"",
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        fontWeight = FontWeight.Medium,
+                                        fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                                        color = if (isDark) Color.White else Color.Black
+                                    )
+                                    Spacer(modifier = Modifier.height(6.dp))
+                                    Text(
+                                        text = "— ${quotePair.second}",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = if (isDark) Color(0xFFCE93D8) else Color(0xFF7B1FA2),
+                                        modifier = Modifier.align(Alignment.End)
+                                    )
+                                }
+                            }
+                        }
+                        else -> {
+                            // Default Progress Card + Level Badge Row
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                Card(
+                                    modifier = Modifier.weight(0.65f),
+                                    shape = RoundedCornerShape(20.dp),
+                                    colors = CardDefaults.cardColors(containerColor = if (isDark) Color(0xFF1C202B) else Color.White),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(14.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(
+                                            modifier = Modifier.size(54.dp),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            CircularProgressIndicator(
+                                                progress = { progress },
+                                                modifier = Modifier.fillMaxSize(),
+                                                color = Color(0xFF4B68FF),
+                                                trackColor = if (isDark) Color(0xFF222635) else Color(0xFFEEF1FF),
+                                                strokeWidth = 4.dp
+                                            )
+                                            Text(
+                                                text = "$completedHabits/$totalHabits",
+                                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (isDark) Color.White else Color.Black
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Column {
+                                            Text(
+                                                text = "Today's Progress",
+                                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
+                                                color = if (isDark) Color(0xFF8B93A6) else Color(0xFF757575)
+                                            )
+                                            Text(
+                                                text = "$completedHabits of $totalHabits completed",
+                                                style = MaterialTheme.typography.labelMedium,
+                                                fontWeight = FontWeight.Bold,
+                                                color = if (isDark) Color.White else Color.Black
+                                            )
+                                            Spacer(modifier = Modifier.height(6.dp))
+                                            LinearProgressIndicator(
+                                                progress = { progress },
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .height(4.dp)
+                                                    .clip(CircleShape),
+                                                color = Color(0xFF4B68FF),
+                                                trackColor = if (isDark) Color(0xFF222635) else Color(0xFFEEF1FF)
+                                            )
+                                            Spacer(modifier = Modifier.height(4.dp))
+                                            Text(
+                                                text = motivationText,
+                                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                                                color = if (isDark) Color(0xFF8B93A6) else Color(0xFF757575),
+                                                maxLines = 1,
+                                                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                            )
+                                        }
+                                    }
+                                }
+
+                                Card(
+                                    modifier = Modifier.weight(0.35f),
+                                    shape = RoundedCornerShape(20.dp),
+                                    colors = CardDefaults.cardColors(containerColor = if (isDark) Color(0xFF222635) else Color(0xFFF3F5FF)),
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .padding(12.dp)
+                                            .fillMaxWidth(),
+                                        horizontalAlignment = Alignment.CenterHorizontally,
+                                        verticalArrangement = Arrangement.Center
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .size(28.dp)
+                                                .clip(CircleShape)
+                                                .background(Color(0xFF6C4BFF).copy(alpha = 0.12f)),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Default.Star,
+                                                contentDescription = null,
+                                                tint = Color(0xFF6C4BFF),
+                                                modifier = Modifier.size(16.dp)
+                                            )
+                                        }
+                                        Spacer(modifier = Modifier.height(6.dp))
+                                        Text(
+                                            text = "Level ${levelInfo.level}",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFF6C4BFF)
+                                        )
+                                        Spacer(modifier = Modifier.height(2.dp))
+                                        Text(
+                                            text = levelInfo.name,
+                                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                                            color = if (isDark) Color(0xFF8B93A6) else Color(0xFF757575),
+                                            maxLines = 1,
+                                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                 }
