@@ -11,6 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,10 +35,27 @@ fun PreferencesScreen(
     val context = LocalContext.current
     var showSoundDialog by remember { mutableStateOf(false) }
 
+    // When the user comes back from the system overlay-permission screen with
+    // the permission granted, finish enabling overlay reminders automatically.
+    var pendingOverlayPermission by rememberSaveable { mutableStateOf(false) }
+    val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME && pendingOverlayPermission) {
+                if (android.provider.Settings.canDrawOverlays(context)) {
+                    onEvent(PreferencesContract.Event.OnOverlayReminderToggle(true))
+                }
+                pendingOverlayPermission = false
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
     if (showSoundDialog) {
         AlertDialog(
             onDismissRequest = { showSoundDialog = false },
-            title = { Text("Select Overlay Sound") },
+            title = { Text("Select Reminder Sound") },
             text = {
                 Column {
                     val options = listOf(
@@ -210,6 +228,9 @@ fun PreferencesScreen(
                         onCheckedChange = { isChecked ->
                             if (isChecked) {
                                 if (!android.provider.Settings.canDrawOverlays(context)) {
+                                    // Remember the request so we can auto-enable
+                                    // when the user returns with the permission.
+                                    pendingOverlayPermission = true
                                     val intent = android.content.Intent(
                                         android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                                         android.net.Uri.parse("package:${context.packageName}")
@@ -223,22 +244,21 @@ fun PreferencesScreen(
                                 onEvent(PreferencesContract.Event.OnOverlayReminderToggle(false))
                             }
                         },
-                        showDivider = state.isOverlayReminderEnabled
+                        showDivider = true
                     )
-                    if (state.isOverlayReminderEnabled) {
-                        PreferenceItem(
-                            title = "Overlay Reminder Sound",
-                            value = when (state.overlayReminderSound) {
-                                "alarm" -> "System Alarm"
-                                "notification" -> "System Notification"
-                                "ringtone" -> "System Ringtone"
-                                "mute" -> "Silent"
-                                else -> state.overlayReminderSound.replaceFirstChar { it.uppercase() }
-                            },
-                            onClick = { showSoundDialog = true },
-                            showDivider = false
-                        )
-                    }
+                    // Applies to both overlay and notification reminders
+                    PreferenceItem(
+                        title = "Reminder Sound",
+                        value = when (state.overlayReminderSound) {
+                            "alarm" -> "System Alarm"
+                            "notification" -> "System Notification"
+                            "ringtone" -> "System Ringtone"
+                            "mute" -> "Silent"
+                            else -> state.overlayReminderSound.replaceFirstChar { it.uppercase() }
+                        },
+                        onClick = { showSoundDialog = true },
+                        showDivider = false
+                    )
                 }
             }
 

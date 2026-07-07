@@ -138,21 +138,35 @@ private fun HabitChecklistContent(
         } else {
             displayHabits.forEach { habit ->
                 val isDone = habit.id in loggedHabitIds
+                // Explicit ✅/⬜ row instead of Glance CheckBox — the CheckBox's
+                // checked state doesn't re-render reliably on all launchers.
                 Row(
                     modifier = GlanceModifier
                         .fillMaxWidth()
-                        .padding(vertical = 2.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    CheckBox(
-                        checked = isDone,
-                        onCheckedChange = actionRunCallback<ToggleHabitAction>(
-                            actionParametersOf(
-                                HabitIdKey to habit.id,
-                                IsDoneKey to !isDone
+                        .padding(vertical = 4.dp)
+                        .clickable(
+                            actionRunCallback<ToggleHabitAction>(
+                                actionParametersOf(
+                                    HabitIdKey to habit.id,
+                                    IsDoneKey to !isDone
+                                )
                             )
                         ),
-                        text = habit.title
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (isDone) "✅" else "⬜",
+                        style = TextStyle(fontSize = 15.sp)
+                    )
+                    Spacer(modifier = GlanceModifier.width(8.dp))
+                    Text(
+                        text = habit.title,
+                        style = TextStyle(
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = if (isDone) WidgetTheme.textSecondary else WidgetTheme.textPrimary
+                        ),
+                        maxLines = 1
                     )
                 }
             }
