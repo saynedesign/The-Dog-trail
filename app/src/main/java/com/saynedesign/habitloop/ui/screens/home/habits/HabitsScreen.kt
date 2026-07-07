@@ -53,6 +53,16 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.Image
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -878,7 +888,18 @@ fun HabitsScreen(
             }
         }
 
-        // Overlay for +XP floating animation
+        // Overlay for +XP floating animation.
+        // Keep the last shown amount so the exit (fade-out) animation still
+        // renders a real number instead of "+null XP" once the state clears.
+        var lastXpAmount by remember { mutableStateOf(0) }
+        LaunchedEffect(state.xpPopAmount) {
+            val amount = state.xpPopAmount
+            if (amount != null) {
+                lastXpAmount = amount
+                delay(1500)
+                onEvent(HabitsContract.Event.OnXpPopDismissed)
+            }
+        }
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -890,24 +911,105 @@ fun HabitsScreen(
                 enter = scaleIn() + slideInVertically(initialOffsetY = { 100 }) + fadeIn(),
                 exit = fadeOut(animationSpec = tween(500))
             ) {
-                LaunchedEffect(state.xpPopAmount) {
-                    if (state.xpPopAmount != null) {
-                        delay(1500)
-                        onEvent(HabitsContract.Event.OnXpPopDismissed)
-                    }
-                }
                 Box(
                     modifier = Modifier
                         .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(16.dp))
                         .padding(horizontal = 24.dp, vertical = 12.dp)
                 ) {
                     Text(
-                        "+${state.xpPopAmount} XP",
+                        "+$lastXpAmount XP",
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onPrimary,
                         fontWeight = FontWeight.Bold
                     )
                 }
+            }
+        }
+
+        // Level-up celebration overlay
+        LevelUpOverlay(
+            level = state.levelUpToLevel,
+            onDismiss = { onEvent(HabitsContract.Event.OnLevelUpDismissed) }
+        )
+    }
+}
+
+/**
+ * Full-screen celebration shown when the user crosses into a new level.
+ * Renders the level badge with a spring pop-in, the level name, and
+ * auto-dismisses after a few seconds (also dismissible by tapping).
+ */
+@Composable
+private fun LevelUpOverlay(
+    level: Int?,
+    onDismiss: () -> Unit
+) {
+    val isDark = isAppInDarkTheme()
+
+    // Remember the last celebrated level so the fade-out still shows content.
+    var lastLevel by remember { mutableStateOf(1) }
+    LaunchedEffect(level) {
+        if (level != null) {
+            lastLevel = level
+            delay(3000)
+            onDismiss()
+        }
+    }
+
+    val levelInfo = LevelSystem.getLevelInfo(lastLevel)
+    val badgeScale by animateFloatAsState(
+        targetValue = if (level != null) 1f else 0.6f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "levelup_badge_scale"
+    )
+
+    AnimatedVisibility(
+        visible = level != null,
+        enter = fadeIn(animationSpec = tween(200)),
+        exit = fadeOut(animationSpec = tween(400))
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.55f))
+                .clickable(indication = null, interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }) { onDismiss() },
+            contentAlignment = Alignment.Center
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+                modifier = Modifier.padding(32.dp)
+            ) {
+                Text(
+                    text = "LEVEL UP!",
+                    style = MaterialTheme.typography.headlineMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Image(
+                    painter = painterResource(id = LevelSystem.getLevelDrawableRes(lastLevel)),
+                    contentDescription = "Level ${levelInfo.level} badge",
+                    modifier = Modifier
+                        .size(160.dp)
+                        .scale(badgeScale)
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Text(
+                    text = "Level ${levelInfo.level}",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White.copy(alpha = 0.85f)
+                )
+                Text(
+                    text = "${levelInfo.emoji} ${levelInfo.name}",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = if (isDark) Color(0xFF8CA0FF) else Color(0xFFFFD54F)
+                )
             }
         }
     }
