@@ -5,6 +5,7 @@ import com.saynedesign.habitloop.data.HabitDao
 import com.saynedesign.habitloop.data.HabitLogDao
 import com.saynedesign.habitloop.data.HabitLogEntity
 import com.saynedesign.habitloop.data.HabitRestDayDao
+import com.saynedesign.habitloop.data.isScheduledOn
 import com.saynedesign.habitloop.widget.WidgetUpdateHelper
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.time.LocalDate
@@ -125,10 +126,8 @@ class CompleteHabitUseCase @Inject constructor(
      * declared rest days) has a log. Mirrors the home-screen logic.
      */
     private suspend fun isPerfectDay(epochDay: Long, completedIds: Set<Long>): Boolean {
-        val dayOfWeek = LocalDate.ofEpochDay(epochDay).dayOfWeek.value // 1=Mon..7=Sun
-        val scheduled = habitDao.getAllHabitsOneShot().filter { habit ->
-            habit.selectedDays.split(",").mapNotNull { it.trim().toIntOrNull() }.contains(dayOfWeek)
-        }
+        val date = LocalDate.ofEpochDay(epochDay)
+        val scheduled = habitDao.getAllHabitsOneShot().filter { it.isScheduledOn(date) }
         val restingIds = habitRestDayDao.getRestingHabitIdsForDay(epochDay).toSet()
         val nonResting = scheduled.filter { it.id !in restingIds }
         return nonResting.isNotEmpty() && nonResting.all { it.id in completedIds }

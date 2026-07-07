@@ -63,6 +63,7 @@ class BootReceiver : BroadcastReceiver() {
                     }
 
                 MidnightRefreshReceiver.schedule(context)
+                CoachCheckReceiver.schedule(context)
                 WidgetUpdateHelper.updateAll(context)
             } catch (_: Exception) {
                 // Never crash the boot broadcast

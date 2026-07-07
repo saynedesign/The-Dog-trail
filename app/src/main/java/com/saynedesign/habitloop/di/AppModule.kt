@@ -28,7 +28,7 @@ object AppModule {
             context,
             HabitDatabase::class.java,
             "habit_database"
-        ).addMigrations(HabitDatabase.MIGRATION_7_8)
+        ).addMigrations(*HabitDatabase.ALL_MIGRATIONS)
          .build()
     }
 
@@ -60,5 +60,11 @@ object AppModule {
     @Singleton
     fun provideXpEventDao(database: HabitDatabase): XpEventDao {
         return database.xpEventDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideCoachEventDao(database: HabitDatabase): com.saynedesign.habitloop.data.CoachEventDao {
+        return database.coachEventDao()
     }
 }

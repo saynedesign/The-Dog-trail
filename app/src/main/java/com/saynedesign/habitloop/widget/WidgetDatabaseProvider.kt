@@ -19,7 +19,12 @@ object WidgetDatabaseProvider {
                 context.applicationContext,
                 HabitDatabase::class.java,
                 "habit_database"
-            ).fallbackToDestructiveMigration()
+            )
+                // Must carry the same migrations as the app's Hilt instance.
+                // The previous fallbackToDestructiveMigration() would have
+                // WIPED the entire database if a widget rendered before the
+                // app process after a schema version bump.
+                .addMigrations(*HabitDatabase.ALL_MIGRATIONS)
                 .build()
             INSTANCE = instance
             instance

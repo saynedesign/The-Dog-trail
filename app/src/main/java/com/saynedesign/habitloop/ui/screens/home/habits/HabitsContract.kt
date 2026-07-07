@@ -31,6 +31,7 @@ interface HabitsContract {
         val totalXp: Int = 0,
         val currentLevel: Int = 1,
         val xpPopAmount: Int? = null,
+        val levelUpToLevel: Int? = null,
         val userName: String = "",
         val profileImageUri: String? = null,
         
@@ -61,6 +62,7 @@ interface HabitsContract {
         
         // XP
         data object OnXpPopDismissed : Event()
+        data object OnLevelUpDismissed : Event()
     }
 
     sealed class Effect {

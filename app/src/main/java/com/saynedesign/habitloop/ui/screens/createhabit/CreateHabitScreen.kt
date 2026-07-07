@@ -23,6 +23,8 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Alarm
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import android.Manifest
@@ -33,6 +35,7 @@ import android.os.Build
 import android.provider.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -47,13 +50,18 @@ import androidx.compose.ui.unit.dp
 import com.saynedesign.habitloop.R
 import com.saynedesign.habitloop.ui.components.HabitOutlinedTextField
 import com.saynedesign.habitloop.ui.components.headerTitleBrush
-import java.text.SimpleDateFormat // Optional: If you need any formatting
+import java.text.SimpleDateFormat
 import java.util.*
 
 import com.saynedesign.habitloop.data.PrimaryGoal
-import androidx.compose.foundation.lazy.items
 import androidx.compose.ui.unit.sp
 
+/**
+ * Redesigned around progressive disclosure: a habit takes TWO decisions
+ * (name + save). Days and reminder are pre-defaulted essentials; everything
+ * else lives in "More options". The one-time toggle and the orphaned
+ * frequency selector are gone.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateHabitScreen(
@@ -61,7 +69,7 @@ fun CreateHabitScreen(
     onEvent: (CreateHabitContract.Event) -> Unit
 ) {
     val context = LocalContext.current
-    
+
     // Launcher for Android 13+ Notification Permission
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -69,7 +77,6 @@ fun CreateHabitScreen(
         if (isGranted) {
             onEvent(CreateHabitContract.Event.OnReminderToggle(true))
         } else {
-            // Permission denied, handle accordingly (e.g. show a snackbar)
             onEvent(CreateHabitContract.Event.OnReminderToggle(false))
         }
     }
@@ -84,6 +91,9 @@ fun CreateHabitScreen(
             }
         }
     }
+
+    var showMoreOptions by rememberSaveable { mutableStateOf(false) }
+    var showCustomDays by rememberSaveable { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -102,15 +112,6 @@ fun CreateHabitScreen(
             contentPadding = PaddingValues(vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item {
-                CreateHabitSection {
-                    HabitTypeToggle(
-                        isOneTime = state.isOneTime,
-                        onToggle = { onEvent(CreateHabitContract.Event.OnToggleOneTime(it)) }
-                    )
-                }
-            }
-
             // Suggested Habits Section based on Primary Goal
             if (state.habitId == null) {
                 val suggestions = when (state.userPrimaryGoal) {
@@ -186,287 +187,93 @@ fun CreateHabitScreen(
                 }
             }
 
+            // Essential 1: Name — with live icon/color preview that opens the icon sheet
             item {
                 CreateHabitSection {
                     Text(
-                        text = if (state.isOneTime) {
-                            stringResource(R.string.create_habit_task_name)
-                        } else {
-                            stringResource(R.string.create_habit_habit_name)
-                        },
+                        text = stringResource(R.string.create_habit_habit_name),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
-                    HabitOutlinedTextField(
-                        value = state.habitName,
-                        onValueChange = { onEvent(CreateHabitContract.Event.OnNameChange(it)) },
-                        placeholder = if (state.isOneTime) {
-                            stringResource(R.string.create_habit_task_name)
-                        } else {
-                            stringResource(R.string.create_habit_habit_name)
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true
-                    )
-                }
-            }
-
-            item {
-                CreateHabitSection {
-                    Text(
-                        text = "Motivation / Why (Optional)",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    HabitOutlinedTextField(
-                        value = state.description,
-                        onValueChange = { onEvent(CreateHabitContract.Event.OnDescriptionChange(it)) },
-                        placeholder = "e.g. To feel energized and healthy",
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = false
-                    )
-                }
-            }
-
-            if (!state.isOneTime) {
-                item {
-                    CreateHabitSection {
-                        Text(
-                            text = "Habit Type",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        HabitTypeSelector(
-                            selectedType = state.habitType,
-                            onTypeSelect = { onEvent(CreateHabitContract.Event.OnTypeChange(it)) }
-                        )
-                        
-                        // Show additional inputs if not Yes/No
-                        AnimatedVisibility(
-                            visible = state.habitType != CreateHabitContract.HabitType.YES_NO,
-                            enter = expandVertically() + fadeIn(),
-                            exit = shrinkVertically() + fadeOut()
-                        ) {
-                            Column(modifier = Modifier.padding(top = 16.dp)) {
-                                Text(
-                                    text = "Target",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    // At Least / At Most Toggle
-                                    Box(
-                                        modifier = Modifier
-                                            .weight(1f)
-                                            .height(56.dp)
-                                            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
-                                            .clickable { onEvent(CreateHabitContract.Event.OnTargetRuleToggle(!state.isAtLeast)) }
-                                            .padding(horizontal = 16.dp),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        Text(
-                                            text = if (state.isAtLeast) "At least" else "At most",
-                                            color = MaterialTheme.colorScheme.onSurface,
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                    }
-                                    
-                                    // Target Value Input
-                                    OutlinedTextField(
-                                        value = state.target,
-                                        onValueChange = { onEvent(CreateHabitContract.Event.OnTargetChange(it)) },
-                                        placeholder = { Text("e.g. 10") },
-                                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
-                                            keyboardType = KeyboardType.Number
-                                        ),
-                                        singleLine = true,
-                                        modifier = Modifier.weight(1f),
-                                        shape = RoundedCornerShape(12.dp),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                                        )
-                                    )
-
-                                    // Unit Input
-                                    OutlinedTextField(
-                                        value = state.unitName,
-                                        onValueChange = { onEvent(CreateHabitContract.Event.OnUnitChange(it)) },
-                                        placeholder = { Text(if (state.habitType == CreateHabitContract.HabitType.TIMER) "mins" else "times") },
-                                        singleLine = true,
-                                        modifier = Modifier.weight(1f),
-                                        shape = RoundedCornerShape(12.dp),
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
-                                        )
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            item {
-                CreateHabitSection {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Text(
-                            text = stringResource(R.string.create_habit_icon),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        TextButton(onClick = { onEvent(CreateHabitContract.Event.OnToggleIconPicker(true)) }) {
-                            Text(stringResource(R.string.create_habit_view_all), color = MaterialTheme.colorScheme.primary)
-                            Icon(Icons.Default.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Box(
+                            modifier = Modifier
+                                .size(56.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .background(Color(state.habitColor).copy(alpha = 0.35f))
+                                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp))
+                                .clickable { onEvent(CreateHabitContract.Event.OnToggleIconPicker(true)) },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = state.habitIcon, style = MaterialTheme.typography.headlineSmall)
                         }
+                        HabitOutlinedTextField(
+                            value = state.habitName,
+                            onValueChange = { onEvent(CreateHabitContract.Event.OnNameChange(it)) },
+                            placeholder = stringResource(R.string.create_habit_habit_name),
+                            modifier = Modifier.weight(1f),
+                            singleLine = true
+                        )
                     }
-                    IconPicker(
-                        selectedIcon = state.habitIcon,
-                        onIconSelect = { onEvent(CreateHabitContract.Event.OnIconChange(it)) }
+                    Text(
+                        text = "Icon & color are picked for you — tap the icon to change them.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
 
+            // Essential 2: Days — presets first, custom on demand
             item {
                 CreateHabitSection {
                     Text(
-                        text = stringResource(R.string.create_habit_color),
+                        text = stringResource(R.string.create_habit_on_these_days),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
-                    ColorPicker(
-                        selectedColor = state.habitColor,
-                        onColorSelect = { onEvent(CreateHabitContract.Event.OnColorChange(it)) }
-                    )
-                }
-            }
+                    val everyDay = setOf(1, 2, 3, 4, 5, 6, 7)
+                    val weekdays = setOf(1, 2, 3, 4, 5)
+                    val isEveryDay = state.selectedDays == everyDay && !showCustomDays
+                    val isWeekdays = state.selectedDays == weekdays && !showCustomDays
+                    val isCustom = showCustomDays || (!isEveryDay && !isWeekdays)
 
-            if (!state.isOneTime) {
-                item {
-                    CreateHabitSection {
-                        Text(
-                            text = stringResource(R.string.create_habit_repeat),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        FrequencySelector(
-                            selectedFrequency = state.frequency,
-                            onFrequencySelect = { onEvent(CreateHabitContract.Event.OnFrequencyChange(it)) }
-                        )
-                    }
-                }
-
-                item {
-                    CreateHabitSection {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = stringResource(R.string.create_habit_on_these_days),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    stringResource(R.string.create_habit_all_day),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Checkbox(
-                                    checked = state.selectedDays.size == 7,
-                                    onCheckedChange = { isChecked ->
-                                        if (isChecked) {
-                                            (1..7).forEach { onEvent(CreateHabitContract.Event.OnDayToggle(it)) }
-                                        }
-                                    },
-                                    colors = CheckboxDefaults.colors(
-                                        checkedColor = MaterialTheme.colorScheme.primary,
-                                        uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                )
-                            }
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        DayPresetChip("Every day", isEveryDay, Modifier.weight(1f)) {
+                            showCustomDays = false
+                            onEvent(CreateHabitContract.Event.OnDaysPreset(everyDay))
                         }
-                        DaySelector(
-                            selectedDays = state.selectedDays,
-                            onDayToggle = { onEvent(CreateHabitContract.Event.OnDayToggle(it)) }
-                        )
-                    }
-                }
-            } else {
-                item {
-                    CreateHabitSection {
-                        Text(
-                            text = stringResource(R.string.create_habit_when),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        DatePickerRow(
-                            date = state.scheduledDate,
-                            onDateChange = { onEvent(CreateHabitContract.Event.OnDateChange(it)) }
-                        )
-                    }
-                }
-            }
-
-            item {
-                CreateHabitSection {
-                    Text(
-                        text = stringResource(R.string.create_habit_do_it_at),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    TimeOfDaySelector(
-                        selectedTime = state.timeOfDay,
-                        onTimeSelect = { onEvent(CreateHabitContract.Event.OnTimeOfDayChange(it)) }
-                    )
-                }
-            }
-
-            if (!state.isOneTime) {
-                item {
-                    CreateHabitSection {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = stringResource(R.string.create_habit_end_habit_on),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Switch(
-                                checked = state.endDateEnabled,
-                                onCheckedChange = { onEvent(CreateHabitContract.Event.OnEndDateToggle(it)) },
-                                colors = SwitchDefaults.colors(
-                                    checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                                    checkedTrackColor = MaterialTheme.colorScheme.primary
-                                )
-                            )
+                        DayPresetChip("Weekdays", isWeekdays, Modifier.weight(1f)) {
+                            showCustomDays = false
+                            onEvent(CreateHabitContract.Event.OnDaysPreset(weekdays))
                         }
-                        if (state.endDateEnabled && state.endDate != null) {
-                            DatePickerRow(
-                                date = state.endDate,
-                                onDateChange = { onEvent(CreateHabitContract.Event.OnEndDateChange(it)) }
+                        DayPresetChip("Custom", isCustom, Modifier.weight(1f)) {
+                            showCustomDays = true
+                        }
+                    }
+
+                    AnimatedVisibility(
+                        visible = isCustom,
+                        enter = expandVertically() + fadeIn(),
+                        exit = shrinkVertically() + fadeOut()
+                    ) {
+                        Column(modifier = Modifier.padding(top = 12.dp)) {
+                            DaySelector(
+                                selectedDays = state.selectedDays,
+                                onDayToggle = { onEvent(CreateHabitContract.Event.OnDayToggle(it)) }
                             )
                         }
                     }
                 }
             }
 
+            // Essential 3: Reminder
             item {
                 CreateHabitSection {
                     Row(
@@ -481,7 +288,7 @@ fun CreateHabitScreen(
                         )
                         Switch(
                             checked = state.reminderEnabled,
-                            onCheckedChange = { enabled -> 
+                            onCheckedChange = { enabled ->
                                 if (enabled) {
                                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                                         permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -507,7 +314,222 @@ fun CreateHabitScreen(
                     }
                 }
             }
-            
+
+            // ---- More options (advanced, collapsed by default) ----
+            item {
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.surface,
+                    shape = RoundedCornerShape(16.dp),
+                    tonalElevation = 1.dp
+                ) {
+                    Column {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { showMoreOptions = !showMoreOptions }
+                                .padding(16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = "More options",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = "Track an amount, motivation note, colors, end date",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Icon(
+                                imageVector = if (showMoreOptions) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        AnimatedVisibility(
+                            visible = showMoreOptions,
+                            enter = expandVertically() + fadeIn(),
+                            exit = shrinkVertically() + fadeOut()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                                verticalArrangement = Arrangement.spacedBy(20.dp)
+                            ) {
+                                // Tracking type + target
+                                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    Text(
+                                        text = "How to track",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    HabitTypeSelector(
+                                        selectedType = state.habitType,
+                                        onTypeSelect = { onEvent(CreateHabitContract.Event.OnTypeChange(it)) }
+                                    )
+                                    AnimatedVisibility(
+                                        visible = state.habitType != CreateHabitContract.HabitType.YES_NO,
+                                        enter = expandVertically() + fadeIn(),
+                                        exit = shrinkVertically() + fadeOut()
+                                    ) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            // At Least / At Most Toggle
+                                            Box(
+                                                modifier = Modifier
+                                                    .weight(1f)
+                                                    .height(56.dp)
+                                                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
+                                                    .clickable { onEvent(CreateHabitContract.Event.OnTargetRuleToggle(!state.isAtLeast)) }
+                                                    .padding(horizontal = 16.dp),
+                                                contentAlignment = Alignment.Center
+                                            ) {
+                                                Text(
+                                                    text = if (state.isAtLeast) "At least" else "At most",
+                                                    color = MaterialTheme.colorScheme.onSurface,
+                                                    fontWeight = FontWeight.SemiBold
+                                                )
+                                            }
+
+                                            OutlinedTextField(
+                                                value = state.target,
+                                                onValueChange = { onEvent(CreateHabitContract.Event.OnTargetChange(it)) },
+                                                placeholder = { Text("e.g. 10") },
+                                                keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                                                    keyboardType = KeyboardType.Number
+                                                ),
+                                                singleLine = true,
+                                                modifier = Modifier.weight(1f),
+                                                shape = RoundedCornerShape(12.dp),
+                                                colors = OutlinedTextFieldDefaults.colors(
+                                                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                                                )
+                                            )
+
+                                            OutlinedTextField(
+                                                value = state.unitName,
+                                                onValueChange = { onEvent(CreateHabitContract.Event.OnUnitChange(it)) },
+                                                placeholder = { Text(if (state.habitType == CreateHabitContract.HabitType.TIMER) "mins" else "times") },
+                                                singleLine = true,
+                                                modifier = Modifier.weight(1f),
+                                                shape = RoundedCornerShape(12.dp),
+                                                colors = OutlinedTextFieldDefaults.colors(
+                                                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                                    unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
+                                                )
+                                            )
+                                        }
+                                    }
+                                }
+
+                                // Motivation note
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Text(
+                                        text = "Motivation / Why (Optional)",
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    HabitOutlinedTextField(
+                                        value = state.description,
+                                        onValueChange = { onEvent(CreateHabitContract.Event.OnDescriptionChange(it)) },
+                                        placeholder = "e.g. To feel energized and healthy",
+                                        modifier = Modifier.fillMaxWidth(),
+                                        singleLine = false
+                                    )
+                                }
+
+                                // Icon override
+                                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.create_habit_icon),
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        TextButton(onClick = { onEvent(CreateHabitContract.Event.OnToggleIconPicker(true)) }) {
+                                            Text(stringResource(R.string.create_habit_view_all), color = MaterialTheme.colorScheme.primary)
+                                            Icon(Icons.Default.ArrowForward, contentDescription = null, modifier = Modifier.size(16.dp))
+                                        }
+                                    }
+                                    IconPicker(
+                                        selectedIcon = state.habitIcon,
+                                        onIconSelect = { onEvent(CreateHabitContract.Event.OnIconChange(it)) }
+                                    )
+                                }
+
+                                // Color override
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Text(
+                                        text = stringResource(R.string.create_habit_color),
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    ColorPicker(
+                                        selectedColor = state.habitColor,
+                                        onColorSelect = { onEvent(CreateHabitContract.Event.OnColorChange(it)) }
+                                    )
+                                }
+
+                                // Time of day (display/sort category only)
+                                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Text(
+                                        text = stringResource(R.string.create_habit_do_it_at),
+                                        style = MaterialTheme.typography.titleSmall,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                    TimeOfDaySelector(
+                                        selectedTime = state.timeOfDay,
+                                        onTimeSelect = { onEvent(CreateHabitContract.Event.OnTimeOfDayChange(it)) }
+                                    )
+                                }
+
+                                // End date
+                                Column {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.create_habit_end_habit_on),
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Switch(
+                                            checked = state.endDateEnabled,
+                                            onCheckedChange = { onEvent(CreateHabitContract.Event.OnEndDateToggle(it)) },
+                                            colors = SwitchDefaults.colors(
+                                                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                                                checkedTrackColor = MaterialTheme.colorScheme.primary
+                                            )
+                                        )
+                                    }
+                                    if (state.endDateEnabled && state.endDate != null) {
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        DatePickerRow(
+                                            date = state.endDate,
+                                            onDateChange = { onEvent(CreateHabitContract.Event.OnEndDateChange(it)) }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             item {
                 Button(
                     onClick = { onEvent(CreateHabitContract.Event.OnSaveClicked) },
@@ -527,17 +549,42 @@ fun CreateHabitScreen(
                 Spacer(modifier = Modifier.height(32.dp))
             }
         }
-        
+
         if (state.showIconPicker) {
             AllIconsSheet(
                 selectedIcon = state.habitIcon,
-                onIconSelect = { 
+                onIconSelect = {
                     onEvent(CreateHabitContract.Event.OnIconChange(it))
                     onEvent(CreateHabitContract.Event.OnToggleIconPicker(false))
                 },
                 onDismiss = { onEvent(CreateHabitContract.Event.OnToggleIconPicker(false)) }
             )
         }
+    }
+}
+
+@Composable
+private fun DayPresetChip(
+    label: String,
+    isSelected: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = modifier
+            .height(44.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = label,
+            color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+            fontWeight = FontWeight.SemiBold,
+            style = MaterialTheme.typography.labelLarge,
+            maxLines = 1
+        )
     }
 }
 
@@ -596,7 +643,7 @@ fun AllIconsSheet(
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
-            
+
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.heightIn(max = 400.dp)
@@ -632,51 +679,6 @@ fun AllIconsSheet(
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun HabitTypeToggle(
-    isOneTime: Boolean,
-    onToggle: (Boolean) -> Unit
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(48.dp)
-            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
-            .padding(4.dp)
-    ) {
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-                .clip(RoundedCornerShape(8.dp))
-                .background(if (!isOneTime) MaterialTheme.colorScheme.primary else Color.Transparent)
-                .clickable { onToggle(false) },
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = stringResource(R.string.create_habit_regular),
-                color = if (!isOneTime) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxHeight()
-                .clip(RoundedCornerShape(8.dp))
-                .background(if (isOneTime) MaterialTheme.colorScheme.primary else Color.Transparent)
-                .clickable { onToggle(true) },
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = stringResource(R.string.create_habit_one_time),
-                color = if (isOneTime) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                fontWeight = FontWeight.SemiBold
-            )
         }
     }
 }
@@ -725,7 +727,7 @@ fun IconPicker(
     onIconSelect: (String) -> Unit
 ) {
     val icons = listOf("🏈", "🏆", "🎖️", "🏀", "⛸️", "📝", "💧", "🏃", "🧘", "📚", "💊", "🥦")
-    
+
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(vertical = 8.dp)
@@ -761,7 +763,7 @@ fun ColorPicker(
         0xFFFFAB91, 0xFFF48FB1, 0xFFF8BBD0, 0xFFCE93D8, 0xFFB39DDB,
         0xFF90CAF9, 0xFF80CBC4, 0xFF80DEEA, 0xFFA5D6A7, 0xFFC0CA33
     )
-    
+
     // Simple FlowRow replacement using nested Rows since FlowRow is experimental/newer
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         val rows = colors.chunked(5)
@@ -799,36 +801,6 @@ fun ColorPicker(
 }
 
 @Composable
-fun FrequencySelector(
-    selectedFrequency: CreateHabitContract.Frequency,
-    onFrequencySelect: (CreateHabitContract.Frequency) -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        CreateHabitContract.Frequency.entries.forEach { frequency ->
-            val isSelected = frequency == selectedFrequency
-            Button(
-                onClick = { onFrequencySelect(frequency) },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
-                    contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
-                ),
-                border = if (!isSelected) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null,
-                shape = RoundedCornerShape(20.dp),
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = frequencyLabel(frequency),
-                    fontWeight = FontWeight.SemiBold
-                )
-            }
-        }
-    }
-}
-
-@Composable
 fun DaySelector(
     selectedDays: Set<Int>,
     onDayToggle: (Int) -> Unit
@@ -842,15 +814,10 @@ fun DaySelector(
         stringResource(R.string.create_habit_day_f),
         stringResource(R.string.create_habit_day_s)
     )
-    // HabitEntity uses 1=Mon, 7=Sun generally, but Calendar uses 1=Sun.
-    // Let's assume standard UI S M T W T F S usually means Sun -> Sat.
-    // So S=7 (Sun) or 1? Let's map indices 0..6 to days.
-    // If we assume 1=Mon, then S(Sun)=7, S(Sat)=6.
     // Order in UI: S, M, T, W, T, F, S -> Sun, Mon, Tue, Wed, Thu, Fri, Sat
-    // Values: 7, 1, 2, 3, 4, 5, 6
-    
+    // Values: 7, 1, 2, 3, 4, 5, 6 (1=Mon..7=Sun)
     val dayValues = listOf(7, 1, 2, 3, 4, 5, 6)
-    
+
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
@@ -884,7 +851,7 @@ fun DatePickerRow(
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
     calendar.timeInMillis = date
-    
+
     val datePickerDialog = android.app.DatePickerDialog(
         context,
         { _, year, month, dayOfMonth ->
@@ -1051,15 +1018,6 @@ fun CreateHabitTopBar(
         }
 
         Spacer(modifier = Modifier.size(48.dp))
-    }
-}
-
-@Composable
-private fun frequencyLabel(frequency: CreateHabitContract.Frequency): String {
-    return when (frequency) {
-        CreateHabitContract.Frequency.DAILY -> stringResource(R.string.create_habit_frequency_daily)
-        CreateHabitContract.Frequency.WEEKLY -> stringResource(R.string.create_habit_frequency_weekly)
-        CreateHabitContract.Frequency.MONTHLY -> stringResource(R.string.create_habit_frequency_monthly)
     }
 }
 

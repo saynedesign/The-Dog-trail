@@ -10,6 +10,8 @@ import com.saynedesign.habitloop.data.HabitLogEntity
 import com.saynedesign.habitloop.data.HabitRestDayDao
 import com.saynedesign.habitloop.data.HabitRestDayEntity
 import com.saynedesign.habitloop.data.UserDao
+import com.saynedesign.habitloop.data.UserPreferencesRepository
+import com.saynedesign.habitloop.data.isScheduledOn
 import com.saynedesign.habitloop.util.AwardXpUseCase
 import com.saynedesign.habitloop.util.CompleteHabitUseCase
 import com.saynedesign.habitloop.util.LevelSystem
@@ -34,7 +36,8 @@ class HabitsViewModel @Inject constructor(
     private val habitRestDayDao: HabitRestDayDao,
     private val userDao: UserDao,
     private val awardXpUseCase: AwardXpUseCase,
-    private val completeHabitUseCase: CompleteHabitUseCase
+    private val completeHabitUseCase: CompleteHabitUseCase,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HabitsContract.State())
@@ -46,6 +49,11 @@ class HabitsViewModel @Inject constructor(
     private var logsCache: List<HabitLogEntity> = emptyList()
     private var allHabitsCache: List<HabitEntity> = emptyList()
     private var restDaysCache: List<HabitRestDayEntity> = emptyList()
+
+    // Highest level for which the celebration has already been shown, seeded
+    // from persisted state so a level-up earned on any screen (or in the
+    // background via widget/notification) fires exactly once. 0 = not yet seeded.
+    private var celebratedLevel: Int = 0
 
     init {
         loadHabits()
@@ -116,13 +124,32 @@ class HabitsViewModel @Inject constructor(
 
     private fun loadXp() {
         viewModelScope.launch {
+            // Seed the celebration baseline from persisted state. For a fresh
+            // install (or existing users on first run after this update) we adopt
+            // the current level as the baseline so we never fire a spurious pop.
+            celebratedLevel = userPreferencesRepository.lastCelebratedLevelOnce()
+
             userDao.getUser().collect { user ->
+                val newLevel = user?.currentLevel ?: 1
+
+                if (celebratedLevel == 0) {
+                    celebratedLevel = newLevel
+                    userPreferencesRepository.updateLastCelebratedLevel(newLevel)
+                }
+
+                val leveledUp = newLevel > celebratedLevel
+                if (leveledUp) {
+                    celebratedLevel = newLevel
+                    userPreferencesRepository.updateLastCelebratedLevel(newLevel)
+                }
+
                 _state.value = _state.value.copy(
                     totalXp = user?.totalXp ?: 0,
-                    currentLevel = user?.currentLevel ?: 1,
+                    currentLevel = newLevel,
                     userName = user?.name ?: "",
                     profileImageUri = user?.profileImageUri ?: user?.photoUri,
-                    motivationStyle = user?.motivationStyle ?: com.saynedesign.habitloop.data.MotivationStyle.SEEING_PROGRESS
+                    motivationStyle = user?.motivationStyle ?: com.saynedesign.habitloop.data.MotivationStyle.SEEING_PROGRESS,
+                    levelUpToLevel = if (leveledUp) newLevel else _state.value.levelUpToLevel
                 )
             }
         }
@@ -130,12 +157,9 @@ class HabitsViewModel @Inject constructor(
 
     private fun updateHabitsForSelectedDate() {
         val selectedDate = _state.value.selectedDate
-        val dayOfWeek = selectedDate.dayOfWeek.value
 
-        val filteredHabits = allHabitsCache.filter { habit ->
-            val scheduledDays = habit.selectedDays.split(",").mapNotNull { it.trim().toIntOrNull() }.toSet()
-            scheduledDays.contains(dayOfWeek)
-        }
+        // Shared scheduling rule: day-of-week + one-time date + end date
+        val filteredHabits = allHabitsCache.filter { it.isScheduledOn(selectedDate) }
         _state.value = _state.value.copy(habits = filteredHabits)
         loadRestDayStateForSelectedDate()
     }
@@ -289,6 +313,9 @@ class HabitsViewModel @Inject constructor(
             // XP
             is HabitsContract.Event.OnXpPopDismissed -> {
                 _state.value = _state.value.copy(xpPopAmount = null)
+            }
+            is HabitsContract.Event.OnLevelUpDismissed -> {
+                _state.value = _state.value.copy(levelUpToLevel = null)
             }
         }
     }

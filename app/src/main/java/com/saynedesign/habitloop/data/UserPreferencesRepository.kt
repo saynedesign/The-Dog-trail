@@ -5,10 +5,12 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -33,6 +35,10 @@ class UserPreferencesRepository @Inject constructor(
         val OVERLAY_REMINDER_SOUND = stringPreferencesKey("overlay_reminder_sound")
         val REMINDER_TIME = stringPreferencesKey("reminder_time")
         val APP_THEME = stringPreferencesKey("app_theme")
+        val IS_COACH_ENABLED = booleanPreferencesKey("is_coach_enabled")
+        // The highest level for which we've already shown the level-up
+        // celebration. 0 = never set (baseline adopted on first read).
+        val LAST_CELEBRATED_LEVEL = intPreferencesKey("last_celebrated_level")
     }
 
     // Flows
@@ -74,6 +80,10 @@ class UserPreferencesRepository @Inject constructor(
 
     val appTheme: Flow<String> = dataStore.data.map { preferences ->
         preferences[PreferencesKeys.APP_THEME] ?: "system"
+    }
+
+    val isCoachEnabled: Flow<Boolean> = dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.IS_COACH_ENABLED] ?: true
     }
 
     // Suspend functions to update settings
@@ -134,6 +144,22 @@ class UserPreferencesRepository @Inject constructor(
     suspend fun updateAppTheme(theme: String) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.APP_THEME] = theme
+        }
+    }
+
+    suspend fun updateCoachEnabled(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.IS_COACH_ENABLED] = enabled
+        }
+    }
+
+    /** One-shot read of the last level we celebrated (0 if never set). */
+    suspend fun lastCelebratedLevelOnce(): Int =
+        dataStore.data.map { it[PreferencesKeys.LAST_CELEBRATED_LEVEL] ?: 0 }.first()
+
+    suspend fun updateLastCelebratedLevel(level: Int) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.LAST_CELEBRATED_LEVEL] = level
         }
     }
 }
