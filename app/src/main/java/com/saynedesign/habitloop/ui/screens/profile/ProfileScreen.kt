@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.saynedesign.habitloop.R
+import com.saynedesign.habitloop.util.LevelSystem
 
 @Composable
 fun ProfileScreen(
@@ -285,15 +286,15 @@ fun CurrentLevelCard(state: ProfileContract.State, onClick: () -> Unit) {
                 Box(
                     modifier = Modifier
                         .size(56.dp)
-                        .background(
-                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
-                            shape = RoundedCornerShape(16.dp)
-                        ),
-                    contentAlignment = Alignment.Center
+                        .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f), RoundedCornerShape(16.dp))
+                        .border(1.dp, MaterialTheme.colorScheme.secondary, RoundedCornerShape(16.dp))
+                        .clip(RoundedCornerShape(16.dp))
                 ) {
-                    Text(
-                        text = "🦴",
-                        fontSize = 28.sp
+                    Image(
+                        painter = painterResource(LevelSystem.getLevelDrawableRes(state.level)),
+                        contentDescription = "Level Badge",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
                     )
                 }
 
@@ -317,7 +318,7 @@ fun CurrentLevelCard(state: ProfileContract.State, onClick: () -> Unit) {
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
-                        text = state.levelName.ifEmpty { "Bone Collector" },
+                        text = state.levelName.ifEmpty { "Initiate" },
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.secondary

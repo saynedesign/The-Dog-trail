@@ -7,6 +7,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Alarm
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import android.Manifest
@@ -47,6 +49,10 @@ import com.saynedesign.habitloop.ui.components.HabitOutlinedTextField
 import com.saynedesign.habitloop.ui.components.headerTitleBrush
 import java.text.SimpleDateFormat // Optional: If you need any formatting
 import java.util.*
+
+import com.saynedesign.habitloop.data.PrimaryGoal
+import androidx.compose.foundation.lazy.items
+import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -105,6 +111,81 @@ fun CreateHabitScreen(
                 }
             }
 
+            // Suggested Habits Section based on Primary Goal
+            if (state.habitId == null) {
+                val suggestions = when (state.userPrimaryGoal) {
+                    PrimaryGoal.FITNESS -> listOf(
+                        Triple("Go for a Run", "🏃", 0xFFFFAB91),
+                        Triple("Daily Yoga", "🧘", 0xFFA5D6A7),
+                        Triple("Drink 3L Water", "💧", 0xFF90CAF9)
+                    )
+                    PrimaryGoal.DISCIPLINE -> listOf(
+                        Triple("Wake up early", "⏰", 0xFFFFCC80),
+                        Triple("Clean my room", "🧹", 0xFFCE93D8),
+                        Triple("Plan my tomorrow", "📅", 0xFFB39DDB)
+                    )
+                    PrimaryGoal.PRODUCTIVITY -> listOf(
+                        Triple("Deep Work Session", "⚡", 0xFF90CAF9),
+                        Triple("Inbox Zero", "💻", 0xFF80DEEA),
+                        Triple("Read 10 pages", "📚", 0xFFA5D6A7)
+                    )
+                    PrimaryGoal.STUDY -> listOf(
+                        Triple("Review notes", "📝", 0xFFFFF9C4),
+                        Triple("Study 1 hour", "🎓", 0xFFB39DDB),
+                        Triple("Learn new skill", "🧠", 0xFF80CBC4)
+                    )
+                    PrimaryGoal.MENTAL_HEALTH -> listOf(
+                        Triple("10m Meditation", "🧘", 0xFFF48FB1),
+                        Triple("Gratitude Journal", "📓", 0xFFF8BBD0),
+                        Triple("Walk in Nature", "🕊️", 0xFFA5D6A7)
+                    )
+                    else -> listOf(
+                        Triple("Track my mood", "⭐️", 0xFFCE93D8),
+                        Triple("Do something creative", "🎨", 0xFFFFAB91),
+                        Triple("Save $5", "🏆", 0xFFFFF9C4)
+                    )
+                }
+
+                item {
+                    CreateHabitSection {
+                        Text(
+                            text = "Suggested Habits",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        LazyRow(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            items(suggestions) { (name, icon, color) ->
+                                Card(
+                                    modifier = Modifier.clickable {
+                                        onEvent(CreateHabitContract.Event.OnNameChange(name))
+                                        onEvent(CreateHabitContract.Event.OnIconChange(icon))
+                                        onEvent(CreateHabitContract.Event.OnColorChange(color))
+                                    },
+                                    shape = RoundedCornerShape(12.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                                    ),
+                                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(text = icon, fontSize = 18.sp)
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Text(text = name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
             item {
                 CreateHabitSection {
                     Text(
@@ -126,6 +207,23 @@ fun CreateHabitScreen(
                         },
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
+                    )
+                }
+            }
+
+            item {
+                CreateHabitSection {
+                    Text(
+                        text = "Motivation / Why (Optional)",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    HabitOutlinedTextField(
+                        value = state.description,
+                        onValueChange = { onEvent(CreateHabitContract.Event.OnDescriptionChange(it)) },
+                        placeholder = "e.g. To feel energized and healthy",
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = false
                     )
                 }
             }
@@ -836,20 +934,16 @@ fun TimeOfDaySelector(
             Button(
                 onClick = { onTimeSelect(time) },
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    contentColor = MaterialTheme.colorScheme.onSurface
+                    containerColor = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
+                    contentColor = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
                 ),
-                border = androidx.compose.foundation.BorderStroke(
-                    1.dp, 
-                    if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant
-                ),
+                border = if (!isSelected) androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null,
                 shape = RoundedCornerShape(20.dp),
                 modifier = Modifier.weight(1f)
             ) {
                 Text(
                     text = timeOfDayLabel(time),
-                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                    color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                    fontWeight = FontWeight.SemiBold
                 )
             }
         }
@@ -879,16 +973,42 @@ fun ReminderTimePicker(
     Row(
         modifier = Modifier
             .fillMaxWidth()
+            .height(56.dp)
+            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
             .clickable { timePickerDialog.show() }
-            .padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(horizontal = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(
-            stringResource(R.string.create_habit_time_label),
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Bold
-        )
-        Text(time, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(
+                imageVector = Icons.Default.Alarm,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = "Reminder Time",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = time,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Icon(
+                imageVector = Icons.Default.Edit,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(16.dp)
+            )
+        }
     }
 }
 

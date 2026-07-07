@@ -61,15 +61,17 @@ class ReportViewModel @Inject constructor(
             combine(
                 habitDao.getAllHabits(),
                 habitLogDao.getAllLogs(),
-                habitRestDayDao.getAllRestDays()
-            ) { habits, logs, restDays ->
+                habitRestDayDao.getAllRestDays(),
+                userDao.getUser()
+            ) { habits, logs, restDays, user ->
                 data class CombinedData(
                     val habits: List<com.saynedesign.habitloop.data.HabitEntity>,
                     val logs: List<com.saynedesign.habitloop.data.HabitLogEntity>,
-                    val restDays: List<com.saynedesign.habitloop.data.HabitRestDayEntity>
+                    val restDays: List<com.saynedesign.habitloop.data.HabitRestDayEntity>,
+                    val user: com.saynedesign.habitloop.data.UserEntity?
                 )
-                CombinedData(habits, logs, restDays)
-            }.collect { (habits, logs, restDays) ->
+                CombinedData(habits, logs, restDays, user)
+            }.collect { (habits, logs, restDays, user) ->
                 val today = LocalDate.now()
 
                 // Build rest day sets
@@ -169,7 +171,13 @@ class ReportViewModel @Inject constructor(
                 }
 
                 val completionRate = if (totalScheduledSum > 0) (totalCompletedSum * 100 / totalScheduledSum) else 0
-                val weeklyConsistencyScore = if (weekScheduled > 0) (weekCompleted * 100 / weekScheduled) else 0
+                val weeklyGoal = user?.weeklyGoal ?: 5
+                val activeDaysInWeek = (0..6).count { i ->
+                    val date = today.minusDays(i.toLong())
+                    val epoch = date.toEpochDay()
+                    (logsByDay[epoch]?.size ?: 0) > 0
+                }
+                val weeklyConsistencyScore = ((activeDaysInWeek * 100) / weeklyGoal).coerceIn(0, 100)
 
                 // Weekly Habit Counts (Bar Chart) — last 7 days
                 val weeklyHabitCounts = (0..6).map { i ->
@@ -227,8 +235,149 @@ class ReportViewModel @Inject constructor(
                     activeMomentum = activeMomentum,
                     strongDays = strongDays,
                     totalEffortPoints = totalEffortPoints,
-                    restDayEpochs = restDayEpochsAll
+                    restDayEpochs = restDayEpochsAll,
+                    weekStartsOn = user?.weekStartsOn ?: com.saynedesign.habitloop.data.WeekStartsOn.MONDAY
                 )
+
+                // Trigger JNI calculations asynchronously
+                viewModelScope.launch(kotlinx.coroutines.Dispatchers.Default) {
+                    _state.value = _state.value.copy(isEngineLoading = true)
+                    try {
+                        val hIds = habits.map { it.id }.toLongArray()
+                        val hTitles = habits.map { it.title }.toTypedArray()
+                        val hTargetValues = habits.map { it.targetValue }.toFloatArray()
+                        val hUnits = habits.map { it.unit }.toTypedArray()
+                        val hTypes = habits.map { it.type }.toTypedArray()
+                        val hSelectedDays = habits.map { it.selectedDays }.toTypedArray()
+                        val hFrequencies = habits.map { it.frequency }.toTypedArray()
+                        val hTimesOfDay = habits.map { it.timeOfDay }.toTypedArray()
+                        val hCreatedEpochDays = habits.map {
+                            java.time.Instant.ofEpochMilli(it.createdTimestamp)
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDate()
+                                .toEpochDay()
+                        }.toLongArray()
+
+                        val logHabitIds = logs.map { it.habitId }.toLongArray()
+                        val logDates = logs.map { it.dateEpochDay }.toLongArray()
+                        val logValues = logs.map { it.value ?: 0f }.toFloatArray()
+
+                        val todayEpochDay = LocalDate.now().toEpochDay()
+
+                        val jsonResult = com.saynedesign.habitloop.data.InsightEngine.generateInsightsJson(
+                            userName = user?.name.orEmpty(),
+                            userDob = user?.dob.orEmpty(),
+                            userHeight = user?.height ?: 0f,
+                            userXp = user?.totalXp ?: 0,
+                            userLevel = user?.currentLevel ?: 1,
+                            userJournal = user?.journal.orEmpty(),
+                            habitIds = hIds,
+                            habitTitles = hTitles,
+                            habitTargetValues = hTargetValues,
+                            habitUnits = hUnits,
+                            habitTypes = hTypes,
+                            habitSelectedDays = hSelectedDays,
+                            habitFrequencies = hFrequencies,
+                            habitTimesOfDay = hTimesOfDay,
+                            habitCreatedEpochDays = hCreatedEpochDays,
+                            logHabitIds = logHabitIds,
+                            logDates = logDates,
+                            logValues = logValues,
+                            todayEpochDay = todayEpochDay
+                        )
+
+                        val jsonObject = org.json.JSONObject(jsonResult)
+
+                        fun parseStringArray(key: String): List<String> {
+                            val arr = jsonObject.optJSONArray(key) ?: return emptyList()
+                            return (0 until arr.length()).map { arr.getString(it) }
+                        }
+
+                        val highlightsList = parseStringArray("highlights")
+                        val insightsList = parseStringArray("insights")
+                        val advicesList = parseStringArray("advices")
+                        val levelProj = jsonObject.optInt("levelProjectionDays", -1)
+
+                        val enrichedAdvices = advicesList.toMutableList()
+                        
+                        when (user?.primaryGoal) {
+                            com.saynedesign.habitloop.data.PrimaryGoal.FITNESS -> {
+                                enrichedAdvices.add("Prioritize recovery: Ensure you allow enough sleep and rest days for muscle regeneration.")
+                                enrichedAdvices.add("Stay hydrated: Tracking water intake is as critical as physical training.")
+                            }
+                            com.saynedesign.habitloop.data.PrimaryGoal.DISCIPLINE -> {
+                                enrichedAdvices.add("Consistency over intensity: Keeping streaks alive is more important than massive daily efforts.")
+                                enrichedAdvices.add("Tackle hard tasks early: Try scheduling your habits for the morning window.")
+                            }
+                            com.saynedesign.habitloop.data.PrimaryGoal.PRODUCTIVITY -> {
+                                enrichedAdvices.add("Minimize distractions: Block out 90 minutes of focused work daily for maximum productivity.")
+                                enrichedAdvices.add("Review weekly: Analyze your most productive times to align future tasks.")
+                            }
+                            com.saynedesign.habitloop.data.PrimaryGoal.STUDY -> {
+                                enrichedAdvices.add("Active recall: Rather than just reading, test your memory to improve learning retention.")
+                                enrichedAdvices.add("Use Pomodoro: Take short 5-minute breaks after 25 minutes of intense studying.")
+                            }
+                            com.saynedesign.habitloop.data.PrimaryGoal.MENTAL_HEALTH -> {
+                                enrichedAdvices.add("Practice mindfulness: Even 5 minutes of meditation daily can significantly lower stress levels.")
+                                enrichedAdvices.add("Mindful rest: Utilize your rest days guilt-free to recharge your mental battery.")
+                            }
+                            else -> {}
+                        }
+
+                        when (user?.experienceLevel) {
+                            com.saynedesign.habitloop.data.ExperienceLevel.BEGINNER -> {
+                                enrichedAdvices.add("Start small: Don't overload yourself with too many habits in the first few weeks.")
+                            }
+                            com.saynedesign.habitloop.data.ExperienceLevel.BUILDING -> {
+                                enrichedAdvices.add("Habit stacking: Anchor new habits to existing ones to build strong momentum.")
+                            }
+                            com.saynedesign.habitloop.data.ExperienceLevel.CONSISTENT -> {
+                                enrichedAdvices.add("Optimize routine: Fine-tune the timing of your habits to make them effortless.")
+                            }
+                            com.saynedesign.habitloop.data.ExperienceLevel.ADVANCED -> {
+                                enrichedAdvices.add("Raise the stakes: Challenge yourself with more demanding targets to avoid stagnation.")
+                            }
+                            else -> {}
+                        }
+
+                        val userWeeklyGoal = user?.weeklyGoal ?: 5
+                        if (userWeeklyGoal >= 6) {
+                            enrichedAdvices.add("High weekly goal: You're aiming for extreme consistency. Make sure to schedule rest days to prevent burnout.")
+                        }
+
+                        val habitScoresList = mutableListOf<ReportContract.HabitScore>()
+                        val scoresArr = jsonObject.optJSONArray("habitScores")
+                        if (scoresArr != null) {
+                            for (i in 0 until scoresArr.length()) {
+                                val obj = scoresArr.getJSONObject(i)
+                                habitScoresList.add(
+                                    ReportContract.HabitScore(
+                                        habitId = obj.optLong("habitId"),
+                                        title = obj.optString("title"),
+                                        grade = obj.optString("grade"),
+                                        consistency7d = obj.optInt("consistency7d"),
+                                        consistency30d = obj.optInt("consistency30d"),
+                                        currentStreak = obj.optInt("currentStreak"),
+                                        longestStreak = obj.optInt("longestStreak"),
+                                        trend = obj.optString("trend"),
+                                        ageDays = obj.optInt("ageDays")
+                                    )
+                                )
+                            }
+                        }
+
+                        _state.value = _state.value.copy(
+                            highlights = highlightsList,
+                            insights = insightsList,
+                            advices = enrichedAdvices,
+                            habitScores = habitScoresList,
+                            levelProjectionDays = levelProj,
+                        )
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                        _state.value = _state.value.copy(isEngineLoading = false)
+                    }
+                }
             }
         }
     }

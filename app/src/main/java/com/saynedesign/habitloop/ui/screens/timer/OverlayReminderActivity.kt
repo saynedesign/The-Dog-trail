@@ -48,6 +48,11 @@ import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.util.Calendar
 import javax.inject.Inject
+import com.saynedesign.habitloop.data.UserPreferencesRepository
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.flow.firstOrNull
+import android.media.Ringtone
+import android.media.RingtoneManager
 
 @AndroidEntryPoint
 class OverlayReminderActivity : ComponentActivity() {
@@ -60,6 +65,11 @@ class OverlayReminderActivity : ComponentActivity() {
 
     @Inject
     lateinit var notificationScheduler: NotificationScheduler
+
+    @Inject
+    lateinit var preferencesRepository: UserPreferencesRepository
+
+    private var ringtone: Ringtone? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,6 +92,11 @@ class OverlayReminderActivity : ComponentActivity() {
 
         val habitId = intent.getLongExtra("habitId", -1L)
         val habitName = intent.getStringExtra("habitName") ?: "Habit Reminder"
+
+        lifecycleScope.launch {
+            val soundPref = preferencesRepository.overlayReminderSound.firstOrNull() ?: "alarm"
+            playSound(soundPref)
+        }
 
         setContent {
             TheDogTailTheme {
@@ -111,13 +126,16 @@ class OverlayReminderActivity : ComponentActivity() {
                             habit = habitState,
                             defaultName = habitName,
                             onSnooze = {
+                                stopSound()
                                 snoozeHabit(habitId, habitState?.title ?: habitName)
                                 finish()
                             },
                             onSkip = {
+                                stopSound()
                                 finish()
                             },
                             onComplete = {
+                                stopSound()
                                 CoroutineScope(Dispatchers.IO).launch {
                                     logCompletion(habitId)
                                     withContext(Dispatchers.Main) {
@@ -175,6 +193,53 @@ class OverlayReminderActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    private fun playSound(soundPref: String) {
+        if (soundPref == "mute") return
+        try {
+            val soundUri = when (soundPref) {
+                "alarm" -> RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+                "notification" -> RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+                "ringtone" -> RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+                else -> RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+            } ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+
+            ringtone = RingtoneManager.getRingtone(applicationContext, soundUri)?.apply {
+                if (soundPref == "alarm" || soundPref == "ringtone") {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        isLooping = true
+                    }
+                }
+                play()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun stopSound() {
+        try {
+            ringtone?.let {
+                if (it.isPlaying) {
+                    it.stop()
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        } finally {
+            ringtone = null
+        }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        stopSound()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        stopSound()
     }
 
     private fun snoozeHabit(habitId: Long, name: String) {

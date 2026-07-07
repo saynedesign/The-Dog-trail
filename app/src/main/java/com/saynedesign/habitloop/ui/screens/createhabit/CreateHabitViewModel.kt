@@ -6,6 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.saynedesign.habitloop.data.HabitDao
 import com.saynedesign.habitloop.data.HabitEntity
+import com.saynedesign.habitloop.data.UserDao
+import com.saynedesign.habitloop.data.ProductivityTime
 import com.saynedesign.habitloop.util.AwardXpUseCase
 import com.saynedesign.habitloop.util.LevelSystem
 import com.saynedesign.habitloop.util.NotificationScheduler
@@ -26,6 +28,7 @@ import com.saynedesign.habitloop.data.UserPreferencesRepository
 class CreateHabitViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val habitDao: HabitDao,
+    private val userDao: UserDao,
     private val notificationScheduler: NotificationScheduler,
     private val awardXpUseCase: AwardXpUseCase,
     private val preferencesRepository: UserPreferencesRepository,
@@ -56,6 +59,26 @@ class CreateHabitViewModel @Inject constructor(
         }
 
         val habitId = savedStateHandle.get<Long>("habitId")
+        
+        viewModelScope.launch {
+            userDao.getUser().collect { user ->
+                if (user != null) {
+                    val defaultTime = when (user.preferredProductivityTime) {
+                        ProductivityTime.MORNING -> user.defaultReminderWindow.split("-").firstOrNull() ?: morningTimePref
+                        ProductivityTime.AFTERNOON -> user.defaultReminderWindow.split("-").firstOrNull() ?: afternoonTimePref
+                        ProductivityTime.EVENING -> user.defaultReminderWindow.split("-").firstOrNull() ?: eveningTimePref
+                        ProductivityTime.NIGHT -> user.defaultReminderWindow.split("-").firstOrNull() ?: "22:00"
+                    }
+                    _state.update { 
+                        it.copy(
+                            userPrimaryGoal = user.primaryGoal,
+                            reminderTime = if (habitId == null || habitId == -1L) defaultTime else it.reminderTime
+                        ) 
+                    }
+                }
+            }
+        }
+
         if (habitId != null && habitId != -1L) {
             loadHabit(habitId)
         } else {

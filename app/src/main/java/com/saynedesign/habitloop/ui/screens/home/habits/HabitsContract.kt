@@ -4,6 +4,8 @@ import com.saynedesign.habitloop.data.HabitEntity
 import com.saynedesign.habitloop.data.HabitLogEntity
 import java.time.LocalDate
 
+import com.saynedesign.habitloop.data.MotivationStyle
+
 interface HabitsContract {
 
     data class State(
@@ -30,7 +32,11 @@ interface HabitsContract {
         val currentLevel: Int = 1,
         val xpPopAmount: Int? = null,
         val userName: String = "",
-        val profileImageUri: String? = null
+        val profileImageUri: String? = null,
+        
+        // Motivation custom
+        val motivationStyle: MotivationStyle = MotivationStyle.SEEING_PROGRESS,
+        val currentStreak: Int = 0
     )
 
     sealed class Event {

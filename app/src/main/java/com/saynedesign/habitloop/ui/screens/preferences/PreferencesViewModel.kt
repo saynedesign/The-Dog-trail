@@ -78,6 +78,11 @@ class PreferencesViewModel @Inject constructor(
                 _state.update { it.copy(isOverlayReminderEnabled = enabled) }
             }
         }
+        viewModelScope.launch {
+            preferencesRepository.overlayReminderSound.collectLatest { sound ->
+                _state.update { it.copy(overlayReminderSound = sound) }
+            }
+        }
     }
 
     fun handleEvent(event: PreferencesContract.Event) {
@@ -118,6 +123,9 @@ class PreferencesViewModel @Inject constructor(
             }
             is PreferencesContract.Event.OnOverlayReminderToggle -> {
                 viewModelScope.launch { preferencesRepository.updateOverlayReminderEnabled(event.enabled) }
+            }
+            is PreferencesContract.Event.OnOverlayReminderSoundChange -> {
+                viewModelScope.launch { preferencesRepository.updateOverlayReminderSound(event.sound) }
             }
             PreferencesContract.Event.OnClearCacheClicked -> {
                 viewModelScope.launch { _effect.send(PreferencesContract.Effect.ShowToast("Cache cleared!")) }

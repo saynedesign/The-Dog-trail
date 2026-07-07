@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.saynedesign.habitloop.R
+import com.saynedesign.habitloop.ui.theme.isAppInDarkTheme
 import com.saynedesign.habitloop.util.LevelSystem
 
 @Composable
@@ -48,6 +49,7 @@ fun AchievementsScreen(
     state: AchievementsContract.State,
     onEvent: (AchievementsContract.Event) -> Unit
 ) {
+    val isDark = isAppInDarkTheme()
     var showInfoDialog by remember { mutableStateOf(false) }
 
     if (showInfoDialog) {
@@ -58,12 +60,13 @@ fun AchievementsScreen(
                     Icon(
                         imageVector = Icons.Default.Info,
                         contentDescription = null,
-                        tint = Color(0xFF6C4BFF)
+                        tint = if (isDark) Color(0xFF9E8BFF) else Color(0xFF6C4BFF)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "Scoring & Ranks Guide",
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                 }
             },
@@ -71,9 +74,10 @@ fun AchievementsScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(
                         text = "Earn XP by completing habits and building consistency. Each milestone unlocks a new dog rank!",
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    HorizontalDivider(color = Color(0xFFE8EAF6))
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                     XpRuleRow(label = "Habit Completed", xp = "+10 XP")
                     XpRuleRow(label = "First Habit of the Day", xp = "+5 XP")
                     XpRuleRow(label = "Perfect Day (All Habits)", xp = "+50 XP")
@@ -84,10 +88,10 @@ fun AchievementsScreen(
             },
             confirmButton = {
                 TextButton(onClick = { showInfoDialog = false }) {
-                    Text("Got it", color = Color(0xFF6C4BFF))
+                    Text("Got it", color = if (isDark) Color(0xFF9E8BFF) else Color(0xFF6C4BFF))
                 }
             },
-            containerColor = Color.White,
+            containerColor = MaterialTheme.colorScheme.surface,
             shape = RoundedCornerShape(16.dp)
         )
     }
@@ -107,13 +111,13 @@ fun AchievementsScreen(
                     onClick = { onEvent(AchievementsContract.Event.OnBackClicked) },
                     modifier = Modifier
                         .size(40.dp)
-                        .background(Color.White, shape = CircleShape)
-                        .border(BorderStroke(1.dp, Color(0xFFE8EAF6)), shape = CircleShape)
+                        .background(MaterialTheme.colorScheme.surface, shape = CircleShape)
+                        .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant), shape = CircleShape)
                 ) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = stringResource(R.string.common_back),
-                        tint = Color(0xFF1D1B20),
+                        tint = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -134,7 +138,7 @@ fun AchievementsScreen(
                     Text(
                         text = stringResource(R.string.achievements_title),
                         style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                        color = Color(0xFF1D1B20)
+                        color = MaterialTheme.colorScheme.onBackground
                     )
                 }
 
@@ -143,19 +147,19 @@ fun AchievementsScreen(
                     onClick = { showInfoDialog = true },
                     modifier = Modifier
                         .size(40.dp)
-                        .background(Color.White, shape = CircleShape)
-                        .border(BorderStroke(1.dp, Color(0xFFE8EAF6)), shape = CircleShape)
+                        .background(MaterialTheme.colorScheme.surface, shape = CircleShape)
+                        .border(BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant), shape = CircleShape)
                 ) {
                     Icon(
                         imageVector = Icons.Default.Info,
                         contentDescription = "Info",
-                        tint = Color(0xFF1D1B20),
+                        tint = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.size(20.dp)
                     )
                 }
             }
         },
-        containerColor = Color(0xFFF8F9FE) // BrandBackground
+        containerColor = MaterialTheme.colorScheme.background
     ) { innerPadding ->
         Column(
             modifier = Modifier
@@ -328,6 +332,7 @@ fun CurrentRankCard(state: AchievementsContract.State) {
 
 @Composable
 fun RanksMap(state: AchievementsContract.State) {
+    val isDark = isAppInDarkTheme()
     val level1 = state.levels.getOrNull(0)
     val level2 = state.levels.getOrNull(1)
     val level3 = state.levels.getOrNull(2)
@@ -356,7 +361,11 @@ fun RanksMap(state: AchievementsContract.State) {
 
                 // Segment L1 -> L2 (highlighted if achieved level 2)
                 val isSegment1High = state.currentLevel >= 2
-                val color1 = if (isSegment1High) Color(0xFF6C4BFF) else Color(0xFFE8EAF6)
+                val color1 = if (isSegment1High) {
+                    if (isDark) Color(0xFF8C76FF) else Color(0xFF6C4BFF)
+                } else {
+                    if (isDark) Color(0xFF292E3B) else Color(0xFFE8EAF6)
+                }
                 val pathEffect1 = if (isSegment1High) null else PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
                 drawLine(
                     color = color1,
@@ -368,7 +377,11 @@ fun RanksMap(state: AchievementsContract.State) {
 
                 // Segment L2 -> L3 (highlighted if achieved level 3)
                 val isSegment2High = state.currentLevel >= 3
-                val color2 = if (isSegment2High) Color(0xFF6C4BFF) else Color(0xFFE8EAF6)
+                val color2 = if (isSegment2High) {
+                    if (isDark) Color(0xFF8C76FF) else Color(0xFF6C4BFF)
+                } else {
+                    if (isDark) Color(0xFF292E3B) else Color(0xFFE8EAF6)
+                }
                 val pathEffect2 = if (isSegment2High) null else PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
                 drawLine(
                     color = color2,
@@ -413,7 +426,11 @@ fun RanksMap(state: AchievementsContract.State) {
 
                 // Segment L4 -> L5 (highlighted if achieved level 5)
                 val isSegment3High = state.currentLevel >= 5
-                val color3 = if (isSegment3High) Color(0xFF6C4BFF) else Color(0xFFE8EAF6)
+                val color3 = if (isSegment3High) {
+                    if (isDark) Color(0xFF8C76FF) else Color(0xFF6C4BFF)
+                } else {
+                    if (isDark) Color(0xFF292E3B) else Color(0xFFE8EAF6)
+                }
                 val pathEffect3 = if (isSegment3High) null else PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
                 drawLine(
                     color = color3,
@@ -425,7 +442,11 @@ fun RanksMap(state: AchievementsContract.State) {
 
                 // Segment L5 -> L6 (highlighted if achieved level 6)
                 val isSegment4High = state.currentLevel >= 6
-                val color4 = if (isSegment4High) Color(0xFF6C4BFF) else Color(0xFFE8EAF6)
+                val color4 = if (isSegment4High) {
+                    if (isDark) Color(0xFF8C76FF) else Color(0xFF6C4BFF)
+                } else {
+                    if (isDark) Color(0xFF292E3B) else Color(0xFFE8EAF6)
+                }
                 val pathEffect4 = if (isSegment4High) null else PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
                 drawLine(
                     color = color4,
@@ -470,7 +491,11 @@ fun RanksMap(state: AchievementsContract.State) {
 
                 // Segment L7 -> L8 (highlighted if achieved level 8)
                 val isSegment5High = state.currentLevel >= 8
-                val color5 = if (isSegment5High) Color(0xFF6C4BFF) else Color(0xFFE8EAF6)
+                val color5 = if (isSegment5High) {
+                    if (isDark) Color(0xFF8C76FF) else Color(0xFF6C4BFF)
+                } else {
+                    if (isDark) Color(0xFF292E3B) else Color(0xFFE8EAF6)
+                }
                 val pathEffect5 = if (isSegment5High) null else PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
                 drawLine(
                     color = color5,
@@ -482,7 +507,11 @@ fun RanksMap(state: AchievementsContract.State) {
 
                 // Segment L8 -> L9 (highlighted if achieved level 9)
                 val isSegment6High = state.currentLevel >= 9
-                val color6 = if (isSegment6High) Color(0xFF6C4BFF) else Color(0xFFE8EAF6)
+                val color6 = if (isSegment6High) {
+                    if (isDark) Color(0xFF8C76FF) else Color(0xFF6C4BFF)
+                } else {
+                    if (isDark) Color(0xFF292E3B) else Color(0xFFE8EAF6)
+                }
                 val pathEffect6 = if (isSegment6High) null else PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
                 drawLine(
                     color = color6,
@@ -532,6 +561,7 @@ fun RanksMap(state: AchievementsContract.State) {
 
 @Composable
 fun LevelCard(levelInfo: LevelSystem.LevelInfo, currentLevel: Int) {
+    val isDark = isAppInDarkTheme()
     val level = levelInfo.level
     val requiredXp = levelInfo.requiredXp
     val name = levelInfo.name
@@ -541,8 +571,19 @@ fun LevelCard(levelInfo: LevelSystem.LevelInfo, currentLevel: Int) {
     val isCurrent = level == currentLevel
     val isLocked = level > currentLevel
 
-    val border = if (isCurrent) BorderStroke(2.dp, Color(0xFF6C4BFF)) else null
-    val cardBg = if (isCurrent) Color(0xFFF7F5FF) else Color.White
+    val primaryAccentColor = if (isDark) Color(0xFF9E8BFF) else Color(0xFF6C4BFF)
+    val border = if (isCurrent) {
+        BorderStroke(2.dp, primaryAccentColor)
+    } else if (isDark) {
+        BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    } else {
+        null
+    }
+    val cardBg = if (isCurrent) {
+        if (isDark) Color(0xFF241D4F) else Color(0xFFF7F5FF)
+    } else {
+        MaterialTheme.colorScheme.surface
+    }
     val cardElevation = if (isCurrent) 8.dp else if (isLocked) 1.dp else 2.dp
 
     Card(
@@ -560,32 +601,38 @@ fun LevelCard(levelInfo: LevelSystem.LevelInfo, currentLevel: Int) {
                 .padding(vertical = 12.dp, horizontal = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Badge Circle containing Emoji (if unlocked) or Lock (if locked)
+            // Badge Circle containing dynamic rank image (if unlocked) or translucent with lock (if locked)
+            val badgeBg = if (isDark) Color(0xFF2A2E3D) else Color(0xFFE8EAF6)
             Box(
                 modifier = Modifier
-                    .size(if (isCurrent) 44.dp else 40.dp)
-                    .background(
-                        color = when {
-                            isCompleted -> Color(0xFFF0ECFF)
-                            isCurrent -> Color(0xFFF0ECFF)
-                            else -> Color(0xFFE8EAF6)
-                        },
+                    .size(if (isCurrent) 50.dp else 46.dp)
+                    .background(badgeBg, CircleShape)
+                    .border(
+                        BorderStroke(
+                            width = if (isCurrent) 2.dp else 1.dp,
+                            color = if (isCurrent) primaryAccentColor else Color.Transparent
+                        ),
                         shape = CircleShape
-                    ),
+                    )
+                    .clip(CircleShape),
                 contentAlignment = Alignment.Center
             ) {
+                Image(
+                    painter = painterResource(LevelSystem.getLevelDrawableRes(level)),
+                    contentDescription = name,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop,
+                    alpha = if (isLocked) 0.35f else 1.0f
+                )
                 if (isLocked) {
                     Icon(
                         imageVector = Icons.Default.Lock,
-                        contentDescription = null,
-                        tint = Color(0xFF9A89FF),
-                        modifier = Modifier.size(18.dp)
-                    )
-                } else {
-                    Text(
-                        text = emoji,
-                        style = MaterialTheme.typography.titleMedium,
-                        textAlign = TextAlign.Center
+                        contentDescription = "Locked",
+                        tint = Color.White,
+                        modifier = Modifier
+                            .size(16.dp)
+                            .background(Color.Black.copy(alpha = 0.4f), CircleShape)
+                            .padding(2.dp)
                     )
                 }
             }
@@ -594,7 +641,7 @@ fun LevelCard(levelInfo: LevelSystem.LevelInfo, currentLevel: Int) {
             Text(
                 text = "Level $level",
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
-                color = Color.Gray
+                color = if (isDark) MaterialTheme.colorScheme.onSurfaceVariant else Color.Gray
             )
             Spacer(modifier = Modifier.height(2.dp))
             // Rank Name (no emoji)
@@ -603,7 +650,7 @@ fun LevelCard(levelInfo: LevelSystem.LevelInfo, currentLevel: Int) {
                 style = MaterialTheme.typography.titleSmall.copy(
                     fontWeight = if (isCurrent) FontWeight.ExtraBold else FontWeight.Bold
                 ),
-                color = if (isCurrent) Color(0xFF6C4BFF) else Color(0xFF1D1B20),
+                color = if (isCurrent) primaryAccentColor else MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center
             )
             Spacer(modifier = Modifier.height(8.dp))
@@ -611,7 +658,7 @@ fun LevelCard(levelInfo: LevelSystem.LevelInfo, currentLevel: Int) {
             Text(
                 text = "$requiredXp XP",
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
-                color = if (isCurrent) Color(0xFF6C4BFF) else Color.Gray
+                color = if (isCurrent) primaryAccentColor else if (isDark) MaterialTheme.colorScheme.onSurfaceVariant else Color.Gray
             )
         }
     }
@@ -639,7 +686,12 @@ fun RowTransitionLine(
     isHighlighted: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val lineColor = if (isHighlighted) Color(0xFF6C4BFF) else Color(0xFFE8EAF6)
+    val isDark = isAppInDarkTheme()
+    val lineColor = if (isHighlighted) {
+        if (isDark) Color(0xFF8C76FF) else Color(0xFF6C4BFF)
+    } else {
+        if (isDark) Color(0xFF292E3B) else Color(0xFFE8EAF6)
+    }
     val strokeWidth = 2.dp
     Canvas(
         modifier = modifier
@@ -681,9 +733,11 @@ fun RowTransitionLine(
 
 @Composable
 fun BottomStatsCard(state: AchievementsContract.State) {
+    val isDark = isAppInDarkTheme()
     Card(
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        border = if (isDark) BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant) else null,
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         modifier = Modifier
             .fillMaxWidth()
@@ -706,7 +760,7 @@ fun BottomStatsCard(state: AchievementsContract.State) {
             )
 
             // Divider
-            VerticalDivider(modifier = Modifier.height(32.dp), color = Color(0xFFE8EAF6))
+            VerticalDivider(modifier = Modifier.height(32.dp), color = MaterialTheme.colorScheme.outlineVariant)
 
             // 2. Day Streak
             StatColumn(
@@ -719,7 +773,7 @@ fun BottomStatsCard(state: AchievementsContract.State) {
             )
 
             // Divider
-            VerticalDivider(modifier = Modifier.height(32.dp), color = Color(0xFFE8EAF6))
+            VerticalDivider(modifier = Modifier.height(32.dp), color = MaterialTheme.colorScheme.outlineVariant)
 
             // 3. Check-ins
             StatColumn(
@@ -732,7 +786,7 @@ fun BottomStatsCard(state: AchievementsContract.State) {
             )
 
             // Divider
-            VerticalDivider(modifier = Modifier.height(32.dp), color = Color(0xFFE8EAF6))
+            VerticalDivider(modifier = Modifier.height(32.dp), color = MaterialTheme.colorScheme.outlineVariant)
 
             // 4. Badges Earned
             StatColumn(
@@ -756,6 +810,24 @@ fun StatColumn(
     label: String,
     modifier: Modifier = Modifier
 ) {
+    val isDark = isAppInDarkTheme()
+    val adjustedIconColor = if (isDark) {
+        when (iconColor) {
+            Color(0xFF6C4BFF) -> Color(0xFF9E8BFF) // Purple
+            Color(0xFFFF5722) -> Color(0xFFFF7A59) // Orange
+            Color(0xFF2E7D32) -> Color(0xFF81C784) // Green
+            Color(0xFF1E88E5) -> Color(0xFF64B5F6) // Blue
+            else -> iconColor
+        }
+    } else {
+        iconColor
+    }
+    val adjustedBgColor = if (isDark) {
+        adjustedIconColor.copy(alpha = 0.15f)
+    } else {
+        bgColor
+    }
+
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally
@@ -763,13 +835,13 @@ fun StatColumn(
         Box(
             modifier = Modifier
                 .size(40.dp)
-                .background(color = bgColor, shape = CircleShape),
+                .background(color = adjustedBgColor, shape = CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                tint = iconColor,
+                tint = adjustedIconColor,
                 modifier = Modifier.size(20.dp)
             )
         }
@@ -777,18 +849,19 @@ fun StatColumn(
         Text(
             text = value,
             style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-            color = Color(0xFF1D1B20)
+            color = MaterialTheme.colorScheme.onSurface
         )
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
-            color = Color.Gray
+            color = if (isDark) MaterialTheme.colorScheme.onSurfaceVariant else Color.Gray
         )
     }
 }
 
 @Composable
 fun XpRuleRow(label: String, xp: String) {
+    val isDark = isAppInDarkTheme()
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -797,12 +870,12 @@ fun XpRuleRow(label: String, xp: String) {
         Text(
             text = label,
             style = MaterialTheme.typography.bodyMedium,
-            color = Color(0xFF1D1B20)
+            color = MaterialTheme.colorScheme.onSurface
         )
         Text(
             text = xp,
             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-            color = Color(0xFF2E7D32)
+            color = if (isDark) Color(0xFF81C784) else Color(0xFF2E7D32)
         )
     }
 }

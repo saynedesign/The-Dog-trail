@@ -12,8 +12,8 @@ interface ProfileContract {
         // XP
         val totalXp: Int = 0,
         val xpProgress: Float = 0f,
-        val levelName: String = "Pup",
-        val levelEmoji: String = "🐾",
+        val levelName: String = "Initiate",
+        val levelEmoji: String = "🗡️",
         val nextLevelXp: Int = 200,
         val currentStreak: Int = 0,
         val bestStreak: Int = 0,

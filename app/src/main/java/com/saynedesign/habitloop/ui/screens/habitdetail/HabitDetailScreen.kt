@@ -9,6 +9,7 @@ import com.saynedesign.habitloop.ui.theme.isAppInDarkTheme as isSystemInDarkThem
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -145,14 +146,15 @@ fun HabitDetailScreen(
                         Last14DaysCard(
                             logs = state.logs,
                             selectedDaysCsv = state.habit.selectedDays,
-                            restDayEpochs = state.restDayEpochs
+                            restDayEpochs = state.restDayEpochs,
+                            onEvent = onEvent
                         )
                     }
 
                     item {
                         YearlyGridCard(
+                            habit = state.habit,
                             logs = state.logs,
-                            createdDate = state.habit.createdTimestamp,
                             totalCompletions = state.totalCompletions
                         )
                     }
@@ -166,7 +168,8 @@ fun HabitDetailScreen(
                             completionRate = state.completionRate,
                             habitXp = state.habitXp,
                             logs = state.logs,
-                            restDayEpochs = state.restDayEpochs
+                            restDayEpochs = state.restDayEpochs,
+                            onEvent = onEvent
                         )
                     }
 
@@ -175,6 +178,97 @@ fun HabitDetailScreen(
             } else {
                  Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(stringResource(R.string.habit_detail_not_found))
+                }
+            }
+        }
+    }
+
+    if (state.showFullHistorySheet && state.habit != null) {
+        ModalBottomSheet(
+            onDismissRequest = { onEvent(HabitDetailContract.Event.OnToggleHistorySheet(false)) },
+            containerColor = MaterialTheme.colorScheme.surface
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 32.dp)
+            ) {
+                Text(
+                    text = "History: ${state.habit.title}",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+
+                if (state.logs.isEmpty()) {
+                    Text(
+                        text = "No history recorded yet.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 24.dp),
+                        textAlign = TextAlign.Center
+                    )
+                } else {
+                    LazyColumn(
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.heightIn(max = 400.dp)
+                    ) {
+                        items(state.logs.sortedByDescending { it.dateEpochDay }) { log ->
+                            val date = LocalDate.ofEpochDay(log.dateEpochDay)
+                            val formatter = DateTimeFormatter.ofPattern("EEEE, MMM d, yyyy")
+                            val dateStr = date.format(formatter)
+
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(12.dp))
+                                    .padding(16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        text = dateStr,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "Logged Value: ${formatValue(log.value ?: 0f)} ${state.habit.unit}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+
+                                val isGoalMet = if (state.habit.type == "YES_NO") {
+                                    true
+                                } else {
+                                    if (state.habit.isAtLeast) {
+                                        (log.value ?: 0f) >= state.habit.targetValue
+                                    } else {
+                                        (log.value ?: 0f) <= state.habit.targetValue
+                                    }
+                                }
+
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(if (isGoalMet) Color(0xFF4CAF50).copy(alpha = 0.15f) else Color(0xFFFF9800).copy(alpha = 0.15f))
+                                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                                ) {
+                                    Text(
+                                        text = if (isGoalMet) "Completed ✅" else "In Progress ⏱️",
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = if (isGoalMet) Color(0xFF4CAF50) else Color(0xFFFF9800),
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -189,19 +283,19 @@ fun HabitMainCard(
 ) {
     val isDark = isSystemInDarkTheme()
     val progress = consistency / 100f
+    val userColor = Color(habit.color)
     
     val cardBackground = if (isDark) {
         Brush.linearGradient(
             colors = listOf(
-                Color(0xFF13112B),
-                Color(0xFF281C30),
-                Color(0xFF3B1E29)
+                userColor.copy(alpha = 0.22f),
+                Color(0xFF13112B)
             )
         )
     } else {
         Brush.linearGradient(
             colors = listOf(
-                Color.White,
+                userColor.copy(alpha = 0.08f),
                 Color.White
             )
         )
@@ -219,7 +313,7 @@ fun HabitMainCard(
                 .background(cardBackground)
                 .then(
                     if (!isDark) {
-                        Modifier.border(1.dp, Color(0xFFE8EAF6), RoundedCornerShape(28.dp))
+                        Modifier.border(1.dp, userColor.copy(alpha = 0.15f), RoundedCornerShape(28.dp))
                     } else Modifier
                 )
                 .padding(20.dp)
@@ -247,23 +341,13 @@ fun HabitMainCard(
                                 style = Stroke(width = strokeWidth.toPx(), cap = StrokeCap.Round)
                             )
                             
-                            // Draw progress with gradient
-                            val progressBrush = if (isDark) {
-                                Brush.horizontalGradient(
-                                    colors = listOf(
-                                        Color(0xFF6C4BFF),
-                                        Color(0xFFFF5E3A),
-                                        Color(0xFFFF9F43)
-                                    )
+                            // Draw progress with gradient based on user selected color
+                            val progressBrush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    userColor,
+                                    userColor.copy(alpha = 0.6f)
                                 )
-                            } else {
-                                Brush.horizontalGradient(
-                                    colors = listOf(
-                                        Color(0xFFFF7A00),
-                                        Color(0xFFFF9F43)
-                                    )
-                                )
-                            }
+                            )
                             
                             drawArc(
                                 brush = progressBrush,
@@ -279,7 +363,7 @@ fun HabitMainCard(
                             modifier = Modifier
                                 .size(56.dp)
                                 .clip(CircleShape)
-                                .background(if (isDark) Color(0xFF25293E).copy(alpha = 0.5f) else Color(0xFFFFF3E0)),
+                                .background(if (isDark) Color(0xFF25293E).copy(alpha = 0.5f) else userColor.copy(alpha = 0.15f)),
                             contentAlignment = Alignment.Center
                         ) {
                             if (habit.icon.isNotBlank()) {
@@ -289,7 +373,7 @@ fun HabitMainCard(
                                     text = habit.title.take(1).uppercase(),
                                     fontSize = 20.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = if (isDark) Color.White else Color(0xFFFF7A00)
+                                    color = if (isDark) Color.White else userColor
                                 )
                             }
                         }
@@ -300,10 +384,10 @@ fun HabitMainCard(
                                 .align(Alignment.BottomCenter)
                                 .offset(y = 4.dp)
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(if (isDark) Color(0xFF141622) else Color(0xFFFFF3E0))
+                                .background(if (isDark) Color(0xFF141622) else userColor.copy(alpha = 0.12f))
                                 .border(
                                     width = 1.dp,
-                                    color = if (isDark) Color(0xFF292E3B) else Color(0xFFFFD180),
+                                    color = if (isDark) Color(0xFF292E3B) else userColor.copy(alpha = 0.4f),
                                     shape = RoundedCornerShape(12.dp)
                                 )
                                 .padding(horizontal = 8.dp, vertical = 4.dp),
@@ -317,13 +401,13 @@ fun HabitMainCard(
                                         text = "$currentStreak",
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 11.sp,
-                                        color = if (isDark) Color.White else Color(0xFFE65100)
+                                        color = if (isDark) Color.White else userColor
                                     )
                                 }
                                 Text(
                                     text = "Day Streak",
                                     fontSize = 7.sp,
-                                    color = if (isDark) Color(0xFF8B93A6) else Color(0xFFE65100).copy(alpha = 0.8f)
+                                    color = if (isDark) Color(0xFF8B93A6) else userColor
                                 )
                             }
                         }
@@ -388,7 +472,7 @@ fun HabitMainCard(
                         // Streak motivator card
                         val annotatedCalloutText = buildAnnotatedString {
                             append("You've checked in ")
-                            withStyle(style = SpanStyle(color = Color(0xFFFF7A00), fontWeight = FontWeight.Bold)) {
+                            withStyle(style = SpanStyle(color = userColor, fontWeight = FontWeight.Bold)) {
                                 append("$currentStreak days straight.")
                             }
                             append(" Keep the momentum going! 💪")
@@ -398,7 +482,7 @@ fun HabitMainCard(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clip(RoundedCornerShape(12.dp))
-                                .background(if (isDark) Color(0xFF1E2230).copy(alpha = 0.5f) else Color(0xFFFFF3E0))
+                                .background(if (isDark) Color(0xFF1E2230).copy(alpha = 0.5f) else userColor.copy(alpha = 0.12f))
                                 .padding(8.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -407,7 +491,7 @@ fun HabitMainCard(
                             Text(
                                 text = annotatedCalloutText,
                                 fontSize = 10.sp,
-                                color = if (isDark) Color.White else Color(0xFFE65100),
+                                color = if (isDark) Color.White else userColor,
                                 lineHeight = 14.sp
                             )
                         }
@@ -431,7 +515,7 @@ fun HabitMainCard(
                             text = "$consistency%",
                             style = MaterialTheme.typography.headlineLarge,
                             fontWeight = FontWeight.Bold,
-                            color = if (isDark) Color.White else Color(0xFFFF5E3A)
+                            color = if (isDark) Color.White else userColor
                         )
                     }
                     
@@ -452,7 +536,7 @@ fun HabitMainCard(
                                     .clip(CircleShape)
                                     .background(
                                         Brush.horizontalGradient(
-                                            colors = listOf(Color(0xFFFF7A00), Color(0xFFFF9F43))
+                                            colors = listOf(userColor, userColor.copy(alpha = 0.6f))
                                         )
                                     )
                             )
@@ -756,7 +840,8 @@ fun TodayStatusActionCard(
 fun Last14DaysCard(
     logs: List<HabitLogEntity>,
     selectedDaysCsv: String,
-    restDayEpochs: Set<Long>
+    restDayEpochs: Set<Long>,
+    onEvent: (HabitDetailContract.Event) -> Unit
 ) {
     val isDark = isSystemInDarkTheme()
     Card(
@@ -788,7 +873,8 @@ fun Last14DaysCard(
                     text = "View full history >",
                     style = MaterialTheme.typography.labelSmall,
                     color = Color(0xFF4B68FF),
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clickable { onEvent(HabitDetailContract.Event.OnToggleHistorySheet(true)) }
                 )
             }
             
@@ -884,12 +970,13 @@ fun Last14DaysCard(
 
 @Composable
 fun YearlyGridCard(
+    habit: HabitEntity,
     logs: List<HabitLogEntity>,
-    createdDate: Long,
     totalCompletions: Int
 ) {
     val isDark = isSystemInDarkTheme()
     val currentYear = LocalDate.now().year
+    val createdDate = habit.createdTimestamp
     
     Card(
         shape = RoundedCornerShape(24.dp),
@@ -919,7 +1006,7 @@ fun YearlyGridCard(
                 Text(
                     text = "$totalCompletions Active Days",
                     style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF4B68FF),
+                    color = Color(habit.color),
                     fontWeight = FontWeight.Bold
                 )
             }
@@ -936,49 +1023,58 @@ fun YearlyGridCard(
             }
             
             val emptyCellColor = if (isDark) Color(0xFF161922) else Color(0xFFE8EAF6)
-            val completedColor = Color(0xFF6C4BFF)
+            val completedColor = Color(habit.color)
 
             LazyRow(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.End
             ) {
                 items(52) { weekIndex ->
-                    val weeksAgo = 51 - weekIndex
-                    val startOfWeek = today.minusWeeks(weeksAgo.toLong())
-                        .with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY))
-                    
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp),
-                        modifier = Modifier.padding(horizontal = 2.dp)
-                    ) {
-                        repeat(7) { dayIndex ->
-                            val date = startOfWeek.plusDays(dayIndex.toLong())
-                            val epochDay = date.toEpochDay()
-                            val isCompleted = logDates.contains(epochDay)
-                            val isFuture = date.isAfter(today)
-                            val beforeHabitCreation = epochDay < createdEpochDay
-                            
-                            val cellColor = when {
-                                beforeHabitCreation || isFuture -> Color.Transparent
-                                isCompleted -> completedColor
-                                else -> emptyCellColor
-                            }
-                            
-                            Box(
-                                modifier = Modifier
-                                    .size(11.dp)
-                                    .clip(RoundedCornerShape(2.dp))
-                                    .background(cellColor)
-                                    .then(
-                                        if (cellColor == Color.Transparent && !isFuture && !beforeHabitCreation) {
-                                            Modifier.border(0.5.dp, emptyCellColor, RoundedCornerShape(2.dp))
-                                        } else if (isFuture || beforeHabitCreation) {
-                                            Modifier.border(0.5.dp, emptyCellColor.copy(alpha = 0.3f), RoundedCornerShape(2.dp))
-                                        } else Modifier
-                                    )
-                            )
-                        }
-                    }
+                      val weeksAgo = 51 - weekIndex
+                      val startOfWeek = today.minusWeeks(weeksAgo.toLong())
+                          .with(java.time.temporal.TemporalAdjusters.previousOrSame(java.time.DayOfWeek.MONDAY))
+                      
+                      Column(
+                          verticalArrangement = Arrangement.spacedBy(4.dp),
+                          modifier = Modifier.padding(horizontal = 2.dp)
+                      ) {
+                          repeat(7) { dayIndex ->
+                              val date = startOfWeek.plusDays(dayIndex.toLong())
+                              val epochDay = date.toEpochDay()
+                              val log = logs.find { it.dateEpochDay == epochDay }
+                              val isCompleted = log != null
+                              val isFuture = date.isAfter(today)
+                              val beforeHabitCreation = epochDay < createdEpochDay
+                              
+                              val cellColor = when {
+                                  beforeHabitCreation || isFuture -> Color.Transparent
+                                  isCompleted -> {
+                                      if (habit.type == "YES_NO" || habit.targetValue <= 0f) {
+                                          completedColor
+                                      } else {
+                                          val ratio = ((log?.value ?: 0f) / habit.targetValue).coerceIn(0f, 1f)
+                                          if (ratio == 0f) emptyCellColor
+                                          else completedColor.copy(alpha = (ratio * 0.8f + 0.2f).coerceIn(0.2f, 1f))
+                                      }
+                                  }
+                                  else -> emptyCellColor
+                              }
+                              
+                              Box(
+                                  modifier = Modifier
+                                      .size(11.dp)
+                                      .clip(RoundedCornerShape(2.dp))
+                                      .background(cellColor)
+                                      .then(
+                                          if (cellColor == Color.Transparent && !isFuture && !beforeHabitCreation) {
+                                              Modifier.border(0.5.dp, emptyCellColor, RoundedCornerShape(2.dp))
+                                          } else if (isFuture || beforeHabitCreation) {
+                                              Modifier.border(0.5.dp, emptyCellColor.copy(alpha = 0.3f), RoundedCornerShape(2.dp))
+                                          } else Modifier
+                                      )
+                              )
+                          }
+                      }
                 }
             }
             
@@ -1022,7 +1118,8 @@ fun MilestonesSection(
     completionRate: Int,
     habitXp: Int,
     logs: List<HabitLogEntity>,
-    restDayEpochs: Set<Long>
+    restDayEpochs: Set<Long>,
+    onEvent: (HabitDetailContract.Event) -> Unit
 ) {
     val isDark = isSystemInDarkTheme()
     val bestStreakVal = calculateBestStreak(logs, restDayEpochs)
@@ -1043,7 +1140,8 @@ fun MilestonesSection(
                 text = "View all >",
                 style = MaterialTheme.typography.labelSmall,
                 color = Color(0xFF4B68FF),
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.clickable { onEvent(HabitDetailContract.Event.OnViewAllMilestonesClicked) }
             )
         }
         

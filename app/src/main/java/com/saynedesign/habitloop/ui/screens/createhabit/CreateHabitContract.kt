@@ -1,8 +1,12 @@
 package com.saynedesign.habitloop.ui.screens.createhabit
 
+import com.saynedesign.habitloop.data.PrimaryGoal
+
 interface CreateHabitContract {
     data class State(
         val habitId: Long? = null, // If not null, we are in edit mode
+        val userPrimaryGoal: PrimaryGoal? = null,
+
         val habitName: String = "",
         val description: String = "",
         val habitIcon: String = "📝", // Default emoji

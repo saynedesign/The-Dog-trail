@@ -18,6 +18,7 @@ interface HomeContract {
         data object OnAchievementsRequested : Event()
         data object OnAppearanceRequested : Event()
         data object OnAboutRequested : Event()
+        data object OnCreateHabitRequested : Event()
     }
 
     sealed class Effect {
@@ -27,5 +28,6 @@ interface HomeContract {
         data object NavigateToAppearance : Effect()
         data object NavigateToAchievements : Effect()
         data object NavigateToAbout : Effect()
+        data object NavigateToCreateHabit : Effect()
     }
 }
