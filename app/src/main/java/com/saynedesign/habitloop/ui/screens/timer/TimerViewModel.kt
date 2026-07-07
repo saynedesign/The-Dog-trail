@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.saynedesign.habitloop.data.HabitDao
 import com.saynedesign.habitloop.data.HabitLogDao
-import com.saynedesign.habitloop.data.HabitLogEntity
+import com.saynedesign.habitloop.util.CompleteHabitUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -19,7 +19,8 @@ import javax.inject.Inject
 @HiltViewModel
 class TimerViewModel @Inject constructor(
     private val habitDao: HabitDao,
-    private val habitLogDao: HabitLogDao
+    private val habitLogDao: HabitLogDao,
+    private val completeHabitUseCase: CompleteHabitUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(TimerContract.State())
@@ -97,15 +98,13 @@ class TimerViewModel @Inject constructor(
     private fun finishSession() {
         viewModelScope.launch {
             val today = LocalDate.now().toEpochDay()
-            // Mark as done for today
-            // Value could be duration in minutes?
+            // Mark as done for today; value = session duration in minutes.
+            // Idempotent: a double finish (auto + manual) can't double-award XP.
             val durationMinutes = _state.value.totalTimeSeconds / 60f
-            habitLogDao.insertLog(
-                HabitLogEntity(
-                    habitId = _state.value.habitId,
-                    dateEpochDay = today,
-                    value = durationMinutes
-                )
+            completeHabitUseCase.complete(
+                habitId = _state.value.habitId,
+                epochDay = today,
+                value = durationMinutes
             )
             sendEffect(TimerContract.Effect.NavigateBack)
         }

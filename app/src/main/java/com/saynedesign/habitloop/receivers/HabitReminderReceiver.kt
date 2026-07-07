@@ -77,12 +77,39 @@ class HabitReminderReceiver : BroadcastReceiver() {
             PendingIntent.FLAG_IMMUTABLE
         )
 
+        // Inline actions: complete or snooze without opening the app
+        val completeIntent = Intent(context, NotificationActionReceiver::class.java).apply {
+            action = NotificationActionReceiver.ACTION_COMPLETE
+            putExtra("habitId", habitId)
+            putExtra("habitName", habitName)
+        }
+        val completePending = PendingIntent.getBroadcast(
+            context,
+            (habitId * 10 + 1).toInt(),
+            completeIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val snoozeIntent = Intent(context, NotificationActionReceiver::class.java).apply {
+            action = NotificationActionReceiver.ACTION_SNOOZE
+            putExtra("habitId", habitId)
+            putExtra("habitName", habitName)
+        }
+        val snoozePending = PendingIntent.getBroadcast(
+            context,
+            (habitId * 10 + 2).toInt(),
+            snoozeIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
         val notification = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle("Time for your habit!")
             .setContentText(habitName)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
+            .addAction(0, "Done ✓", completePending)
+            .addAction(0, "Snooze 15m", snoozePending)
             .setAutoCancel(true)
             .build()
 

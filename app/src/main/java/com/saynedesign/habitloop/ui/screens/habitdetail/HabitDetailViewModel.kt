@@ -10,6 +10,7 @@ import com.saynedesign.habitloop.data.HabitRestDayDao
 import com.saynedesign.habitloop.data.UserDao
 import com.saynedesign.habitloop.data.XpEventDao
 import com.saynedesign.habitloop.util.AwardXpUseCase
+import com.saynedesign.habitloop.util.CompleteHabitUseCase
 import com.saynedesign.habitloop.util.LevelSystem
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -31,6 +32,7 @@ class HabitDetailViewModel @Inject constructor(
     private val xpEventDao: XpEventDao,
     private val userDao: UserDao,
     private val awardXpUseCase: AwardXpUseCase,
+    private val completeHabitUseCase: CompleteHabitUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -271,37 +273,23 @@ class HabitDetailViewModel @Inject constructor(
     private fun toggleTodayCompletion(isDone: Boolean) {
         viewModelScope.launch {
             val todayEpoch = LocalDate.now().toEpochDay()
-            val existing = habitLogDao.getLogForDay(habitId, todayEpoch)
-            val currentState = _state.value
-            val habitTarget = currentState.habit?.targetValue ?: 1f
-            
-            if (isDone && existing == null) {
-                habitLogDao.insertLog(HabitLogEntity(habitId = habitId, dateEpochDay = todayEpoch, value = habitTarget))
-                awardXpUseCase.award(LevelSystem.XpRewards.HABIT_COMPLETE, LevelSystem.XpReasons.HABIT_COMPLETE, habitId)
-                // Reload
-                loadData()
-                loadXp()
-            } else if (!isDone && existing != null) {
-                habitLogDao.deleteLog(existing)
-                awardXpUseCase.award(-LevelSystem.XpRewards.HABIT_COMPLETE, LevelSystem.XpReasons.HABIT_COMPLETE + "_REVOKE", habitId)
-                // Reload
-                loadData()
-                loadXp()
+            val habitTarget = _state.value.habit?.targetValue ?: 1f
+
+            if (isDone) {
+                completeHabitUseCase.complete(habitId, todayEpoch, habitTarget)
+            } else {
+                completeHabitUseCase.uncomplete(habitId, todayEpoch)
             }
+            // Reload
+            loadData()
+            loadXp()
         }
     }
-    
+
     private fun updateTodayLogValue(value: Float) {
         viewModelScope.launch {
             val todayEpoch = LocalDate.now().toEpochDay()
-            val existing = habitLogDao.getLogForDay(habitId, todayEpoch)
-            
-            if (existing != null) {
-                habitLogDao.insertLog(existing.copy(value = value))
-            } else {
-                habitLogDao.insertLog(HabitLogEntity(habitId = habitId, dateEpochDay = todayEpoch, value = value))
-                awardXpUseCase.award(LevelSystem.XpRewards.HABIT_COMPLETE, LevelSystem.XpReasons.HABIT_COMPLETE, habitId)
-            }
+            completeHabitUseCase.setValue(habitId, todayEpoch, value)
             // Reload
             loadData()
             loadXp()

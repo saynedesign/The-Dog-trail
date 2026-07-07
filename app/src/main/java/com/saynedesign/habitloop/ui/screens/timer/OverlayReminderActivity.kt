@@ -61,7 +61,7 @@ class OverlayReminderActivity : ComponentActivity() {
     lateinit var db: HabitDatabase
 
     @Inject
-    lateinit var awardXpUseCase: AwardXpUseCase
+    lateinit var completeHabitUseCase: com.saynedesign.habitloop.util.CompleteHabitUseCase
 
     @Inject
     lateinit var notificationScheduler: NotificationScheduler
@@ -256,20 +256,8 @@ class OverlayReminderActivity : ComponentActivity() {
     }
 
     private suspend fun logCompletion(habitId: Long) {
-        val todayEpoch = LocalDate.now().toEpochDay()
-        // Check if log exists
-        val log = db.habitLogDao().getLogForDay(habitId, todayEpoch)
-        if (log == null) {
-            db.habitLogDao().insertLog(
-                HabitLogEntity(
-                    habitId = habitId,
-                    dateEpochDay = todayEpoch,
-                    value = 1f
-                )
-            )
-            awardXpUseCase.award(LevelSystem.XpRewards.HABIT_COMPLETE, LevelSystem.XpReasons.HABIT_COMPLETE, habitId)
-            WidgetUpdateHelper.updateAll(this)
-        }
+        // Unified path: log + full XP (incl. first-of-day / perfect-day) + widgets
+        completeHabitUseCase.complete(habitId)
     }
 }
 
