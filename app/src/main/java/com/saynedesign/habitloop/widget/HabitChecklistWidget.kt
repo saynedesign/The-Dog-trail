@@ -37,6 +37,7 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.saynedesign.habitloop.MainActivity
 import com.saynedesign.habitloop.data.HabitEntity
+import com.saynedesign.habitloop.data.isScheduledOn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
@@ -50,14 +51,10 @@ class HabitChecklistWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val db = WidgetDatabaseProvider.getDatabase(context)
         val today = LocalDate.now()
-        val dayOfWeek = today.dayOfWeek.value
         val todayEpoch = today.toEpochDay()
 
         val allHabits = withContext(Dispatchers.IO) { db.habitDao().getAllHabitsOneShot() }
-        val todayHabits = allHabits.filter { habit ->
-            val days = habit.selectedDays.split(",").mapNotNull { it.trim().toIntOrNull() }.toSet()
-            days.contains(dayOfWeek)
-        }
+        val todayHabits = allHabits.filter { it.isScheduledOn(today) }
         val todayLogs = withContext(Dispatchers.IO) { db.habitLogDao().getLogsForDayOneShot(todayEpoch) }
         val loggedHabitIds = todayLogs.map { it.habitId }.toSet()
 

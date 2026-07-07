@@ -28,6 +28,7 @@ import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.saynedesign.habitloop.MainActivity
+import com.saynedesign.habitloop.data.isScheduledOn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
@@ -41,15 +42,11 @@ class StreakSummaryWidget : GlanceAppWidget() {
         val db = WidgetDatabaseProvider.getDatabase(context)
         val today = LocalDate.now()
         val todayEpoch = today.toEpochDay()
-        val dayOfWeek = today.dayOfWeek.value
 
         val data = withContext(Dispatchers.IO) {
             val allHabits = db.habitDao().getAllHabitsOneShot()
             val todayLogs = db.habitLogDao().getLogsForDayOneShot(todayEpoch)
-            val todayHabits = allHabits.filter { habit ->
-                val days = habit.selectedDays.split(",").mapNotNull { it.trim().toIntOrNull() }.toSet()
-                days.contains(dayOfWeek)
-            }
+            val todayHabits = allHabits.filter { it.isScheduledOn(today) }
             val user = db.userDao().getUserOneShot()
 
             var streak = 0
