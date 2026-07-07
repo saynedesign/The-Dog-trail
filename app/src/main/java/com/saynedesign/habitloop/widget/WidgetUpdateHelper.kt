@@ -17,7 +17,9 @@ object WidgetUpdateHelper {
             HabitChecklistWidget().updateAll(context)
             StreakSummaryWidget().updateAll(context)
             QuickActionsWidget().updateAll(context)
-            // InspirationWidget rotates by day, no data-driven update needed
+            // Quote rotates by day-of-year — the midnight refresh must reach it
+            // too, otherwise it only changes when the launcher feels like it.
+            InspirationWidget().updateAll(context)
         }
     }
 }

@@ -32,11 +32,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 
-private val SBg = Color(0xFF1C202B)
-private val STextPrimary = Color(0xFFFFFFFF)
-private val STextDark = Color(0xFF1D1B20)
-private val SAccent = Color(0xFF4B68FF)
-
 /**
  * Widget 2: Streak & XP Summary
  */
@@ -95,7 +90,7 @@ private fun StreakSummaryContent(data: StreakData) {
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(ColorProvider(SBg))
+            .background(WidgetTheme.bg)
             .padding(16.dp)
             .clickable(actionStartActivity<MainActivity>()),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -110,7 +105,7 @@ private fun StreakSummaryContent(data: StreakData) {
             style = TextStyle(
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = ColorProvider(STextPrimary)
+                color = WidgetTheme.textPrimary
             )
         )
 
@@ -128,7 +123,7 @@ private fun StreakSummaryContent(data: StreakData) {
                     style = TextStyle(
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
-                        color = ColorProvider(SAccent)
+                        color = WidgetTheme.accent
                     )
                 )
             }
@@ -142,7 +137,7 @@ private fun StreakSummaryContent(data: StreakData) {
                     style = TextStyle(
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
-                        color = ColorProvider(SAccent)
+                        color = WidgetTheme.accent
                     )
                 )
             }
@@ -156,7 +151,7 @@ private fun StreakSummaryContent(data: StreakData) {
                     style = TextStyle(
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Medium,
-                        color = ColorProvider(SAccent)
+                        color = WidgetTheme.accent
                     )
                 )
             }

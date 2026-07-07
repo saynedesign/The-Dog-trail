@@ -35,17 +35,9 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.saynedesign.habitloop.MainActivity
 import com.saynedesign.habitloop.data.HabitEntity
-import com.saynedesign.habitloop.data.HabitLogEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
-
-private val QBg = Color(0xFF1C202B)
-private val QTextPrimary = Color(0xFFFFFFFF)
-private val QTextSecondary = Color(0xFF8B93A6)
-private val QAccent = Color(0xFF4B68FF)
-private val QAccentDone = Color(0xFF3366FF)
-private val QSurface = Color(0xFF292E3B)
 
 /**
  * Widget 3: Quick Actions — Top 3 habits as one-tap buttons.
@@ -85,7 +77,7 @@ private fun QuickActionsContent(
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(ColorProvider(QBg))
+            .background(WidgetTheme.bg)
             .padding(16.dp)
     ) {
         Text(
@@ -93,7 +85,7 @@ private fun QuickActionsContent(
             style = TextStyle(
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = ColorProvider(QTextPrimary)
+                color = WidgetTheme.textPrimary
             )
         )
 
@@ -108,15 +100,15 @@ private fun QuickActionsContent(
                     text = "No habits for today",
                     style = TextStyle(
                         fontSize = 14.sp,
-                        color = ColorProvider(QTextSecondary)
+                        color = WidgetTheme.textSecondary
                     )
                 )
             }
         } else {
             habits.forEach { habit ->
                 val isDone = habit.id in loggedHabitIds
-                val bgColor = if (isDone) ColorProvider(QAccentDone) else ColorProvider(QSurface)
-                val textColor = ColorProvider(QTextPrimary)
+                val bgColor = if (isDone) WidgetTheme.accentDone else WidgetTheme.surface
+                val textColor = if (isDone) WidgetTheme.onAccent else WidgetTheme.textPrimary
 
                 Box(
                     modifier = GlanceModifier
@@ -169,26 +161,11 @@ class QuickToggleAction : ActionCallback {
         val isDone = parameters[IsDoneKey] ?: return
         val todayEpoch = LocalDate.now().toEpochDay()
 
-        val db = WidgetDatabaseProvider.getDatabase(context)
+        // Unified completion path — same XP/streak behavior as in-app toggles.
         withContext(Dispatchers.IO) {
-            if (isDone) {
-                val existing = db.habitLogDao().getLogForDay(habitId, todayEpoch)
-                if (existing == null) {
-                    db.habitLogDao().insertLog(
-                        HabitLogEntity(habitId = habitId, dateEpochDay = todayEpoch, value = 1f)
-                    )
-                }
-            } else {
-                val existing = db.habitLogDao().getLogForDay(habitId, todayEpoch)
-                if (existing != null) {
-                    db.habitLogDao().deleteLog(existing)
-                }
-            }
+            context.widgetEntryPoint().completeHabitUseCase()
+                .setCompleted(habitId, todayEpoch, isDone)
         }
-
-        QuickActionsWidget().updateAll(context)
-        HabitChecklistWidget().updateAll(context)
-        StreakSummaryWidget().updateAll(context)
     }
 }
 

@@ -11,6 +11,7 @@ import com.saynedesign.habitloop.data.HabitRestDayDao
 import com.saynedesign.habitloop.data.HabitRestDayEntity
 import com.saynedesign.habitloop.data.UserDao
 import com.saynedesign.habitloop.util.AwardXpUseCase
+import com.saynedesign.habitloop.util.CompleteHabitUseCase
 import com.saynedesign.habitloop.util.LevelSystem
 import com.saynedesign.habitloop.widget.WidgetUpdateHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -32,7 +33,8 @@ class HabitsViewModel @Inject constructor(
     private val habitLogDao: HabitLogDao,
     private val habitRestDayDao: HabitRestDayDao,
     private val userDao: UserDao,
-    private val awardXpUseCase: AwardXpUseCase
+    private val awardXpUseCase: AwardXpUseCase,
+    private val completeHabitUseCase: CompleteHabitUseCase
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(HabitsContract.State())
@@ -294,106 +296,20 @@ class HabitsViewModel @Inject constructor(
     private fun toggleHabit(habitId: Long, isDone: Boolean) {
         viewModelScope.launch {
             val day = _state.value.selectedEpochDay
-            val existing = habitLogDao.getLogForDay(habitId, day)
-            if (isDone && existing == null) {
-                habitLogDao.insertLog(HabitLogEntity(habitId = habitId, dateEpochDay = day, value = 1f))
-
-                val logsToday = logsCache.count { it.dateEpochDay == day }
-                var xpAwarded = LevelSystem.XpRewards.HABIT_COMPLETE
-                awardXpUseCase.award(LevelSystem.XpRewards.HABIT_COMPLETE, LevelSystem.XpReasons.HABIT_COMPLETE, habitId)
-
-                if (logsToday == 0) {
-                    awardXpUseCase.award(LevelSystem.XpRewards.FIRST_OF_DAY, LevelSystem.XpReasons.FIRST_OF_DAY, habitId)
-                    xpAwarded += LevelSystem.XpRewards.FIRST_OF_DAY
-                }
-
-                val scheduledHabits = _state.value.habits
-                val restingIds = _state.value.restingHabitIds
-                val nonRestingHabits = scheduledHabits.filter { it.id !in restingIds }
-                val logsForDay = logsCache.filter { it.dateEpochDay == day }.map { it.habitId }.toSet() + habitId
-                val allDone = nonRestingHabits.all { it.id in logsForDay }
-                if (allDone && nonRestingHabits.isNotEmpty()) {
-                    awardXpUseCase.award(LevelSystem.XpRewards.PERFECT_DAY, LevelSystem.XpReasons.PERFECT_DAY)
-                    xpAwarded += LevelSystem.XpRewards.PERFECT_DAY
-                }
-
-                _state.value = _state.value.copy(xpPopAmount = xpAwarded)
-            } else if (!isDone && existing != null) {
-                habitLogDao.deleteLog(existing)
-
-                val logsToday = logsCache.count { it.dateEpochDay == day }
-                awardXpUseCase.award(-LevelSystem.XpRewards.HABIT_COMPLETE, LevelSystem.XpReasons.HABIT_COMPLETE + "_REVOKE", habitId)
-                if (logsToday == 1) {
-                    awardXpUseCase.award(-LevelSystem.XpRewards.FIRST_OF_DAY, LevelSystem.XpReasons.FIRST_OF_DAY + "_REVOKE", habitId)
-                }
-
-                val scheduledHabits = _state.value.habits
-                val restingIds = _state.value.restingHabitIds
-                val nonRestingHabits = scheduledHabits.filter { it.id !in restingIds }
-                val logsForDayBeforeUncheck = logsCache.filter { it.dateEpochDay == day }.map { it.habitId }.toSet()
-                val allDoneBefore = nonRestingHabits.all { it.id in logsForDayBeforeUncheck }
-                if (allDoneBefore && nonRestingHabits.isNotEmpty()) {
-                    awardXpUseCase.award(-LevelSystem.XpRewards.PERFECT_DAY, LevelSystem.XpReasons.PERFECT_DAY + "_REVOKE")
-                }
+            val result = completeHabitUseCase.setCompleted(habitId, day, isDone)
+            if (result.changed && result.xpAwarded > 0) {
+                _state.value = _state.value.copy(xpPopAmount = result.xpAwarded)
             }
-            WidgetUpdateHelper.updateAll(context)
         }
     }
 
     private fun updateHabitValue(habitId: Long, newValue: Float) {
         viewModelScope.launch {
             val day = _state.value.selectedEpochDay
-            val existing = habitLogDao.getLogForDay(habitId, day)
-            
-            if (newValue <= 0f) {
-                if (existing != null) {
-                    habitLogDao.deleteLog(existing)
-                    
-                    // Revoke completion XP
-                    val logsToday = logsCache.count { it.dateEpochDay == day }
-                    awardXpUseCase.award(-LevelSystem.XpRewards.HABIT_COMPLETE, LevelSystem.XpReasons.HABIT_COMPLETE + "_REVOKE", habitId)
-                    if (logsToday == 1) {
-                        awardXpUseCase.award(-LevelSystem.XpRewards.FIRST_OF_DAY, LevelSystem.XpReasons.FIRST_OF_DAY + "_REVOKE", habitId)
-                    }
-
-                    val scheduledHabits = _state.value.habits
-                    val restingIds = _state.value.restingHabitIds
-                    val nonRestingHabits = scheduledHabits.filter { it.id !in restingIds }
-                    val logsForDayBeforeUncheck = logsCache.filter { it.dateEpochDay == day }.map { it.habitId }.toSet()
-                    val allDoneBefore = nonRestingHabits.all { it.id in logsForDayBeforeUncheck }
-                    if (allDoneBefore && nonRestingHabits.isNotEmpty()) {
-                        awardXpUseCase.award(-LevelSystem.XpRewards.PERFECT_DAY, LevelSystem.XpReasons.PERFECT_DAY + "_REVOKE")
-                    }
-                }
-            } else {
-                if (existing != null) {
-                    habitLogDao.insertLog(existing.copy(value = newValue))
-                } else {
-                    habitLogDao.insertLog(HabitLogEntity(habitId = habitId, dateEpochDay = day, value = newValue))
-                    
-                    val logsToday = logsCache.count { it.dateEpochDay == day }
-                    var xpAwarded = LevelSystem.XpRewards.HABIT_COMPLETE
-                    awardXpUseCase.award(LevelSystem.XpRewards.HABIT_COMPLETE, LevelSystem.XpReasons.HABIT_COMPLETE, habitId)
-
-                    if (logsToday == 0) {
-                        awardXpUseCase.award(LevelSystem.XpRewards.FIRST_OF_DAY, LevelSystem.XpReasons.FIRST_OF_DAY, habitId)
-                        xpAwarded += LevelSystem.XpRewards.FIRST_OF_DAY
-                    }
-
-                    val scheduledHabits = _state.value.habits
-                    val restingIds = _state.value.restingHabitIds
-                    val nonRestingHabits = scheduledHabits.filter { it.id !in restingIds }
-                    val logsForDay = logsCache.filter { it.dateEpochDay == day }.map { it.habitId }.toSet() + habitId
-                    val allDone = nonRestingHabits.all { it.id in logsForDay }
-                    if (allDone && nonRestingHabits.isNotEmpty()) {
-                        awardXpUseCase.award(LevelSystem.XpRewards.PERFECT_DAY, LevelSystem.XpReasons.PERFECT_DAY)
-                        xpAwarded += LevelSystem.XpRewards.PERFECT_DAY
-                    }
-
-                    _state.value = _state.value.copy(xpPopAmount = xpAwarded)
-                }
+            val result = completeHabitUseCase.setValue(habitId, day, newValue)
+            if (result.changed && result.xpAwarded > 0) {
+                _state.value = _state.value.copy(xpPopAmount = result.xpAwarded)
             }
-            WidgetUpdateHelper.updateAll(context)
         }
     }
 

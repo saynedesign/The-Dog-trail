@@ -37,17 +37,9 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.saynedesign.habitloop.MainActivity
 import com.saynedesign.habitloop.data.HabitEntity
-import com.saynedesign.habitloop.data.HabitLogEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
-
-private val WidgetBg = Color(0xFF1C202B)
-private val WidgetTextPrimary = Color(0xFFFFFFFF)
-private val WidgetTextSecondary = Color(0xFF8B93A6)
-private val WidgetAccent = Color(0xFF4B68FF)
-private val WidgetAccentSurface = Color(0xFF292E3B)
-private val WidgetAccentMuted = Color(0xFF3D4566)
 
 /**
  * Widget 1: Habit Checklist — Shows today's habits with checkboxes.
@@ -88,7 +80,7 @@ private fun HabitChecklistContent(
     Column(
         modifier = GlanceModifier
             .fillMaxSize()
-            .background(ColorProvider(WidgetBg))
+            .background(WidgetTheme.bg)
             .padding(16.dp)
             .clickable(actionStartActivity<MainActivity>())
     ) {
@@ -102,7 +94,7 @@ private fun HabitChecklistContent(
                 style = TextStyle(
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = ColorProvider(WidgetTextPrimary)
+                    color = WidgetTheme.textPrimary
                 )
             )
             Spacer(modifier = GlanceModifier.defaultWeight())
@@ -111,7 +103,7 @@ private fun HabitChecklistContent(
                 style = TextStyle(
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
-                    color = ColorProvider(WidgetAccent)
+                    color = WidgetTheme.accent
                 )
             )
         }
@@ -123,8 +115,8 @@ private fun HabitChecklistContent(
         LinearProgressIndicator(
             progress = progress,
             modifier = GlanceModifier.fillMaxWidth().height(6.dp),
-            color = ColorProvider(WidgetAccent),
-            backgroundColor = ColorProvider(WidgetAccentSurface)
+            color = WidgetTheme.accent,
+            backgroundColor = WidgetTheme.surface
         )
 
         Spacer(modifier = GlanceModifier.height(12.dp))
@@ -139,28 +131,42 @@ private fun HabitChecklistContent(
                     text = "No habits for today ✨",
                     style = TextStyle(
                         fontSize = 14.sp,
-                        color = ColorProvider(WidgetTextSecondary)
+                        color = WidgetTheme.textSecondary
                     )
                 )
             }
         } else {
             displayHabits.forEach { habit ->
                 val isDone = habit.id in loggedHabitIds
+                // Explicit ✅/⬜ row instead of Glance CheckBox — the CheckBox's
+                // checked state doesn't re-render reliably on all launchers.
                 Row(
                     modifier = GlanceModifier
                         .fillMaxWidth()
-                        .padding(vertical = 2.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    CheckBox(
-                        checked = isDone,
-                        onCheckedChange = actionRunCallback<ToggleHabitAction>(
-                            actionParametersOf(
-                                HabitIdKey to habit.id,
-                                IsDoneKey to !isDone
+                        .padding(vertical = 4.dp)
+                        .clickable(
+                            actionRunCallback<ToggleHabitAction>(
+                                actionParametersOf(
+                                    HabitIdKey to habit.id,
+                                    IsDoneKey to !isDone
+                                )
                             )
                         ),
-                        text = habit.title
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (isDone) "✅" else "⬜",
+                        style = TextStyle(fontSize = 15.sp)
+                    )
+                    Spacer(modifier = GlanceModifier.width(8.dp))
+                    Text(
+                        text = habit.title,
+                        style = TextStyle(
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = if (isDone) WidgetTheme.textSecondary else WidgetTheme.textPrimary
+                        ),
+                        maxLines = 1
                     )
                 }
             }
@@ -170,7 +176,7 @@ private fun HabitChecklistContent(
                     text = "+${habits.size - 5} more",
                     style = TextStyle(
                         fontSize = 12.sp,
-                        color = ColorProvider(WidgetTextSecondary)
+                        color = WidgetTheme.textSecondary
                     )
                 )
             }
@@ -191,26 +197,12 @@ class ToggleHabitAction : ActionCallback {
         val isDone = parameters[IsDoneKey] ?: return
         val todayEpoch = LocalDate.now().toEpochDay()
 
-        val db = WidgetDatabaseProvider.getDatabase(context)
+        // Unified completion path: log + XP (base/first-of-day/perfect-day)
+        // + XP event history + widget refresh — identical to in-app toggles.
         withContext(Dispatchers.IO) {
-            if (isDone) {
-                val existing = db.habitLogDao().getLogForDay(habitId, todayEpoch)
-                if (existing == null) {
-                    db.habitLogDao().insertLog(
-                        HabitLogEntity(habitId = habitId, dateEpochDay = todayEpoch, value = 1f)
-                    )
-                }
-            } else {
-                val existing = db.habitLogDao().getLogForDay(habitId, todayEpoch)
-                if (existing != null) {
-                    db.habitLogDao().deleteLog(existing)
-                }
-            }
+            context.widgetEntryPoint().completeHabitUseCase()
+                .setCompleted(habitId, todayEpoch, isDone)
         }
-
-        HabitChecklistWidget().updateAll(context)
-        StreakSummaryWidget().updateAll(context)
-        QuickActionsWidget().updateAll(context)
     }
 }
 
