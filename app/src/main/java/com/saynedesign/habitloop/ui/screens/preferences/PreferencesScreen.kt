@@ -257,6 +257,14 @@ fun PreferencesScreen(
                             else -> state.overlayReminderSound.replaceFirstChar { it.uppercase() }
                         },
                         onClick = { showSoundDialog = true },
+                        showDivider = true
+                    )
+                    // Behavior-driven coach: streak warnings, break check-ins,
+                    // celebrations and the Sunday digest (max 1/day, 20:30)
+                    PreferenceToggleItem(
+                        title = "Smart Coach",
+                        checked = state.isCoachEnabled,
+                        onCheckedChange = { onEvent(PreferencesContract.Event.OnCoachToggle(it)) },
                         showDivider = false
                     )
                 }

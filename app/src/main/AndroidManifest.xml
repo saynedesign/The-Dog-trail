@@ -43,6 +43,8 @@
 
         <receiver android:name=".receivers.MidnightRefreshReceiver" android:exported="false" />
 
+        <receiver android:name=".receivers.CoachCheckReceiver" android:exported="false" />
+
         <receiver
             android:name=".receivers.BootReceiver"
             android:exported="false">
