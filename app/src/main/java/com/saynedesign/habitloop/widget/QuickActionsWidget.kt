@@ -35,6 +35,7 @@ import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
 import com.saynedesign.habitloop.MainActivity
 import com.saynedesign.habitloop.data.HabitEntity
+import com.saynedesign.habitloop.data.isScheduledOn
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
@@ -47,15 +48,11 @@ class QuickActionsWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val db = WidgetDatabaseProvider.getDatabase(context)
         val today = LocalDate.now()
-        val dayOfWeek = today.dayOfWeek.value
         val todayEpoch = today.toEpochDay()
 
         val data = withContext(Dispatchers.IO) {
             val allHabits = db.habitDao().getAllHabitsOneShot()
-            val todayHabits = allHabits.filter { habit ->
-                val days = habit.selectedDays.split(",").mapNotNull { it.trim().toIntOrNull() }.toSet()
-                days.contains(dayOfWeek)
-            }.take(3)
+            val todayHabits = allHabits.filter { it.isScheduledOn(today) }.take(3)
             val todayLogs = db.habitLogDao().getLogsForDayOneShot(todayEpoch)
             val loggedIds = todayLogs.map { it.habitId }.toSet()
             Pair(todayHabits, loggedIds)

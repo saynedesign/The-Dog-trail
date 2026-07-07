@@ -10,6 +10,7 @@ import com.saynedesign.habitloop.data.HabitRestDayDao
 import com.saynedesign.habitloop.data.MotivationStyle
 import com.saynedesign.habitloop.data.UserDao
 import com.saynedesign.habitloop.data.UserPreferencesRepository
+import com.saynedesign.habitloop.data.isScheduledOn
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import java.time.DayOfWeek
@@ -72,7 +73,6 @@ class CoachEngine @Inject constructor(
         if (habits.isEmpty()) return null
 
         val todayEpoch = today.toEpochDay()
-        val dayOfWeek = today.dayOfWeek.value
         val logs = habitLogDao.getLogsBetween(todayEpoch - 90, todayEpoch).first()
         val restDays = habitRestDayDao.getAllRestDays().first()
 
@@ -82,7 +82,7 @@ class CoachEngine @Inject constructor(
         val loggedTodayIds = logsToday.map { it.habitId }.toSet()
         val restingTodayIds = restByDay[todayEpoch].orEmpty().map { it.habitId }.toSet()
 
-        val scheduledToday = habits.filter { it.scheduledOn(dayOfWeek) }
+        val scheduledToday = habits.filter { it.isScheduledOn(today) }
         val pendingToday = scheduledToday.filter { it.id !in loggedTodayIds && it.id !in restingTodayIds }
         val streak = computeStreak(logsByDay.keys, restByDay.keys, todayEpoch)
 
@@ -260,9 +260,6 @@ class CoachEngine @Inject constructor(
         val last = coachEventDao.lastEventOfType(type) ?: return true
         return System.currentTimeMillis() - last >= TimeUnit.DAYS.toMillis(days.toLong())
     }
-
-    private fun HabitEntity.scheduledOn(dayOfWeek: Int): Boolean =
-        selectedDays.split(",").mapNotNull { it.trim().toIntOrNull() }.contains(dayOfWeek)
 
     /** Rest-day-aware momentum, counted from yesterday backward (today may still be in progress). */
     private fun computeStreak(logDays: Set<Long>, restDayEpochs: Set<Long>, todayEpoch: Long): Int {

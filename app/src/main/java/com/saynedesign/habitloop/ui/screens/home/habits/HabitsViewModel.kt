@@ -10,6 +10,7 @@ import com.saynedesign.habitloop.data.HabitLogEntity
 import com.saynedesign.habitloop.data.HabitRestDayDao
 import com.saynedesign.habitloop.data.HabitRestDayEntity
 import com.saynedesign.habitloop.data.UserDao
+import com.saynedesign.habitloop.data.isScheduledOn
 import com.saynedesign.habitloop.util.AwardXpUseCase
 import com.saynedesign.habitloop.util.CompleteHabitUseCase
 import com.saynedesign.habitloop.util.LevelSystem
@@ -130,12 +131,9 @@ class HabitsViewModel @Inject constructor(
 
     private fun updateHabitsForSelectedDate() {
         val selectedDate = _state.value.selectedDate
-        val dayOfWeek = selectedDate.dayOfWeek.value
 
-        val filteredHabits = allHabitsCache.filter { habit ->
-            val scheduledDays = habit.selectedDays.split(",").mapNotNull { it.trim().toIntOrNull() }.toSet()
-            scheduledDays.contains(dayOfWeek)
-        }
+        // Shared scheduling rule: day-of-week + one-time date + end date
+        val filteredHabits = allHabitsCache.filter { it.isScheduledOn(selectedDate) }
         _state.value = _state.value.copy(habits = filteredHabits)
         loadRestDayStateForSelectedDate()
     }
