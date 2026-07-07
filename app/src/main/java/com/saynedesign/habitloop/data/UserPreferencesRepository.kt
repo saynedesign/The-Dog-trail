@@ -33,6 +33,7 @@ class UserPreferencesRepository @Inject constructor(
         val OVERLAY_REMINDER_SOUND = stringPreferencesKey("overlay_reminder_sound")
         val REMINDER_TIME = stringPreferencesKey("reminder_time")
         val APP_THEME = stringPreferencesKey("app_theme")
+        val IS_COACH_ENABLED = booleanPreferencesKey("is_coach_enabled")
     }
 
     // Flows
@@ -74,6 +75,10 @@ class UserPreferencesRepository @Inject constructor(
 
     val appTheme: Flow<String> = dataStore.data.map { preferences ->
         preferences[PreferencesKeys.APP_THEME] ?: "system"
+    }
+
+    val isCoachEnabled: Flow<Boolean> = dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.IS_COACH_ENABLED] ?: true
     }
 
     // Suspend functions to update settings
@@ -134,6 +139,12 @@ class UserPreferencesRepository @Inject constructor(
     suspend fun updateAppTheme(theme: String) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.APP_THEME] = theme
+        }
+    }
+
+    suspend fun updateCoachEnabled(enabled: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.IS_COACH_ENABLED] = enabled
         }
     }
 }

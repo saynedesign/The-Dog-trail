@@ -12,9 +12,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         UserEntity::class,
         HabitLogEntity::class,
         HabitRestDayEntity::class,
-        XpEventEntity::class
+        XpEventEntity::class,
+        CoachEventEntity::class
     ],
-    version = 8,
+    version = 9,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -24,8 +25,23 @@ abstract class HabitDatabase : RoomDatabase() {
     abstract fun habitLogDao(): HabitLogDao
     abstract fun habitRestDayDao(): HabitRestDayDao
     abstract fun xpEventDao(): XpEventDao
+    abstract fun coachEventDao(): CoachEventDao
 
     companion object {
+        /** All migrations — every database builder MUST register this list. */
+        val ALL_MIGRATIONS: Array<Migration>
+            get() = arrayOf(MIGRATION_7_8, MIGRATION_8_9)
+
+        val MIGRATION_8_9 = object : Migration(8, 9) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS coach_events (" +
+                        "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "type TEXT NOT NULL, " +
+                        "timestamp INTEGER NOT NULL)"
+                )
+            }
+        }
         val MIGRATION_7_8 = object : Migration(7, 8) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL("ALTER TABLE user_info ADD COLUMN photoUri TEXT DEFAULT NULL")
