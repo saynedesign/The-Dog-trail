@@ -32,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import com.saynedesign.habitloop.ui.components.ProfileAvatar
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -223,21 +224,14 @@ fun ProfileHeader(state: ProfileContract.State, onEditProfile: () -> Unit) {
                         .background(MaterialTheme.colorScheme.surfaceVariant),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (state.profileImageUri != null) {
-                        AsyncImage(
-                            model = state.profileImageUri,
-                            contentDescription = "Profile Image",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
-                    } else {
-                        Text(
-                            text = state.userName.take(1).ifEmpty { "A" }.uppercase(),
-                            style = MaterialTheme.typography.headlineMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
+                    ProfileAvatar(
+                        imageUri = state.profileImageUri,
+                        name = state.userName,
+                        modifier = Modifier.fillMaxSize(),
+                        backgroundColor = Color.Transparent,
+                        contentColor = MaterialTheme.colorScheme.primary,
+                        initialsFontSize = 28.sp
+                    )
                 }
             }
 

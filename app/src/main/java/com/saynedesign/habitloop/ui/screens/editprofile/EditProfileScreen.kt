@@ -40,6 +40,7 @@ import com.saynedesign.habitloop.data.MotivationStyle
 import com.saynedesign.habitloop.data.ExperienceLevel
 import com.saynedesign.habitloop.data.WeekStartsOn
 import com.saynedesign.habitloop.ui.components.HabitOutlinedTextField
+import com.saynedesign.habitloop.ui.components.ProfileAvatar
 import com.saynedesign.habitloop.ui.components.headerTitleBrush
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -181,21 +182,14 @@ fun EditProfileScreen(
                         .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
                     contentAlignment = Alignment.Center
                 ) {
-                    if (state.profileImageUri != null) {
-                        AsyncImage(
-                            model = state.profileImageUri,
-                            contentDescription = "Profile Image",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Default.Person,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(48.dp)
-                        )
-                    }
+                    ProfileAvatar(
+                        imageUri = state.profileImageUri,
+                        name = state.name,
+                        modifier = Modifier.fillMaxSize(),
+                        backgroundColor = Color.Transparent,
+                        contentColor = MaterialTheme.colorScheme.primary,
+                        initialsFontSize = 32.sp
+                    )
                 }
                 
                 Box(
