@@ -81,6 +81,7 @@ import androidx.compose.ui.layout.ContentScale
 import com.saynedesign.habitloop.ui.theme.isAppInDarkTheme
 import com.saynedesign.habitloop.R
 import com.saynedesign.habitloop.ui.components.HabitCard
+import com.saynedesign.habitloop.ui.components.ProfileAvatar
 import com.saynedesign.habitloop.ui.screens.home.CalendarStrip
 import com.saynedesign.habitloop.util.LevelSystem
 import kotlinx.coroutines.delay
@@ -188,25 +189,15 @@ fun HabitsScreen(
                         .padding(vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Profile Image / Dog Emoji circle
-                    Box(
-                        modifier = Modifier
-                            .size(52.dp)
-                            .clip(CircleShape)
-                            .background(if (isDark) Color(0xFF1E2230) else Color(0xFFF0F2FA)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (state.profileImageUri != null) {
-                            AsyncImage(
-                                model = state.profileImageUri,
-                                contentDescription = "Profile Image",
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
-                            Text("🐶", fontSize = 28.sp)
-                        }
-                    }
+                    // Profile picture (or consistent initials placeholder)
+                    ProfileAvatar(
+                        imageUri = state.profileImageUri,
+                        name = state.userName,
+                        modifier = Modifier.size(52.dp),
+                        backgroundColor = if (isDark) Color(0xFF1E2230) else Color(0xFFF0F2FA),
+                        contentColor = Color(0xFF4B68FF),
+                        initialsFontSize = 20.sp
+                    )
 
                     Spacer(modifier = Modifier.width(12.dp))
 

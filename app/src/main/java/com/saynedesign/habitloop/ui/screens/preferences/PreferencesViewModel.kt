@@ -84,6 +84,16 @@ class PreferencesViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
+            preferencesRepository.reminderStyle.collectLatest { style ->
+                _state.update { it.copy(reminderStyle = style) }
+            }
+        }
+        viewModelScope.launch {
+            preferencesRepository.customSoundLabel.collectLatest { label ->
+                _state.update { it.copy(customSoundLabel = label) }
+            }
+        }
+        viewModelScope.launch {
             preferencesRepository.isCoachEnabled.collectLatest { enabled ->
                 _state.update { it.copy(isCoachEnabled = enabled) }
             }
@@ -131,6 +141,15 @@ class PreferencesViewModel @Inject constructor(
             }
             is PreferencesContract.Event.OnOverlayReminderSoundChange -> {
                 viewModelScope.launch { preferencesRepository.updateOverlayReminderSound(event.sound) }
+            }
+            is PreferencesContract.Event.OnReminderStyleChange -> {
+                viewModelScope.launch { preferencesRepository.updateReminderStyle(event.style) }
+            }
+            is PreferencesContract.Event.OnCustomSoundSelected -> {
+                viewModelScope.launch {
+                    preferencesRepository.updateCustomSound(event.uri, event.label)
+                    preferencesRepository.updateOverlayReminderSound("custom")
+                }
             }
             is PreferencesContract.Event.OnCoachToggle -> {
                 viewModelScope.launch { preferencesRepository.updateCoachEnabled(event.enabled) }

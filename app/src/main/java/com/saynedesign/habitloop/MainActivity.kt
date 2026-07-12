@@ -56,6 +56,9 @@ import com.saynedesign.habitloop.ui.screens.home.habits.HabitsViewModel
 import com.saynedesign.habitloop.ui.screens.onboarding.OnboardingContract
 import com.saynedesign.habitloop.ui.screens.onboarding.OnboardingScreen
 import com.saynedesign.habitloop.ui.screens.onboarding.OnboardingViewModel
+import com.saynedesign.habitloop.ui.screens.onboarding.ReminderSetupContract
+import com.saynedesign.habitloop.ui.screens.onboarding.ReminderSetupScreen
+import com.saynedesign.habitloop.ui.screens.onboarding.ReminderSetupViewModel
 import com.saynedesign.habitloop.ui.screens.preferences.PreferencesContract
 import com.saynedesign.habitloop.ui.screens.preferences.PreferencesScreen
 import com.saynedesign.habitloop.ui.screens.preferences.PreferencesViewModel
@@ -220,6 +223,27 @@ class MainActivity : ComponentActivity() {
                                 viewModel.effect.collect { effect ->
                                     when (effect) {
                                         is UserInfoContract.Effect.NavigateToHome -> {
+                                            // Onboarding continues into the reminder-style choice.
+                                            navController.navigate("reminder_setup")
+                                        }
+                                    }
+                                }
+                            }
+
+                            UserInfoScreen(
+                                state = state,
+                                onEvent = viewModel::handleEvent
+                            )
+                        }
+
+                        composable("reminder_setup") {
+                            val viewModel = hiltViewModel<ReminderSetupViewModel>()
+                            val state by viewModel.state.collectAsState()
+
+                            LaunchedEffect(Unit) {
+                                viewModel.effect.collect { effect ->
+                                    when (effect) {
+                                        is ReminderSetupContract.Effect.NavigateHome -> {
                                             navController.navigate("home") {
                                                 popUpTo("onboarding") { inclusive = true }
                                             }
@@ -228,7 +252,7 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
 
-                            UserInfoScreen(
+                            ReminderSetupScreen(
                                 state = state,
                                 onEvent = viewModel::handleEvent
                             )

@@ -202,13 +202,14 @@ fun PeopleBubblesPlaceholder() {
                     )
                 )
         )
-        // Puppy Mascot Illustration
+        // App icon / logo
         Image(
-            painter = painterResource(R.drawable.puppy_level_avatar),
-            contentDescription = "Dog Mascot",
+            painter = painterResource(R.drawable.habit_tracker_icon),
+            contentDescription = "App Logo",
             modifier = Modifier
-                .size(180.dp)
+                .size(150.dp)
                 .offset(y = floatAnim1.dp)
+                .clip(RoundedCornerShape(36.dp))
         )
     }
 }

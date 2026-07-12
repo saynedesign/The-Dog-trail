@@ -34,22 +34,62 @@ fun PreferencesScreen(
 ) {
     val context = LocalContext.current
     var showSoundDialog by remember { mutableStateOf(false) }
+    var showStyleDialog by remember { mutableStateOf(false) }
 
-    // When the user comes back from the system overlay-permission screen with
-    // the permission granted, finish enabling overlay reminders automatically.
+    // System ringtone picker for a user's own custom reminder sound.
+    val ringtonePicker = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        val uri = result.data?.getParcelableExtra<android.net.Uri>(
+            android.media.RingtoneManager.EXTRA_RINGTONE_PICKED_URI
+        )
+        if (uri != null) {
+            val label = runCatching {
+                android.media.RingtoneManager.getRingtone(context, uri)?.getTitle(context)
+            }.getOrNull() ?: "Custom"
+            onEvent(PreferencesContract.Event.OnCustomSoundSelected(uri.toString(), label))
+        }
+    }
+
+    fun launchRingtonePicker() {
+        val intent = android.content.Intent(android.media.RingtoneManager.ACTION_RINGTONE_PICKER).apply {
+            putExtra(android.media.RingtoneManager.EXTRA_RINGTONE_TYPE, android.media.RingtoneManager.TYPE_ALL)
+            putExtra(android.media.RingtoneManager.EXTRA_RINGTONE_TITLE, "Select reminder sound")
+            putExtra(android.media.RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false)
+            putExtra(android.media.RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true)
+        }
+        ringtonePicker.launch(intent)
+    }
+
+    // When the user returns from the system overlay-permission screen with the
+    // permission granted, finish switching to the full-screen alarm style.
     var pendingOverlayPermission by rememberSaveable { mutableStateOf(false) }
     val lifecycleOwner = androidx.compose.ui.platform.LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
             if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME && pendingOverlayPermission) {
                 if (android.provider.Settings.canDrawOverlays(context)) {
-                    onEvent(PreferencesContract.Event.OnOverlayReminderToggle(true))
+                    onEvent(PreferencesContract.Event.OnReminderStyleChange("overlay"))
                 }
                 pendingOverlayPermission = false
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    fun selectReminderStyle(style: String) {
+        if (style == "overlay" && !android.provider.Settings.canDrawOverlays(context)) {
+            pendingOverlayPermission = true
+            context.startActivity(
+                android.content.Intent(
+                    android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    android.net.Uri.parse("package:${context.packageName}")
+                )
+            )
+        } else {
+            onEvent(PreferencesContract.Event.OnReminderStyleChange(style))
+        }
     }
 
     if (showSoundDialog) {
@@ -62,15 +102,24 @@ fun PreferencesScreen(
                         "alarm" to "System Alarm 🚨",
                         "notification" to "System Notification 🔔",
                         "ringtone" to "System Ringtone 🎵",
+                        "custom" to "Custom sound… 🎼",
                         "mute" to "Muted 🔇"
                     )
                     options.forEach { (key, label) ->
+                        val display = if (key == "custom" && state.overlayReminderSound == "custom") {
+                            "${state.customSoundLabel} 🎼"
+                        } else label
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    onEvent(PreferencesContract.Event.OnOverlayReminderSoundChange(key))
-                                    showSoundDialog = false
+                                    if (key == "custom") {
+                                        showSoundDialog = false
+                                        launchRingtonePicker()
+                                    } else {
+                                        onEvent(PreferencesContract.Event.OnOverlayReminderSoundChange(key))
+                                        showSoundDialog = false
+                                    }
                                 }
                                 .padding(vertical = 12.dp, horizontal = 8.dp),
                             verticalAlignment = Alignment.CenterVertically
@@ -78,18 +127,74 @@ fun PreferencesScreen(
                             RadioButton(
                                 selected = (state.overlayReminderSound == key),
                                 onClick = {
-                                    onEvent(PreferencesContract.Event.OnOverlayReminderSoundChange(key))
-                                    showSoundDialog = false
+                                    if (key == "custom") {
+                                        showSoundDialog = false
+                                        launchRingtonePicker()
+                                    } else {
+                                        onEvent(PreferencesContract.Event.OnOverlayReminderSoundChange(key))
+                                        showSoundDialog = false
+                                    }
                                 }
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = label, style = MaterialTheme.typography.bodyLarge)
+                            Text(text = display, style = MaterialTheme.typography.bodyLarge)
                         }
                     }
                 }
             },
             confirmButton = {
                 TextButton(onClick = { showSoundDialog = false }) {
+                    Text("Close")
+                }
+            }
+        )
+    }
+
+    if (showStyleDialog) {
+        AlertDialog(
+            onDismissRequest = { showStyleDialog = false },
+            title = { Text("Reminder Style") },
+            text = {
+                Column {
+                    val options = listOf(
+                        "overlay" to ("Full-screen alarm 🔔" to "A takeover screen with sound — like an alarm clock"),
+                        "notification" to ("Standard notification 📩" to "A heads-up notification with sound"),
+                        "off" to ("Off 🚫" to "No habit reminders")
+                    )
+                    options.forEach { (key, texts) ->
+                        val (label, desc) = texts
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    showStyleDialog = false
+                                    selectReminderStyle(key)
+                                }
+                                .padding(vertical = 10.dp, horizontal = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = (state.reminderStyle == key),
+                                onClick = {
+                                    showStyleDialog = false
+                                    selectReminderStyle(key)
+                                }
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(text = label, style = MaterialTheme.typography.bodyLarge)
+                                Text(
+                                    text = desc,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showStyleDialog = false }) {
                     Text("Close")
                 }
             }
@@ -222,42 +327,32 @@ fun PreferencesScreen(
                         showDivider = true,
                         enabled = state.isDailyReminderEnabled
                     )
-                    PreferenceToggleItem(
-                        title = "Overlay Reminders",
-                        checked = state.isOverlayReminderEnabled,
-                        onCheckedChange = { isChecked ->
-                            if (isChecked) {
-                                if (!android.provider.Settings.canDrawOverlays(context)) {
-                                    // Remember the request so we can auto-enable
-                                    // when the user returns with the permission.
-                                    pendingOverlayPermission = true
-                                    val intent = android.content.Intent(
-                                        android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                                        android.net.Uri.parse("package:${context.packageName}")
-                                    )
-                                    context.startActivity(intent)
-                                    onEvent(PreferencesContract.Event.OnOverlayReminderToggle(false))
-                                } else {
-                                    onEvent(PreferencesContract.Event.OnOverlayReminderToggle(true))
-                                }
-                            } else {
-                                onEvent(PreferencesContract.Event.OnOverlayReminderToggle(false))
-                            }
+                    // How reminders are delivered: full-screen alarm, standard
+                    // notification, or off.
+                    PreferenceItem(
+                        title = "Reminder Style",
+                        value = when (state.reminderStyle) {
+                            "overlay" -> "Full-screen alarm"
+                            "off" -> "Off"
+                            else -> "Notification"
                         },
+                        onClick = { showStyleDialog = true },
                         showDivider = true
                     )
-                    // Applies to both overlay and notification reminders
+                    // Applies to both alarm and notification reminders.
                     PreferenceItem(
                         title = "Reminder Sound",
                         value = when (state.overlayReminderSound) {
                             "alarm" -> "System Alarm"
                             "notification" -> "System Notification"
                             "ringtone" -> "System Ringtone"
+                            "custom" -> state.customSoundLabel
                             "mute" -> "Silent"
                             else -> state.overlayReminderSound.replaceFirstChar { it.uppercase() }
                         },
                         onClick = { showSoundDialog = true },
-                        showDivider = true
+                        showDivider = true,
+                        enabled = state.reminderStyle != "off"
                     )
                     // Behavior-driven coach: streak warnings, break check-ins,
                     // celebrations and the Sunday digest (max 1/day, 20:30)

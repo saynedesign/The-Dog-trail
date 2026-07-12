@@ -39,6 +39,13 @@ class UserPreferencesRepository @Inject constructor(
         // The highest level for which we've already shown the level-up
         // celebration. 0 = never set (baseline adopted on first read).
         val LAST_CELEBRATED_LEVEL = intPreferencesKey("last_celebrated_level")
+        // How habit reminders are delivered: "overlay" (full-screen alarm),
+        // "notification" (standard heads-up), or "off".
+        val REMINDER_STYLE = stringPreferencesKey("reminder_style")
+        // A user-picked custom sound (system ringtone picker) used when the
+        // reminder sound is set to "custom".
+        val CUSTOM_SOUND_URI = stringPreferencesKey("custom_sound_uri")
+        val CUSTOM_SOUND_LABEL = stringPreferencesKey("custom_sound_label")
     }
 
     // Flows
@@ -84,6 +91,21 @@ class UserPreferencesRepository @Inject constructor(
 
     val isCoachEnabled: Flow<Boolean> = dataStore.data.map { preferences ->
         preferences[PreferencesKeys.IS_COACH_ENABLED] ?: true
+    }
+
+    // Reminder style. Falls back to the legacy overlay toggle so existing users
+    // who had overlay reminders on keep the full-screen alarm after this update.
+    val reminderStyle: Flow<String> = dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.REMINDER_STYLE]
+            ?: if (preferences[PreferencesKeys.IS_OVERLAY_REMINDER_ENABLED] == true) "overlay" else "notification"
+    }
+
+    val customSoundUri: Flow<String> = dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.CUSTOM_SOUND_URI] ?: ""
+    }
+
+    val customSoundLabel: Flow<String> = dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.CUSTOM_SOUND_LABEL] ?: "Custom"
     }
 
     // Suspend functions to update settings
@@ -160,6 +182,25 @@ class UserPreferencesRepository @Inject constructor(
     suspend fun updateLastCelebratedLevel(level: Int) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.LAST_CELEBRATED_LEVEL] = level
+        }
+    }
+
+    suspend fun reminderStyleOnce(): String = reminderStyle.first()
+
+    suspend fun customSoundUriOnce(): String = customSoundUri.first()
+
+    suspend fun updateReminderStyle(style: String) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.REMINDER_STYLE] = style
+            // Keep the legacy flag in sync for any older readers.
+            preferences[PreferencesKeys.IS_OVERLAY_REMINDER_ENABLED] = (style == "overlay")
+        }
+    }
+
+    suspend fun updateCustomSound(uri: String, label: String) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.CUSTOM_SOUND_URI] = uri
+            preferences[PreferencesKeys.CUSTOM_SOUND_LABEL] = label
         }
     }
 }

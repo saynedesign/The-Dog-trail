@@ -36,23 +36,42 @@ class HabitReminderReceiver : BroadcastReceiver() {
                 val habitName = intent.getStringExtra("habitName") ?: "Habit Reminder"
                 val habitId = intent.getLongExtra("habitId", -1)
 
-                val isOverlayEnabled = preferencesRepository.isOverlayReminderEnabled.firstOrNull() ?: false
+                val style = preferencesRepository.reminderStyleOnce()
+                if (style == "off") return@launch // user disabled reminders
+
                 val canDrawOverlay = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                     Settings.canDrawOverlays(context)
                 } else {
                     true
                 }
 
-                if (isOverlayEnabled && canDrawOverlay) {
-                    val overlayIntent = Intent(context, OverlayReminderActivity::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                        putExtra("habitId", habitId)
-                        putExtra("habitName", habitName)
+                val soundPref = preferencesRepository.overlayReminderSound.firstOrNull() ?: "alarm"
+                val customUri = if (soundPref == "custom") preferencesRepository.customSoundUriOnce() else ""
+
+                if (style == "overlay") {
+                    // Alarm-style delivery. A full-screen-intent notification is the
+                    // only reliable way to launch a takeover UI from the background on
+                    // Android 10+ — it fires the activity directly when the screen is
+                    // locked/off and shows an audible heads-up when the phone is in use.
+                    showNotification(context, habitId, habitName, soundPref, customUri, fullScreen = true)
+
+                    // Best-effort immediate takeover while the app has the overlay
+                    // permission (covers active foreground use). singleTask + the
+                    // full-screen intent together prevent a duplicate launch.
+                    if (canDrawOverlay) {
+                        try {
+                            val overlayIntent = Intent(context, OverlayReminderActivity::class.java).apply {
+                                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                                putExtra("habitId", habitId)
+                                putExtra("habitName", habitName)
+                            }
+                            context.startActivity(overlayIntent)
+                        } catch (_: Exception) {
+                            // Background-activity-start blocked — the full-screen intent covers it.
+                        }
                     }
-                    context.startActivity(overlayIntent)
                 } else {
-                    val soundPref = preferencesRepository.overlayReminderSound.firstOrNull() ?: "alarm"
-                    showNotification(context, habitId, habitName, soundPref)
+                    showNotification(context, habitId, habitName, soundPref, customUri, fullScreen = false)
                 }
             } finally {
                 pendingResult.finish()
@@ -60,25 +79,39 @@ class HabitReminderReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun reminderSoundUri(soundPref: String): android.net.Uri? = when (soundPref) {
+    private fun reminderSoundUri(soundPref: String, customUri: String): android.net.Uri? = when (soundPref) {
         "mute" -> null
+        "custom" -> customUri.takeIf { it.isNotBlank() }?.let { android.net.Uri.parse(it) }
+            ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
         "alarm" -> RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
         "ringtone" -> RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
         else -> RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
     } ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 
-    private fun showNotification(context: Context, habitId: Long, habitName: String, soundPref: String) {
+    private fun showNotification(
+        context: Context,
+        habitId: Long,
+        habitName: String,
+        soundPref: String,
+        customUri: String,
+        fullScreen: Boolean
+    ) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         // Channel settings are immutable after creation, so the sound choice is
-        // baked into the channel id — changing the tune switches channels.
-        val channelId = "habit_reminders_$soundPref"
+        // baked into the channel id — changing the tune switches channels. A custom
+        // pick includes its URI hash so re-picking a different tune makes a fresh
+        // channel. The alarm (full-screen) variant lives on its own channel so it
+        // always keeps IMPORTANCE_HIGH + alarm audio.
+        val soundKey = if (soundPref == "custom") "custom${customUri.hashCode()}" else soundPref
+        val channelId = if (fullScreen) "habit_alarms_$soundKey" else "habit_reminders_$soundKey"
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             // Drop the legacy channel that was created without an explicit sound
             notificationManager.deleteNotificationChannel("habit_reminders")
 
             if (notificationManager.getNotificationChannel(channelId) == null) {
-                val channel = NotificationChannel(channelId, "Habit Reminders", NotificationManager.IMPORTANCE_HIGH)
+                val channelName = if (fullScreen) "Habit Alarms" else "Habit Reminders"
+                val channel = NotificationChannel(channelId, channelName, NotificationManager.IMPORTANCE_HIGH)
                 channel.enableVibration(true)
                 if (soundPref == "mute") {
                     channel.setSound(null, null)
@@ -89,7 +122,7 @@ class HabitReminderReceiver : BroadcastReceiver() {
                         else -> AudioAttributes.USAGE_NOTIFICATION
                     }
                     channel.setSound(
-                        reminderSoundUri(soundPref),
+                        reminderSoundUri(soundPref, customUri),
                         AudioAttributes.Builder()
                             .setUsage(usage)
                             .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
@@ -100,9 +133,19 @@ class HabitReminderReceiver : BroadcastReceiver() {
             }
         }
 
-        val openIntent = Intent(context, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            putExtra("habitId", habitId)
+        // Tapping the notification (or a full-screen alarm launch) opens the
+        // takeover overlay; a plain reminder just opens the app.
+        val openIntent = if (fullScreen) {
+            Intent(context, OverlayReminderActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                putExtra("habitId", habitId)
+                putExtra("habitName", habitName)
+            }
+        } else {
+            Intent(context, MainActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                putExtra("habitId", habitId)
+            }
         }
         val pendingIntent = PendingIntent.getActivity(
             context,
@@ -146,10 +189,18 @@ class HabitReminderReceiver : BroadcastReceiver() {
             .addAction(0, "Snooze 15m", snoozePending)
             .setAutoCancel(true)
 
+        if (fullScreen) {
+            // Launch the overlay directly when the screen is locked/off; otherwise
+            // this posts an audible, alarm-category heads-up the user can tap.
+            builder
+                .setCategory(NotificationCompat.CATEGORY_ALARM)
+                .setFullScreenIntent(pendingIntent, true)
+        }
+
         // Pre-O devices ignore channel sound settings — set it on the notification
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             if (soundPref != "mute") {
-                builder.setSound(reminderSoundUri(soundPref))
+                builder.setSound(reminderSoundUri(soundPref, customUri))
             }
             builder.setDefaults(NotificationCompat.DEFAULT_VIBRATE)
         }
