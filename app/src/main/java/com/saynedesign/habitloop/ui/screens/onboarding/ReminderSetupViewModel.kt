@@ -32,6 +32,9 @@ class ReminderSetupViewModel @Inject constructor(
             is ReminderSetupContract.Event.OnContinue -> {
                 viewModelScope.launch {
                     preferencesRepository.updateReminderStyle(_state.value.selectedStyle)
+                    // New users make this choice during onboarding, so the
+                    // existing-user "switch to alarm" home prompt must not fire.
+                    preferencesRepository.setHasSeenOverlayPromo()
                     _effect.send(ReminderSetupContract.Effect.NavigateHome)
                 }
             }

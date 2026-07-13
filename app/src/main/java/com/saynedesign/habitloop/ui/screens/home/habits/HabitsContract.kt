@@ -32,6 +32,7 @@ interface HabitsContract {
         val currentLevel: Int = 1,
         val xpPopAmount: Int? = null,
         val levelUpToLevel: Int? = null,
+        val showOverlayPromo: Boolean = false,
         val userName: String = "",
         val profileImageUri: String? = null,
         
@@ -63,6 +64,10 @@ interface HabitsContract {
         // XP
         data object OnXpPopDismissed : Event()
         data object OnLevelUpDismissed : Event()
+
+        // One-time overlay-reminder promo (existing users after an update)
+        data object OnOverlayPromoEnabled : Event()
+        data object OnOverlayPromoDismissed : Event()
     }
 
     sealed class Effect {
