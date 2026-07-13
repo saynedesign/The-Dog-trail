@@ -60,6 +60,25 @@ class HabitsViewModel @Inject constructor(
         loadLogs()
         loadXp()
         loadRestDays()
+        maybeShowOverlayPromo()
+    }
+
+    /**
+     * One-time nudge for existing users who updated the app: they've already
+     * finished onboarding, so they never saw the reminder-style choice. Offer
+     * the full-screen alarm once, unless they're already on it.
+     */
+    private fun maybeShowOverlayPromo() {
+        viewModelScope.launch {
+            val seen = userPreferencesRepository.hasSeenOverlayPromoOnce()
+            val style = userPreferencesRepository.reminderStyleOnce()
+            if (!seen && style != "overlay") {
+                _state.value = _state.value.copy(showOverlayPromo = true)
+            } else if (!seen) {
+                // Already on overlay — nothing to promo, just don't ask again.
+                userPreferencesRepository.setHasSeenOverlayPromo()
+            }
+        }
     }
 
     private fun loadHabits() {
@@ -316,6 +335,19 @@ class HabitsViewModel @Inject constructor(
             }
             is HabitsContract.Event.OnLevelUpDismissed -> {
                 _state.value = _state.value.copy(levelUpToLevel = null)
+            }
+            is HabitsContract.Event.OnOverlayPromoEnabled -> {
+                _state.value = _state.value.copy(showOverlayPromo = false)
+                viewModelScope.launch {
+                    userPreferencesRepository.updateReminderStyle("overlay")
+                    userPreferencesRepository.setHasSeenOverlayPromo()
+                }
+            }
+            is HabitsContract.Event.OnOverlayPromoDismissed -> {
+                _state.value = _state.value.copy(showOverlayPromo = false)
+                viewModelScope.launch {
+                    userPreferencesRepository.setHasSeenOverlayPromo()
+                }
             }
         }
     }

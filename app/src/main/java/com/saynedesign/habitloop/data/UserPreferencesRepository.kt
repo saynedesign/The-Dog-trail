@@ -46,6 +46,10 @@ class UserPreferencesRepository @Inject constructor(
         // reminder sound is set to "custom".
         val CUSTOM_SOUND_URI = stringPreferencesKey("custom_sound_uri")
         val CUSTOM_SOUND_LABEL = stringPreferencesKey("custom_sound_label")
+        // Whether the one-time "switch to full-screen alarm" prompt has been
+        // shown. Set true after onboarding (new users) or after the prompt is
+        // seen (existing users who updated) so it never appears twice.
+        val HAS_SEEN_OVERLAY_PROMO = booleanPreferencesKey("has_seen_overlay_promo")
     }
 
     // Flows
@@ -188,6 +192,13 @@ class UserPreferencesRepository @Inject constructor(
     suspend fun reminderStyleOnce(): String = reminderStyle.first()
 
     suspend fun customSoundUriOnce(): String = customSoundUri.first()
+
+    suspend fun hasSeenOverlayPromoOnce(): Boolean =
+        dataStore.data.map { it[PreferencesKeys.HAS_SEEN_OVERLAY_PROMO] ?: false }.first()
+
+    suspend fun setHasSeenOverlayPromo() {
+        dataStore.edit { it[PreferencesKeys.HAS_SEEN_OVERLAY_PROMO] = true }
+    }
 
     suspend fun updateReminderStyle(style: String) {
         dataStore.edit { preferences ->

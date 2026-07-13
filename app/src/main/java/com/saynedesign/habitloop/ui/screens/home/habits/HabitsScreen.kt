@@ -57,6 +57,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.spring
@@ -95,6 +102,42 @@ fun HabitsScreen(
     innerPadding: PaddingValues = PaddingValues(0.dp)
 ) {
     val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
+
+    // One-time "switch to full-screen alarm" prompt for existing users.
+    // If they accept without the overlay permission, send them to grant it and
+    // finish enabling when they return.
+    var pendingPromoEnable by rememberSaveable { mutableStateOf(false) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME && pendingPromoEnable) {
+                pendingPromoEnable = false
+                onEvent(HabitsContract.Event.OnOverlayPromoEnabled)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    if (state.showOverlayPromo) {
+        OverlayReminderPromoDialog(
+            onEnable = {
+                if (android.provider.Settings.canDrawOverlays(context)) {
+                    onEvent(HabitsContract.Event.OnOverlayPromoEnabled)
+                } else {
+                    pendingPromoEnable = true
+                    context.startActivity(
+                        android.content.Intent(
+                            android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            android.net.Uri.parse("package:${context.packageName}")
+                        )
+                    )
+                }
+            },
+            onDismiss = { onEvent(HabitsContract.Event.OnOverlayPromoDismissed) }
+        )
+    }
 
     // Dialogs
     if (state.showDeleteDialog) {
@@ -1003,5 +1046,66 @@ private fun LevelUpOverlay(
                 )
             }
         }
+    }
+}
+
+/**
+ * One-time prompt shown on home to existing users after an update, offering to
+ * upgrade their plain notifications to the full-screen alarm.
+ */
+@Composable
+private fun OverlayReminderPromoDialog(
+    onEnable: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = { Text("🔔", fontSize = 32.sp) },
+        title = {
+            Text(
+                "Never miss a habit again",
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+        },
+        text = {
+            Column {
+                Text(
+                    "Upgrade your reminders to a full-screen alarm that's hard to ignore — like an alarm clock for your goals.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(Modifier.height(14.dp))
+                PromoBullet("👁️", "Impossible to swipe away unseen")
+                PromoBullet("✅", "Prompts a quick done / snooze / skip")
+                PromoBullet("🔥", "A strong cue that protects your streak")
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onEnable,
+                shape = RoundedCornerShape(14.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4B68FF))
+            ) {
+                Text("Enable full-screen alarm", fontWeight = FontWeight.Bold, color = Color.White)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Keep notifications")
+            }
+        }
+    )
+}
+
+@Composable
+private fun PromoBullet(emoji: String, text: String) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(vertical = 4.dp)
+    ) {
+        Text(emoji, fontSize = 16.sp)
+        Spacer(Modifier.width(10.dp))
+        Text(text, style = MaterialTheme.typography.bodyMedium)
     }
 }
