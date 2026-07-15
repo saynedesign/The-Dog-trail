@@ -19,3 +19,12 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# --- JNI: the native insight engine is bound by exact class + method name.
+# R8 must not rename/remove the class holding the native method or the JNI
+# lookup (Java_com_saynedesign_habitloop_data_InsightEngine_generateInsightsJson)
+# fails at runtime with UnsatisfiedLinkError.
+-keep class com.saynedesign.habitloop.data.InsightEngine { *; }
+-keepclasseswithmembernames,includedescriptorclasses class * {
+    native <methods>;
+}

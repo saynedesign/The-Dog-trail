@@ -14,15 +14,19 @@ android {
         applicationId = "com.saynedesign.habitloop"
         minSdk = 30
         targetSdk = 37
-        versionCode = 2
-        versionName = "1.0.1"
+        versionCode = 3
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // R8 code shrinking + resource shrinking to cut APK size and speed
+            // up load. Keep rules for the JNI insight engine live in
+            // proguard-rules.pro; Hilt/Room/Compose/Coil/Glance ship their own.
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
