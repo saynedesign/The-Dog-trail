@@ -387,10 +387,11 @@ fun MetricItem(
 
 @Composable
 fun JniSunsetInsightCard(state: ReportContract.State) {
-    // Select the best insight or advice to feature in the sunset card
+    // Only feature a genuine, habit-derived insight. Profile advice must not
+    // masquerade as an "Insight" — otherwise a brand-new user with no habits
+    // sees a generic tip here before they've created anything.
     val featuredInsight = state.insights.firstOrNull()
-        ?: state.advices.firstOrNull()
-        ?: "Keep logging your habits to generate custom C++ insights!"
+        ?: "Keep logging your habits to unlock personalized insights!"
 
     Card(
         modifier = Modifier.fillMaxWidth(),
